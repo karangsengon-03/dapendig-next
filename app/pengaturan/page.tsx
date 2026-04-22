@@ -111,10 +111,10 @@ function NormalisasiSection() {
           size="sm"
           variant="outline"
           onClick={() => setConfirm(true)}
-          className="border-amber-600/40 text-amber-400 hover:bg-amber-500/10"
+          className="border-amber-600/40 text-amber-400 hover:bg-amber-500/10 w-full justify-start"
         >
-          <Wrench className="w-3.5 h-3.5 mr-1.5" />
-          Normalisasi Ulang Data Pekerjaan &amp; Hub. Keluarga
+          <Wrench className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+          <span className="truncate">Normalisasi Ulang Data Pekerjaan &amp; Hub. Keluarga</span>
         </Button>
       )}
     </div>

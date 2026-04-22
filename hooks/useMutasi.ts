@@ -206,3 +206,33 @@ export function useDeleteMutasiMasuk() {
     },
   })
 }
+
+export function useEditMutasiKeluar() {
+  const qc = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<MutasiKeluar> }) => {
+      await updateDoc(doc(db, 'mutasi_keluar', id), { ...data, updated_at: serverTimestamp() })
+      await addDoc(collection(db, 'log'), {
+        aksi: 'edit', keterangan: `Edit mutasi keluar: ${data.nama ?? ''}`,
+        nik_target: data.nik_target ?? '', oleh: user?.email ?? 'unknown', ts: serverTimestamp(),
+      })
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['mutasi'], exact: false }) },
+  })
+}
+
+export function useEditMutasiMasuk() {
+  const qc = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<MutasiMasuk> }) => {
+      await updateDoc(doc(db, 'mutasi_masuk', id), { ...data, updated_at: serverTimestamp() })
+      await addDoc(collection(db, 'log'), {
+        aksi: 'edit', keterangan: `Edit mutasi masuk: ${data.nama_lengkap ?? ''}`,
+        nik_target: data.nik ?? '', oleh: user?.email ?? 'unknown', ts: serverTimestamp(),
+      })
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['mutasi'], exact: false }) },
+  })
+}

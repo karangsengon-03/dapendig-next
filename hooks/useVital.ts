@@ -234,3 +234,33 @@ export function useRollbackMeninggal() {
     },
   })
 }
+
+export function useEditLahir() {
+  const qc = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Lahir> }) => {
+      await updateDoc(doc(db, 'lahir', id), { ...data, updated_at: serverTimestamp() })
+      await addDoc(collection(db, 'log'), {
+        aksi: 'edit', keterangan: `Edit kelahiran: ${data.nama_lengkap ?? ''}`,
+        nik_target: data.nik ?? '', oleh: user?.email ?? 'unknown', ts: serverTimestamp(),
+      })
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['vital'], exact: false }) },
+  })
+}
+
+export function useEditMeninggal() {
+  const qc = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Meninggal> }) => {
+      await updateDoc(doc(db, 'meninggal', id), { ...data, updated_at: serverTimestamp() })
+      await addDoc(collection(db, 'log'), {
+        aksi: 'edit', keterangan: `Edit kematian: ${data.nama ?? ''}`,
+        nik_target: data.nik_target ?? '', oleh: user?.email ?? 'unknown', ts: serverTimestamp(),
+      })
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['vital'], exact: false }) },
+  })
+}
