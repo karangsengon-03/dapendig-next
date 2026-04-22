@@ -1,0 +1,147 @@
+export const HUBUNGAN_KELUARGA = [
+  'Kepala Keluarga',
+  'Istri',
+  'Anak',
+  'Menantu',
+  'Cucu',
+  'Orang Tua',
+  'Mertua',
+  'Famili Lain',
+  'Pembantu',
+  'Lainnya',
+] as const
+
+export const JENIS_KELAMIN = ['Laki-laki', 'Perempuan'] as const
+
+export const AGAMA = [
+  'Islam',
+  'Kristen',
+  'Katolik',
+  'Hindu',
+  'Buddha',
+  'Konghucu',
+] as const
+
+export const PENDIDIKAN = [
+  'Tidak/Belum Sekolah',
+  'Belum Tamat SD/Sederajat',
+  'Tamat SD/Sederajat',
+  'SLTP/Sederajat',
+  'SLTA/Sederajat',
+  'Diploma I/II',
+  'Akademi/Diploma III/S. Muda',
+  'Diploma IV/Strata I',
+  'Strata II',
+  'Strata III',
+] as const
+
+export const PEKERJAAN = [
+  'Belum/Tidak Bekerja',
+  'Mengurus Rumah Tangga',
+  'Pelajar/Mahasiswa',
+  'Pensiunan',
+  'Pegawai Negeri Sipil',
+  'Tentara Nasional Indonesia',
+  'Kepolisian RI',
+  'Perdagangan',
+  'Petani/Pekebun',
+  'Peternak',
+  'Nelayan/Perikanan',
+  'Industri',
+  'Konstruksi',
+  'Transportasi',
+  'Karyawan Swasta',
+  'Karyawan BUMN',
+  'Karyawan BUMD',
+  'Karyawan Honorer',
+  'Buruh Harian Lepas',
+  'Buruh Tani/Perkebunan',
+  'Buruh Nelayan/Perikanan',
+  'Buruh Peternakan',
+  'Pembantu Rumah Tangga',
+  'Tukang Cukur',
+  'Tukang Listrik',
+  'Tukang Batu',
+  'Tukang Kayu',
+  'Tukang Sol Sepatu',
+  'Tukang Las/Pandai Besi',
+  'Tukang Jahit',
+  'Tukang Gigi',
+  'Penata Rias',
+  'Penata Busana',
+  'Penata Rambut',
+  'Mekanik',
+  'Seniman',
+  'Tabib',
+  'Paraji',
+  'Perancang Busana',
+  'Penterjemah',
+  'Imam Masjid',
+  'Pendeta',
+  'Pastor',
+  'Wartawan',
+  'Ustadz/Mubaligh',
+  'Juru Masak',
+  'Promotor Acara',
+  'Anggota DPR-RI',
+  'Anggota DPD',
+  'Anggota BPK',
+  'Presiden',
+  'Wakil Presiden',
+  'Anggota Mahkamah Konstitusi',
+  'Anggota Kabinet/Kementerian',
+  'Duta Besar',
+  'Gubernur',
+  'Wakil Gubernur',
+  'Bupati',
+  'Wakil Bupati',
+  'Walikota',
+  'Wakil Walikota',
+  'Anggota DPRD Provinsi',
+  'Anggota DPRD Kabupaten/Kota',
+  'Dosen',
+  'Guru',
+  'Pilot',
+  'Pengacara',
+  'Notaris',
+  'Arsitek',
+  'Akuntan',
+  'Konsultan',
+  'Dokter',
+  'Bidan',
+  'Perawat',
+  'Apoteker',
+  'Psikiater/Psikolog',
+  'Penyiar Televisi',
+  'Penyiar Radio',
+  'Pelaut',
+  'Peneliti',
+  'Sopir',
+  'Pialang',
+  'Paranormal',
+  'Pedagang',
+  'Perangkat Desa',
+  'Kepala Desa',
+  'Biarawati',
+  'Wiraswasta',
+  'Lainnya',
+] as const
+
+export const STATUS_PERKAWINAN = [
+  'Belum Kawin',
+  'Kawin',
+  'Cerai Hidup',
+  'Cerai Mati',
+] as const
+
+export const STATUS_PENDUDUK = ['aktif', 'tidak aktif'] as const
+
+export const RT_LIST = ['1', '2', '3', '4', '5', '6'] as const
+export const RW_LIST = ['1', '2'] as const
+
+export type HubunganKeluarga = typeof HUBUNGAN_KELUARGA[number]
+export type JenisKelamin = typeof JENIS_KELAMIN[number]
+export type Agama = typeof AGAMA[number]
+export type Pendidikan = typeof PENDIDIKAN[number]
+export type Pekerjaan = typeof PEKERJAAN[number]
+export type StatusPerkawinan = typeof STATUS_PERKAWINAN[number]

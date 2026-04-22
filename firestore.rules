@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAllowed() {
+      return request.auth != null && request.auth.uid in [
+        'dzQ7vIVsTEbtfgML286w9MmUGqz2',
+        'ZDX7bXzB95hBMv99Q5OxkXwJfmf2',
+        'lZqlErwDKiSWXphAfAcI9uTgQKt2',
+        'sdcHroGRTeZQxeQOtmJzMzmskP62',
+        'YA7qQvgouLZYyAap44Z0I1kWTx43'
+      ];
+    }
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function isAdmin()    { return isAllowed() && role() == 'admin'; }
+    function isOperator() { return isAllowed() && role() in ['admin','operator']; }
+    function isViewer()   { return isAllowed() && role() in ['admin','operator','viewer']; }
+
+    match /penduduk/{nik} {
+      allow read:          if isViewer();
+      allow create,update: if isOperator();
+      allow delete:        if isAdmin();
+    }
+    match /mutasi_keluar/{id} { allow read: if isViewer(); allow create: if isOperator(); allow update,delete: if isAdmin(); }
+    match /mutasi_masuk/{id}  { allow read: if isViewer(); allow create: if isOperator(); allow update,delete: if isAdmin(); }
+    match /lahir/{id}         { allow read: if isViewer(); allow create: if isOperator(); allow update,delete: if isAdmin(); }
+    match /meninggal/{id}     { allow read: if isViewer(); allow create: if isOperator(); allow update,delete: if isAdmin(); }
+    match /log/{id}           { allow read: if isViewer(); allow create: if isOperator(); allow update,delete: if isAdmin(); }
+    match /config/{doc}       { allow read: if isAllowed(); allow write: if isAdmin(); }
+    match /users/{uid}        { allow read: if isAllowed(); allow write: if isAdmin(); }
+    match /counter_surat/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    match /recycle_bin/{id} {
+      allow read: if isViewer();
+      allow create: if isOperator();
+      allow delete: if isAdmin();
+    }
+  }
+}
