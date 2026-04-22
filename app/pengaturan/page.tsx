@@ -7,7 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useUserList, useUpdateUserRole, useDeleteUser, useWilayahConfig, useSaveWilayah, useNormalisasiData } from '@/hooks/usePengaturan'
+import {
+  useUserList,
+  useUpdateUserRole,
+  useDeleteUser,
+  useWilayahConfig,
+  useSaveWilayah,
+  useNormalisasiData,
+} from '@/hooks/usePengaturan'
 import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/components/ui/toast'
 import { EksporSection } from '@/components/pengaturan/EksporSection'
@@ -21,6 +28,8 @@ const ROLE_LABEL: Record<UserRole, string> = {
   operator: 'Operator',
   viewer: 'Viewer',
 }
+
+// ── Halaman utama ─────────────────────────────────────────────────────────────
 
 export default function PengaturanPage() {
   const { isAdmin, user: currentUser } = useAuthStore()
@@ -53,6 +62,8 @@ export default function PengaturanPage() {
   )
 }
 
+// ── Normalisasi Data ──────────────────────────────────────────────────────────
+
 function NormalisasiSection() {
   const { toast } = useToast()
   const mutation = useNormalisasiData()
@@ -62,7 +73,10 @@ function NormalisasiSection() {
     setConfirm(false)
     try {
       const result = await mutation.mutateAsync()
-      toast(`Normalisasi selesai: ${result.diperbarui} data diperbarui${result.gagal ? `, ${result.gagal} gagal` : ''}`, 'success')
+      toast(
+        `Normalisasi selesai: ${result.diperbarui} data diperbarui${result.gagal ? `, ${result.gagal} gagal` : ''}`,
+        'success'
+      )
     } catch {
       toast('Gagal menjalankan normalisasi', 'error')
     }
@@ -80,19 +94,32 @@ function NormalisasiSection() {
       {confirm ? (
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-400">Yakin menjalankan normalisasi?</span>
-          <Button size="sm" className="bg-amber-600 hover:bg-amber-700" onClick={handleNormalisasi} disabled={mutation.isPending}>
+          <Button
+            size="sm"
+            className="bg-amber-600 hover:bg-amber-700"
+            onClick={handleNormalisasi}
+            disabled={mutation.isPending}
+          >
             {mutation.isPending ? 'Memproses...' : 'Ya, Jalankan'}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setConfirm(false)}>Batal</Button>
+          <Button size="sm" variant="outline" onClick={() => setConfirm(false)}>
+            Batal
+          </Button>
         </div>
       ) : (
-        <Button size="sm" variant="outline" onClick={() => setConfirm(true)} className="border-amber-600/40 text-amber-400 hover:bg-amber-500/10">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setConfirm(true)}
+          className="border-amber-600/40 text-amber-400 hover:bg-amber-500/10"
+        >
           <Wrench className="w-3.5 h-3.5 mr-1.5" />
           Normalisasi Ulang Data Pekerjaan &amp; Hub. Keluarga
         </Button>
       )}
     </div>
   )
+}
 
 // ── Manajemen Pengguna ───────────────────────────────────────────────────────
 
@@ -147,16 +174,20 @@ function UserManagement({ currentUid }: { currentUid: string }) {
                           <select
                             value={u.role}
                             disabled={updatingRole}
-                            onChange={(e) => updateRole(
-                              { uid: u.uid, role: e.target.value as UserRole },
-                              {
-                                onSuccess: () => toast(`Role ${u.email} diperbarui`, 'success'),
-                                onError: () => toast('Gagal memperbarui role', 'error'),
-                              }
-                            )}
+                            onChange={(e) =>
+                              updateRole(
+                                { uid: u.uid, role: e.target.value as UserRole },
+                                {
+                                  onSuccess: () => toast(`Role ${u.email} diperbarui`, 'success'),
+                                  onError: () => toast('Gagal memperbarui role', 'error'),
+                                }
+                              )
+                            }
                             className="bg-slate-900 border border-slate-600 text-slate-200 rounded px-2 py-1 text-xs pr-6 appearance-none focus:outline-none focus:ring-1 focus:ring-sky-500"
                           >
-                            {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+                            {ROLES.map((r) => (
+                              <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+                            ))}
                           </select>
                           <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         </div>
@@ -181,7 +212,6 @@ function UserManagement({ currentUid }: { currentUid: string }) {
         </div>
       )}
 
-      {/* Delete user confirm */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-sm w-full shadow-2xl">
@@ -197,13 +227,18 @@ function UserManagement({ currentUid }: { currentUid: string }) {
               <Button
                 size="sm"
                 className="bg-red-600 hover:bg-red-700"
-                onClick={() => deleteUser(
-                  { uid: deleteTarget.uid, email: deleteTarget.email },
-                  {
-                    onSuccess: () => { setDeleteTarget(null); toast(`Akses ${deleteTarget.email} dicabut`, 'success') },
-                    onError: () => { toast('Gagal menghapus pengguna', 'error') },
-                  }
-                )}
+                onClick={() =>
+                  deleteUser(
+                    { uid: deleteTarget.uid, email: deleteTarget.email },
+                    {
+                      onSuccess: () => {
+                        setDeleteTarget(null)
+                        toast(`Akses ${deleteTarget.email} dicabut`, 'success')
+                      },
+                      onError: () => toast('Gagal menghapus pengguna', 'error'),
+                    }
+                  )
+                }
                 disabled={deletingUser}
               >
                 {deletingUser ? 'Menghapus...' : 'Hapus'}
