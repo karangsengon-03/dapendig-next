@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, HeartCrack } from 'lucide-react'
+import { X, HeartCrack, AlertTriangle } from 'lucide-react'
 import { useCatatMeninggal } from '@/hooks/usePenduduk'
 import { useToast } from '@/components/ui/toast'
 import type { Penduduk } from '@/types'
@@ -63,8 +63,9 @@ export function CatatMeninggalModal({ penduduk, allPenduduk, onClose, onSuccess 
         </div>
 
         {penduduk.hubungan_keluarga === 'Kepala Keluarga' && (
-          <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <p className="text-xs text-amber-400">⚠️ Penduduk ini adalah Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Suami/Anak tertua).</p>
+          <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
+            <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-amber-400">Penduduk ini adalah Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Suami/Anak tertua).</p>
           </div>
         )}
 

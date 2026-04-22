@@ -17,7 +17,7 @@ export default function PendudukPage() {
   const router = useRouter()
   const { data: allData = [], isLoading } = usePendudukList()
   const deleteMutation = useDeletePenduduk()
-  const { isAdmin, isOperator } = useAuthStore()
+  const { isAdmin, isOperator, user } = useAuthStore()
 
   const [filter, setFilter] = useState<FilterState>({
     search: '',
@@ -144,7 +144,7 @@ export default function PendudukPage() {
           <PendudukTable
             data={filtered}
             loading={isLoading}
-            role={role}
+            role={user?.role ?? 'viewer'}
             page={page}
             pageSize={pageSize}
             onDelete={setDeleteTarget}

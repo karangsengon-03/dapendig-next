@@ -225,7 +225,7 @@ export function ImportSection() {
               disabled={importMutation.isPending}
               className="bg-violet-600 hover:bg-violet-700 text-white"
             >
-              {importMutation.isPending ? 'Mengimport...' : `✅ Import ${rawRows.length} Data`}
+              {importMutation.isPending ? 'Mengimport...' : (<><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />Import {rawRows.length} Data</>)}
             </Button>
           </div>
         </div>
