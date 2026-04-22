@@ -6,13 +6,14 @@ import { doc, getDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
 import { auth, db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
-import type { AppUser, Role } from '@/types'
+import type { AppUser, UserRole } from '@/types'
 
 const ALLOWED_UIDS = [
   'dzQ7vIVsTEbtfgML286w9MmUGqz2',
   'ZDX7bXzB95hBMv99Q5OxkXwJfmf2',
   'lZqlErwDKiSWXphAfAcI9uTgQKt2',
   'sdcHroGRTeZQxeQOtmJzMzmskP62',
+  'YA7qQvgouLZYyAap44Z0I1kWTx43',
 ]
 
 export function useAuthListener() {
@@ -43,7 +44,7 @@ export function useAuthListener() {
             uid: firebaseUser.uid,
             email: firebaseUser.email ?? '',
             nama: data.nama ?? '',
-            role: (data.role as Role) ?? 'viewer',
+            role: (data.role as UserRole) ?? 'viewer',
           }
           setUser(appUser)
         } else {
