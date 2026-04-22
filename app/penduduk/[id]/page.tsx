@@ -59,7 +59,7 @@ export default function DetailPendudukPage() {
   const { data, isLoading } = usePendudukDetail(id)
   const { data: allPenduduk = [] } = usePendudukList()
   const deleteMutation = useDeletePenduduk()
-  const role = useAuthStore((s) => s.role) ?? 'viewer'
+  const { isAdmin, isOperator } = useAuthStore()
   const { toast } = useToast()
 
   const [showDelete, setShowDelete] = useState(false)
@@ -68,8 +68,8 @@ export default function DetailPendudukPage() {
   const [showCatatMeninggal, setShowCatatMeninggal] = useState(false)
   const [showKKModal, setShowKKModal] = useState(false)
 
-  const canEdit = role === 'admin' || role === 'operator'
-  const canDelete = role === 'admin'
+  const canEdit = isOperator()
+  const canDelete = isAdmin()
   const isAktif = data?.status === 'aktif'
 
   async function handleDelete() {
