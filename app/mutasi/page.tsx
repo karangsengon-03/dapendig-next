@@ -263,8 +263,17 @@ export default function MutasiPage() {
             </div>
           </div>
           {canAdd && (
-            <Button size="sm" onClick={() => setShowForm(!showForm)}>
-              <Plus className="w-4 h-4 mr-1"/>{showForm?'Tutup':'Tambah'}
+            <Button
+              size="sm"
+              onClick={() => setShowForm(!showForm)}
+              className={showForm
+                ? 'bg-slate-600/80 hover:bg-slate-600 border border-white/10 text-slate-200'
+                : ''}
+            >
+              {showForm
+                ? <><X className="w-4 h-4 mr-1" />Tutup</>
+                : <><Plus className="w-4 h-4 mr-1" />Tambah</>
+              }
             </Button>
           )}
         </div>
@@ -301,10 +310,10 @@ export default function MutasiPage() {
                     <tbody>
                       {dataKeluar.map((row: MutasiKeluar, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailKeluar(row)}>
-                          <td className="px-3 py-3 text-slate-500 text-xs">{i+1}</td>
+                          <td className="px-3 py-3 text-slate-500 text-sm">{i+1}</td>
                           <td className="px-3 py-3 text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama}</td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.nik_target||'—'}</td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.no_kk||'—'}</td>
+                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik_target||'—'}</td>
+                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.no_kk||'—'}</td>
                           <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
                           <td className="px-3 py-3 text-slate-300">{row.tujuan}</td>
                           <td className="px-3 py-3 text-slate-400">{row.alasan||'—'}</td>
@@ -335,13 +344,13 @@ export default function MutasiPage() {
                     <tbody>
                       {dataMasuk.map((row: MutasiMasuk, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailMasuk(row)}>
-                          <td className="px-3 py-3 text-slate-500 text-xs">{i+1}</td>
+                          <td className="px-3 py-3 text-slate-500 text-sm">{i+1}</td>
                           <td className="px-3 py-3 text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama_lengkap}</td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.nik||'—'}</td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.no_kk||'—'}</td>
+                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik||'—'}</td>
+                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.no_kk||'—'}</td>
                           <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
                           <td className="px-3 py-3 text-slate-300">{row.asal_daerah}</td>
-                          <td className="px-3 py-3 text-slate-400 text-xs">RT {row.rt}/RW {row.rw}</td>
+                          <td className="px-3 py-3 text-slate-400 text-sm">RT {row.rt}/RW {row.rw}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -2,12 +2,11 @@
 
 import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { UserPlus, ChevronLeft, ChevronRight, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Users } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { PendudukTable } from '@/components/penduduk/PendudukTable'
 import { PendudukFilter, type FilterState } from '@/components/penduduk/PendudukFilter'
 import { usePendudukList } from '@/hooks/usePenduduk'
-import { useAuthStore } from '@/store/authStore'
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const
 
@@ -28,7 +27,6 @@ function PendudukContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: allData = [], isLoading } = usePendudukList()
-  const { isOperator } = useAuthStore()
 
   const [filter, setFilter] = useState<FilterState>(() => ({
     ...DEFAULT_FILTER,
@@ -109,27 +107,14 @@ function PendudukContent() {
     setPage(1)
   }
 
-  const canAdd = isOperator()
-
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Users size={18} className="text-sky-400" />
-          <div>
-            <h1 className="text-base font-bold text-slate-100">Data Penduduk</h1>
-            <p className="text-xs text-slate-500">Desa Karang Sengon · Klik baris untuk detail</p>
-          </div>
+      <div className="flex items-center gap-2">
+        <Users size={18} className="text-sky-400" />
+        <div>
+          <h1 className="text-base font-bold text-slate-100">Data Penduduk</h1>
+          <p className="text-xs text-slate-500">Desa Karang Sengon · Klik baris untuk detail</p>
         </div>
-        {canAdd && (
-          <button
-            onClick={() => router.push('/penduduk/tambah')}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-sky-500/90 hover:bg-sky-500 text-sm text-white font-medium transition-colors flex-shrink-0"
-          >
-            <UserPlus size={15} />
-            <span className="hidden sm:inline">Tambah</span>
-          </button>
-        )}
       </div>
 
       <PendudukFilter

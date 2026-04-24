@@ -85,13 +85,8 @@ export function Sidebar() {
           </div>
           {/* Desktop: logo icon only */}
           <div className="hidden md:flex items-center justify-center w-full py-1">
-            <div className="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-                <path d="M16 4L28 13H4L16 4Z" fill="#0ea5e9" fillOpacity="0.9" />
-                <rect x="6" y="13" width="20" height="13" rx="1" fill="#0ea5e9" fillOpacity="0.25" />
-                <rect x="13" y="19" width="6" height="7" rx="1" fill="#0ea5e9" fillOpacity="0.7" />
-                <circle cx="16" cy="10" r="1.5" fill="#fff" fillOpacity="0.9" />
-              </svg>
+            <div className="w-9 h-9 rounded-xl overflow-hidden border border-white/10">
+              <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" />
             </div>
           </div>
           {/* Mobile close button */}

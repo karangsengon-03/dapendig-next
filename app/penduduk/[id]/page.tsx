@@ -146,48 +146,52 @@ export default function DetailPendudukPage() {
               {/* Domisili */}
               <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] px-4 py-1 md:col-span-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-sky-400/70 pt-3 pb-1">Domisili</p>
-                <div className="grid grid-cols-2 md:grid-cols-4">
+                <div className="grid grid-cols-2">
                   <DetailRow label="RT">{data.rt}</DetailRow>
                   <DetailRow label="RW">{data.rw}</DetailRow>
-                  <div className="md:col-span-2">
-                    <DetailRow label="Alamat">{data.alamat || '—'}</DetailRow>
-                  </div>
                 </div>
+                {data.alamat && (
+                  <DetailRow label="Alamat">{data.alamat}</DetailRow>
+                )}
               </div>
             </div>
 
-            {/* Tombol aksi */}
+            {/* Tombol aksi — Baris 1: Edit | Hapus, Baris 2: Catat Pindah | Catat Meninggal */}
             {(canEdit || canDelete) && (
-              <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-3 px-1">Aksi</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {canEdit && (
-                    <button onClick={() => router.push(`/penduduk/${id}/edit`)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-colors">
-                      <Pencil size={15} className="shrink-0" />
-                      <span className="text-sm font-medium">Edit Data</span>
-                    </button>
-                  )}
+              <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Aksi</p>
+                <div className="flex flex-col gap-2">
+                  {/* Baris 1: Edit & Hapus */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {canEdit && (
+                      <button onClick={() => router.push(`/penduduk/${id}/edit`)}
+                        className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-colors">
+                        <Pencil size={14} className="shrink-0" />
+                        <span className="text-sm font-medium">Edit Data</span>
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button onClick={() => setShowDelete(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-colors">
+                        <Trash2 size={14} className="shrink-0" />
+                        <span className="text-sm font-medium">Hapus Data</span>
+                      </button>
+                    )}
+                  </div>
+                  {/* Baris 2: Catat Pindah & Catat Meninggal */}
                   {canEdit && isAktif && (
-                    <button onClick={() => setShowCatatPindah(true)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500/20 transition-colors">
-                      <LogOut size={15} className="shrink-0" />
-                      <span className="text-sm font-medium">Catat Pindah</span>
-                    </button>
-                  )}
-                  {canEdit && isAktif && (
-                    <button onClick={() => setShowCatatMeninggal(true)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-500/10 border border-slate-500/20 text-slate-400 hover:bg-slate-500/20 transition-colors">
-                      <HeartCrack size={15} className="shrink-0" />
-                      <span className="text-sm font-medium">Catat Meninggal</span>
-                    </button>
-                  )}
-                  {canDelete && (
-                    <button onClick={() => setShowDelete(true)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-colors col-span-2 sm:col-span-1">
-                      <Trash2 size={15} className="shrink-0" />
-                      <span className="text-sm font-medium">Hapus Data</span>
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => setShowCatatPindah(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500/20 transition-colors">
+                        <LogOut size={14} className="shrink-0" />
+                        <span className="text-sm font-medium">Catat Pindah</span>
+                      </button>
+                      <button onClick={() => setShowCatatMeninggal(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-slate-500/10 border border-slate-500/20 text-slate-400 hover:bg-slate-500/20 transition-colors">
+                        <HeartCrack size={14} className="shrink-0" />
+                        <span className="text-sm font-medium">Catat Meninggal</span>
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

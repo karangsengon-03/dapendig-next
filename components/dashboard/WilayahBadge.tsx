@@ -12,10 +12,10 @@ export function WilayahBadge() {
       <p className="text-xs text-slate-400">
         Desa{' '}
         <span className="text-slate-200 font-medium">{wilayah.desa}</span>
-        {' · '}
+        {', '}
         Kec. {wilayah.kecamatan}
-        {' · '}
-        {wilayah.kabupaten}
+        {', '}
+        Kab. {wilayah.kabupaten}
       </p>
     </div>
   )

@@ -32,14 +32,27 @@ function BarRow({ label, value, total, color = 'bg-sky-500', onClick }: {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0
   return (
     <div
-      className={`flex items-center gap-2 text-sm ${onClick ? 'cursor-pointer group' : ''}`}
+      className={[
+        'flex items-center gap-2 text-sm rounded-lg px-2 py-1 -mx-2 transition-colors',
+        onClick ? 'cursor-pointer hover:bg-white/[0.04] active:bg-white/[0.07]' : '',
+      ].join(' ')}
       onClick={onClick}
+      title={onClick ? `Klik untuk lihat ${value} penduduk` : undefined}
     >
-      <span className={`w-40 truncate text-slate-400 shrink-0 text-xs ${onClick ? 'group-hover:text-sky-400 transition-colors' : ''}`}>{label}</span>
-      <div className="flex-1 bg-slate-800/60 rounded-full h-2">
-        <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${pct}%` }} />
+      <span className={[
+        'w-36 truncate text-xs shrink-0',
+        onClick ? 'text-slate-300 group-hover:text-sky-400' : 'text-slate-500',
+      ].join(' ')}>{label}</span>
+      <div className="flex-1 bg-slate-800/60 rounded-full h-1.5">
+        <div className={`${color} h-1.5 rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
-      <span className={`w-16 text-right text-slate-500 text-xs ${onClick ? 'group-hover:text-sky-400 transition-colors' : ''}`}>{value} ({pct}%)</span>
+      <span className={[
+        'w-20 text-right text-xs shrink-0 tabular-nums',
+        onClick ? 'text-slate-400' : 'text-slate-600',
+      ].join(' ')}>
+        {value} <span className="text-slate-600">({pct}%)</span>
+        {onClick && <span className="ml-1 text-sky-500/60 text-[10px]">→</span>}
+      </span>
     </div>
   )
 }
@@ -174,7 +187,7 @@ export default function MonografiPage() {
               <Card title="Agama">
                 <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
                 <div className="space-y-2">
-                  {(Object.entries(data.byAgama) as [string, number][]).sort((a, b) => b[1] - a[1]).map(([agama, n]) => (
+                  {(Object.entries(data.byAgama) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([agama, n]) => (
                     <BarRow key={agama} label={agama} value={n} total={data.totalAktif} color="bg-emerald-500"
                       onClick={() => goFilter('agama', agama)} />
                   ))}
@@ -183,7 +196,7 @@ export default function MonografiPage() {
               <Card title="Status Perkawinan">
                 <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
                 <div className="space-y-2">
-                  {(Object.entries(data.byStatusPerkawinan) as [string, number][]).sort((a, b) => b[1] - a[1]).map(([status, n]) => (
+                  {(Object.entries(data.byStatusPerkawinan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([status, n]) => (
                     <BarRow key={status} label={status} value={n} total={data.totalAktif} color="bg-amber-500"
                       onClick={() => goFilter('statusPerkawinan', status)} />
                   ))}
@@ -194,7 +207,7 @@ export default function MonografiPage() {
             <Card title="Tingkat Pendidikan">
               <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
               <div className="space-y-2">
-                {(Object.entries(data.byPendidikan) as [string, number][]).sort((a, b) => b[1] - a[1]).map(([pend, n]) => (
+                {(Object.entries(data.byPendidikan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pend, n]) => (
                   <BarRow key={pend} label={pend} value={n} total={data.totalAktif} color="bg-sky-500"
                     onClick={() => goFilter('pendidikan', pend)} />
                 ))}
@@ -204,7 +217,7 @@ export default function MonografiPage() {
             <Card title="Pekerjaan">
               <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
               <div className="space-y-2">
-                {(Object.entries(data.byPekerjaan) as [string, number][]).sort((a, b) => b[1] - a[1]).map(([pek, n]) => (
+                {(Object.entries(data.byPekerjaan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pek, n]) => (
                   <BarRow key={pek} label={pek} value={n} total={data.totalAktif} color="bg-rose-400"
                     onClick={() => goFilter('pekerjaan', pek)} />
                 ))}

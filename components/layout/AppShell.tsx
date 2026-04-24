@@ -27,13 +27,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0f1e] flex flex-col items-center justify-center gap-4">
-        <div className="w-10 h-10 rounded-2xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center">
-          <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-            <path d="M16 4L28 13H4L16 4Z" fill="#0ea5e9" fillOpacity="0.9" />
-            <rect x="6" y="13" width="20" height="13" rx="1" fill="#0ea5e9" fillOpacity="0.25" />
-            <rect x="13" y="19" width="6" height="7" rx="1" fill="#0ea5e9" fillOpacity="0.7" />
-            <circle cx="16" cy="10" r="1.5" fill="#fff" fillOpacity="0.9" />
-          </svg>
+        <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-2xl shadow-sky-500/20 border border-white/10">
+          <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" />
         </div>
         <div className="flex flex-col items-center gap-1">
           <p className="text-sm font-semibold text-slate-300">DaPenDig Next</p>

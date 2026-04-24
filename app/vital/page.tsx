@@ -256,8 +256,17 @@ export default function VitalPage() {
             </div>
           </div>
           {canAdd && (
-            <Button size="sm" onClick={() => setShowForm(!showForm)}>
-              <Plus className="w-4 h-4 mr-1"/>{showForm?'Tutup':'Tambah'}
+            <Button
+              size="sm"
+              onClick={() => setShowForm(!showForm)}
+              className={showForm
+                ? 'bg-slate-600/80 hover:bg-slate-600 border border-white/10 text-slate-200'
+                : ''}
+            >
+              {showForm
+                ? <><X className="w-4 h-4 mr-1" />Tutup</>
+                : <><Plus className="w-4 h-4 mr-1" />Tambah</>
+              }
             </Button>
           )}
         </div>
@@ -292,9 +301,9 @@ export default function VitalPage() {
                     <tbody>
                       {dataLahir.map((row: Lahir, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailLahir(row)}>
-                          <td className="px-3 py-3 text-slate-500 text-xs">{i+1}</td>
+                          <td className="px-3 py-3 text-slate-500 text-sm">{i+1}</td>
                           <td className="px-3 py-3 text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama_lengkap}</td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.nik||'—'}</td>
+                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik||'—'}</td>
                           <td className="px-3 py-3">
                             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${row.jenis_kelamin==='Laki-laki'?'bg-sky-500/10 text-sky-400':'bg-pink-500/10 text-pink-400'}`}>
                               {row.jenis_kelamin==='Laki-laki'?'L':'P'}
@@ -303,7 +312,7 @@ export default function VitalPage() {
                           <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal_lahir)}</td>
                           <td className="px-3 py-3 text-slate-400">{row.nama_ayah}</td>
                           <td className="px-3 py-3 text-slate-400">{row.nama_ibu}</td>
-                          <td className="px-3 py-3 text-slate-400 text-xs">RT {row.rt}/RW {row.rw}</td>
+                          <td className="px-3 py-3 text-slate-400 text-sm">RT {row.rt}/RW {row.rw}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -329,10 +338,10 @@ export default function VitalPage() {
                     <tbody>
                       {dataMeninggal.map((row: Meninggal, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailMeninggal(row)}>
-                          <td className="px-3 py-3 text-slate-500 text-xs">{i+1}</td>
+                          <td className="px-3 py-3 text-slate-500 text-sm">{i+1}</td>
                           <td className="px-3 py-3 text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama}</td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.nik_target||'—'}</td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.no_kk||'—'}</td>
+                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik_target||'—'}</td>
+                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.no_kk||'—'}</td>
                           <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
                           <td className="px-3 py-3 text-slate-400 text-xs">{row.hub_asli||'—'}</td>
                           <td className="px-3 py-3 text-slate-400">{row.sebab||'—'}</td>

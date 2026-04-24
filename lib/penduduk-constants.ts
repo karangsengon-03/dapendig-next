@@ -136,8 +136,8 @@ export const STATUS_PERKAWINAN = [
 
 export const STATUS_PENDUDUK = ['aktif', 'tidak aktif'] as const
 
-export const RT_LIST = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'] as const
-export const RW_LIST = ['1', '2'] as const
+export const RT_LIST = ['001','002','003','004','005','006','007','008','009','010','011'] as const
+export const RW_LIST = ['001','002','003','004'] as const
 
 export type HubunganKeluarga = typeof HUBUNGAN_KELUARGA[number]
 export type JenisKelamin = typeof JENIS_KELAMIN[number]
