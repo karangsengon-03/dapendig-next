@@ -65,12 +65,15 @@ export default function DashboardPage() {
   return (
     <AppShell title="Beranda">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <WilayahBadge />
-          <p className="text-xs text-slate-600">
-            Data per {now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
+        {/* Sub-header */}
+        <div className="flex items-center gap-2">
+          <Home size={18} className="text-sky-400" />
+          <div>
+            <h1 className="text-base font-bold text-slate-100">Beranda</h1>
+            <p className="text-xs text-slate-500">Ringkasan data kependudukan Desa Karang Sengon</p>
+          </div>
         </div>
+        <WilayahBadge />
 
         {/* Total stats */}
         <div className="grid grid-cols-2 gap-3">

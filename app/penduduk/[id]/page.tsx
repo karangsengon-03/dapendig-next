@@ -1,10 +1,9 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Pencil, Trash2, User, Printer, LogOut, HeartCrack } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, User, LogOut, HeartCrack } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { DeleteDialog } from '@/components/penduduk/DeleteDialog'
-import { SuratModal } from '@/components/penduduk/SuratModal'
 import { CatatPindahKeluarModal } from '@/components/penduduk/CatatPindahKeluarModal'
 import { CatatMeninggalModal } from '@/components/penduduk/CatatMeninggalModal'
 import { KKModal } from '@/components/penduduk/KKModal'
@@ -59,7 +58,6 @@ export default function DetailPendudukPage() {
   const { toast } = useToast()
 
   const [showDelete, setShowDelete] = useState(false)
-  const [showSurat, setShowSurat] = useState(false)
   const [showCatatPindah, setShowCatatPindah] = useState(false)
   const [showCatatMeninggal, setShowCatatMeninggal] = useState(false)
   const [showKKModal, setShowKKModal] = useState(false)
@@ -82,7 +80,7 @@ export default function DetailPendudukPage() {
   return (
     <AppShell title="Detail Penduduk">
       <div className="flex flex-col gap-4">
-        {/* Header minimal: hanya back + nama */}
+        {/* Sub-header */}
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()}
             className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 flex-shrink-0">
@@ -102,7 +100,7 @@ export default function DetailPendudukPage() {
           </div>
         ) : !data ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-slate-800/60 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#0d1424] border border-white/[0.06] flex items-center justify-center">
               <User size={24} className="text-slate-600" />
             </div>
             <p className="text-sm text-slate-500">Data tidak ditemukan</p>
@@ -151,61 +149,55 @@ export default function DetailPendudukPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4">
                   <DetailRow label="RT">{data.rt}</DetailRow>
                   <DetailRow label="RW">{data.rw}</DetailRow>
-                  {data.alamat && <div className="md:col-span-2"><DetailRow label="Alamat">{data.alamat}</DetailRow></div>}
+                  <div className="md:col-span-2">
+                    <DetailRow label="Alamat">{data.alamat || '—'}</DetailRow>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Tombol aksi di bawah — dengan label teks, seperti apps lama */}
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-3 px-1">Aksi</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => setShowSurat(true)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-colors">
-                  <Printer size={15} className="shrink-0" />
-                  <span className="text-sm font-medium">Cetak Surat</span>
-                </button>
-
-                {canEdit && (
-                  <button onClick={() => router.push(`/penduduk/${id}/edit`)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-colors">
-                    <Pencil size={15} className="shrink-0" />
-                    <span className="text-sm font-medium">Edit Data</span>
-                  </button>
-                )}
-
-                {canEdit && isAktif && (
-                  <button onClick={() => setShowCatatPindah(true)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500/20 transition-colors">
-                    <LogOut size={15} className="shrink-0" />
-                    <span className="text-sm font-medium">Catat Pindah</span>
-                  </button>
-                )}
-
-                {canEdit && isAktif && (
-                  <button onClick={() => setShowCatatMeninggal(true)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-500/10 border border-slate-500/20 text-slate-400 hover:bg-slate-500/20 transition-colors">
-                    <HeartCrack size={15} className="shrink-0" />
-                    <span className="text-sm font-medium">Catat Meninggal</span>
-                  </button>
-                )}
-
-                {canDelete && (
-                  <button onClick={() => setShowDelete(true)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-colors col-span-2 sm:col-span-1">
-                    <Trash2 size={15} className="shrink-0" />
-                    <span className="text-sm font-medium">Hapus Data</span>
-                  </button>
-                )}
+            {/* Tombol aksi */}
+            {(canEdit || canDelete) && (
+              <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-3 px-1">Aksi</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {canEdit && (
+                    <button onClick={() => router.push(`/penduduk/${id}/edit`)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-colors">
+                      <Pencil size={15} className="shrink-0" />
+                      <span className="text-sm font-medium">Edit Data</span>
+                    </button>
+                  )}
+                  {canEdit && isAktif && (
+                    <button onClick={() => setShowCatatPindah(true)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500/20 transition-colors">
+                      <LogOut size={15} className="shrink-0" />
+                      <span className="text-sm font-medium">Catat Pindah</span>
+                    </button>
+                  )}
+                  {canEdit && isAktif && (
+                    <button onClick={() => setShowCatatMeninggal(true)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-500/10 border border-slate-500/20 text-slate-400 hover:bg-slate-500/20 transition-colors">
+                      <HeartCrack size={15} className="shrink-0" />
+                      <span className="text-sm font-medium">Catat Meninggal</span>
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button onClick={() => setShowDelete(true)}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-colors col-span-2 sm:col-span-1">
+                      <Trash2 size={15} className="shrink-0" />
+                      <span className="text-sm font-medium">Hapus Data</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </div>
 
       <DeleteDialog open={showDelete} nama={data?.nama_lengkap ?? ''} loading={deleteMutation.isPending}
         onConfirm={handleDelete} onCancel={() => setShowDelete(false)} />
-      {showSurat && data && <SuratModal penduduk={data} onClose={() => setShowSurat(false)} />}
       {showCatatPindah && data && (
         <CatatPindahKeluarModal penduduk={data} onClose={() => setShowCatatPindah(false)}
           onSuccess={() => { setShowCatatPindah(false); router.refresh() }} />

@@ -75,6 +75,8 @@ export function RTChart({ data, loading }: RTChartProps) {
                   fontSize: '12px',
                   color: '#e2e8f0',
                 }}
+                labelStyle={{ color: '#94a3b8' }}
+                itemStyle={{ color: '#e2e8f0' }}
                 formatter={(value: number) => [`${value} jiwa`, 'Jumlah']}
               />
               <Bar dataKey="jumlah" radius={[6, 6, 0, 0]}>

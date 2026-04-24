@@ -60,6 +60,8 @@ export function GenderChart({ lakiLaki, perempuan, loading }: GenderChartProps) 
                     fontSize: '12px',
                     color: '#e2e8f0',
                   }}
+                  labelStyle={{ color: '#94a3b8' }}
+                  itemStyle={{ color: '#e2e8f0' }}
                   formatter={(value: number) => [
                     `${value} jiwa (${((value / total) * 100).toFixed(1)}%)`,
                   ]}

@@ -49,7 +49,7 @@ function EditNamaForm() {
   }
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-4">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 space-y-4">
       <div className="flex items-center gap-2">
         <User className="w-4 h-4 text-sky-400" />
         <h2 className="font-semibold text-slate-100">Informasi Akun</h2>
@@ -145,7 +145,7 @@ function GantiPasswordForm() {
   }
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-4">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 space-y-4">
       <div className="flex items-center gap-2">
         <Lock className="w-4 h-4 text-sky-400" />
         <h2 className="font-semibold text-slate-100">Ganti Password</h2>
@@ -204,8 +204,16 @@ export default function ProfilPage() {
   return (
     <AppShell title="Profil Saya">
       <div className="max-w-lg mx-auto space-y-5">
+        {/* Sub-header */}
+        <div className="flex items-center gap-2">
+          <User className="w-[18px] h-[18px] text-sky-400" />
+          <div>
+            <h1 className="text-base font-bold text-slate-100">Profil Saya</h1>
+            <p className="text-xs text-slate-500">Informasi akun dan keamanan</p>
+          </div>
+        </div>
         {/* Avatar card */}
-        <div className="flex items-center gap-4 bg-slate-800/40 border border-slate-700/60 rounded-2xl px-5 py-4">
+        <div className="flex items-center gap-4 bg-[#0d1424] border border-white/[0.06] rounded-2xl px-5 py-4">
           <div className="w-14 h-14 rounded-2xl bg-sky-500 flex items-center justify-center text-xl font-bold text-white shrink-0 select-none">
             {getInisial(user?.nama || user?.email || '')}
           </div>

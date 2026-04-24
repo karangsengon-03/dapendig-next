@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Loader2, UserCircle2, RefreshCw } from 'lucide-react'
 import { auth } from '@/lib/firebase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,64 +17,56 @@ export function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [savedEmail, setSavedEmail] = useState<string | null>(null)
+  const [mode, setMode] = useState<'lanjut' | 'login'>('lanjut')
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       setSavedEmail(stored)
-      setEmail(stored)
-      setRememberMe(true)
+      setMode('lanjut')
+    } else {
+      setMode('login')
     }
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email || !password) {
+  function handleGanti() {
+    setMode('login')
+    setSavedEmail(null)
+    setEmail('')
+    setPassword('')
+    setError('')
+  }
+
+  async function handleSubmit() {
+    const targetEmail = mode === 'lanjut' ? (savedEmail ?? '') : email
+    if (!targetEmail || !password) {
       setError('Email dan kata sandi wajib diisi.')
       return
     }
     setLoading(true)
     setError('')
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-      if (rememberMe) {
-        localStorage.setItem(STORAGE_KEY, email)
-      } else {
-        localStorage.removeItem(STORAGE_KEY)
-      }
+      await signInWithEmailAndPassword(auth, targetEmail, password)
+      localStorage.setItem(STORAGE_KEY, targetEmail)
       router.replace('/dashboard')
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code ?? ''
-      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-        setError('Email atau kata sandi tidak sesuai.')
+      if (code === 'auth/user-not-found') {
+        setError('Email tidak terdaftar di sistem.')
+      } else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setError('Kata sandi salah. Silakan coba lagi.')
+      } else if (code === 'auth/invalid-email') {
+        setError('Format email tidak valid.')
       } else if (code === 'auth/too-many-requests') {
-        setError('Terlalu banyak percobaan. Coba lagi beberapa saat.')
+        setError('Terlalu banyak percobaan. Tunggu beberapa saat.')
       } else if (code === 'auth/network-request-failed') {
         setError('Gagal terhubung. Periksa koneksi internet.')
       } else {
         setError('Terjadi kesalahan. Silakan coba lagi.')
       }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleLanjutkan = async () => {
-    if (!savedEmail || !password) {
-      setError('Masukkan kata sandi untuk melanjutkan.')
-      return
-    }
-    setLoading(true)
-    setError('')
-    try {
-      await signInWithEmailAndPassword(auth, savedEmail, password)
-      router.replace('/dashboard')
-    } catch {
-      setError('Kata sandi salah.')
     } finally {
       setLoading(false)
     }
@@ -88,7 +80,6 @@ export function LoginForm() {
       </div>
 
       <div className="relative w-full max-w-sm flex flex-col items-center gap-6">
-        {/* Logo & brand */}
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-16 h-16 rounded-2xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center shadow-lg shadow-sky-500/10">
             <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
@@ -109,7 +100,6 @@ export function LoginForm() {
           </div>
         </div>
 
-        {/* Card login */}
         <div className="w-full rounded-2xl border border-white/[0.08] bg-[#0d1424] p-6 shadow-2xl">
           <p className="text-sm font-semibold text-slate-300 text-center mb-5">Masuk ke Akun</p>
 
@@ -119,63 +109,80 @@ export function LoginForm() {
             </div>
           )}
 
-          {/* Mode Lanjutkan jika ada email tersimpan */}
-          {savedEmail && (
-            <div className="mb-4 px-3.5 py-3 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-between gap-2">
-              <div>
-                <p className="text-xs text-slate-400">Masuk sebagai</p>
-                <p className="text-sm font-medium text-slate-200">{savedEmail}</p>
+          {mode === 'lanjut' && savedEmail && (
+            <div className="mb-5 px-3.5 py-3 rounded-xl bg-sky-500/8 border border-sky-500/20 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-sky-500/15 flex items-center justify-center shrink-0">
+                <UserCircle2 size={16} className="text-sky-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] text-slate-500">Masuk sebagai</p>
+                <p className="text-sm font-medium text-slate-200 truncate">{savedEmail}</p>
               </div>
               <button
                 type="button"
-                onClick={() => { setSavedEmail(null); setEmail(''); setRememberMe(false); localStorage.removeItem(STORAGE_KEY) }}
-                className="text-xs text-sky-400 hover:text-sky-300 shrink-0"
+                onClick={handleGanti}
+                className="flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 transition-colors shrink-0"
               >
+                <RefreshCw size={11} />
                 Ganti
               </button>
             </div>
           )}
 
-          <form onSubmit={savedEmail ? (e) => { e.preventDefault(); handleLanjutkan() } : handleSubmit} className="flex flex-col gap-4">
-            {!savedEmail && (
+          <div className="flex flex-col gap-4">
+            {mode === 'login' && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="nama@desa.id" value={email}
-                  onChange={(e) => setEmail(e.target.value)} autoComplete="email" disabled={loading} />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="nama@desa.id"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError('') }}
+                  autoComplete="email"
+                  disabled={loading}
+                />
               </div>
             )}
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">Kata Sandi</Label>
               <div className="relative">
-                <Input id="password" type={showPw ? 'text' : 'password'} placeholder="••••••••"
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password" disabled={loading} className="pr-10" />
-                <button type="button" onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors" tabIndex={-1}>
+                <Input
+                  id="password"
+                  type={showPw ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError('') }}
+                  autoComplete="current-password"
+                  disabled={loading}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  tabIndex={-1}
+                >
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
-            {!savedEmail && (
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 accent-sky-500 cursor-pointer" />
-                <span className="text-xs text-slate-400">Ingat email saya</span>
-              </label>
-            )}
-
-            <Button type="submit" disabled={loading} className="w-full h-11 mt-1 text-sm">
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full h-11 mt-1 text-sm"
+            >
               {loading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" />Memproses...</>
-              ) : savedEmail ? (
+              ) : mode === 'lanjut' ? (
                 <><LogIn className="h-4 w-4" />Lanjutkan</>
               ) : (
                 <><LogIn className="h-4 w-4" />Masuk</>
               )}
             </Button>
-          </form>
+          </div>
 
           <p className="text-center text-xs text-slate-600 mt-5 leading-relaxed">
             Hanya akun yang terdaftar yang dapat mengakses sistem ini.<br />

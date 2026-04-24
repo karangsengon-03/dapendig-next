@@ -133,7 +133,7 @@ export function ImportSection() {
   }
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center gap-2 mb-1">
         <Upload className="w-5 h-5 text-violet-400" />
         <h2 className="font-semibold text-slate-100">Import Data Excel</h2>
@@ -150,7 +150,7 @@ export function ImportSection() {
             onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
             onClick={() => fileRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors ${dragging ? 'border-violet-500/60 bg-violet-500/5' : 'border-slate-600 hover:border-slate-500 hover:bg-slate-700/30'}`}
+            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors ${dragging ? 'border-violet-500/60 bg-violet-500/5' : 'border-white/[0.15] hover:border-sky-500/40 hover:bg-sky-500/5'}`}
           >
             <FileSpreadsheet className="w-10 h-10 text-slate-500" />
             <div className="text-center">

@@ -67,11 +67,14 @@ export default function RecycleBinPage() {
   return (
     <AppShell title="Tempat Sampah">
       <div className="flex flex-col gap-4">
-        {/* Header */}
+        {/* Sub-header */}
         <div className="flex items-center justify-between gap-2">
-          <div>
-            <h1 className="text-base font-bold text-slate-100">Tempat Sampah</h1>
-            <p className="text-xs text-slate-500">Data penduduk yang telah dihapus</p>
+          <div className="flex items-center gap-2">
+            <Trash2 size={18} className="text-sky-400" />
+            <div>
+              <h1 className="text-base font-bold text-slate-100">Tempat Sampah</h1>
+              <p className="text-xs text-slate-500">Data penduduk yang telah dihapus</p>
+            </div>
           </div>
           {canAdmin && data.length > 0 && (
             <button
@@ -115,7 +118,7 @@ export default function RecycleBinPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.map((item, idx) => (
+                  {data.map((item: RecycleBinItem, idx: number) => (
                     <tr key={item.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
                       <td className="px-4 py-3 text-slate-500 text-xs">{idx + 1}</td>
                       <td className="px-4 py-3 text-slate-200 font-medium">{item.data_asli.nama_lengkap}</td>

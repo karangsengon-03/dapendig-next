@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Shield, Users, MapPin, ChevronDown, Wrench } from 'lucide-react'
+import { Shield, Users, MapPin, Wrench } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,8 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   useUserList,
-  useUpdateUserRole,
-  useDeleteUser,
   useWilayahConfig,
   useSaveWilayah,
   useNormalisasiData,
@@ -19,7 +17,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/components/ui/toast'
 import { EksporSection } from '@/components/pengaturan/EksporSection'
 import { ImportSection } from '@/components/pengaturan/ImportSection'
-import type { UserRole, ConfigWilayah } from '@/types'
+import type { UserRole, ConfigWilayah, AppUser } from '@/types'
 
 const ROLES: UserRole[] = ['admin', 'operator', 'viewer']
 
@@ -51,7 +49,13 @@ export default function PengaturanPage() {
   return (
     <AppShell title="Pengaturan">
       <div className="p-4 max-w-3xl mx-auto space-y-6">
-        <h1 className="text-lg font-bold text-slate-100">Pengaturan</h1>
+        <div className="flex items-center gap-2">
+          <Shield className="w-[18px] h-[18px] text-sky-400" />
+          <div>
+            <h1 className="text-base font-bold text-slate-100">Pengaturan</h1>
+            <p className="text-xs text-slate-500">Konfigurasi sistem dan manajemen akun</p>
+          </div>
+        </div>
         <UserManagement currentUid={currentUser?.uid ?? ''} />
         <WilayahForm />
         <NormalisasiSection />
@@ -83,7 +87,7 @@ function NormalisasiSection() {
   }
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center gap-2 mb-1">
         <Wrench className="w-5 h-5 text-amber-400" />
         <h2 className="font-semibold text-slate-100">Pemeliharaan Data</h2>
@@ -125,84 +129,49 @@ function NormalisasiSection() {
 
 function UserManagement({ currentUid }: { currentUid: string }) {
   const { data: users, isLoading } = useUserList()
-  const { mutate: updateRole, isPending: updatingRole } = useUpdateUserRole()
-  const { mutate: deleteUser, isPending: deletingUser } = useDeleteUser()
-  const { toast } = useToast()
-  const [deleteTarget, setDeleteTarget] = useState<{ uid: string; email: string } | null>(null)
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-sky-400" />
-        <h2 className="font-semibold text-slate-100">Manajemen Pengguna</h2>
+        <div>
+          <h2 className="font-semibold text-slate-100">Manajemen Pengguna</h2>
+          <p className="text-[11px] text-slate-500 mt-0.5">Tambah atau ubah pengguna melalui Firebase Console</p>
+        </div>
       </div>
 
       {isLoading ? (
         <div className="space-y-2">
-          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
         </div>
       ) : !users?.length ? (
-        <p className="text-slate-500 text-sm">Belum ada pengguna terdaftar di Firestore</p>
+        <p className="text-slate-500 text-sm">Belum ada pengguna terdaftar</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-700">
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-800 text-slate-400 text-left">
-                <th className="px-3 py-3">Email</th>
-                <th className="px-3 py-3">Nama</th>
-                <th className="px-3 py-3">Role</th>
-                <th className="px-3 py-3 w-12"></th>
+              <tr className="border-b border-white/[0.06]">
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Email</th>
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Role</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => {
+              {users.map((u: AppUser) => {
                 const isSelf = u.uid === currentUid
                 return (
-                  <tr key={u.uid} className="border-t border-slate-700/50 hover:bg-slate-800/40">
-                    <td className="px-3 py-3 text-slate-200">
+                  <tr key={u.uid} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                    <td className="px-3 py-3 text-slate-200 text-sm">
                       {u.email}
                       {isSelf && (
-                        <span className="ml-2 text-xs bg-sky-500/20 text-sky-400 px-1.5 py-0.5 rounded">Anda</span>
+                        <span className="ml-2 text-[10px] bg-sky-500/15 text-sky-400 px-1.5 py-0.5 rounded border border-sky-500/20">Anda</span>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-slate-400">{u.nama ?? '-'}</td>
+                    <td className="px-3 py-3 text-slate-400 text-sm">{u.nama ?? '—'}</td>
                     <td className="px-3 py-3">
-                      {isSelf ? (
-                        <span className="text-slate-400">{ROLE_LABEL[u.role]}</span>
-                      ) : (
-                        <div className="relative inline-block">
-                          <select
-                            value={u.role}
-                            disabled={updatingRole}
-                            onChange={(e) =>
-                              updateRole(
-                                { uid: u.uid, role: e.target.value as UserRole },
-                                {
-                                  onSuccess: () => toast(`Role ${u.email} diperbarui`, 'success'),
-                                  onError: () => toast('Gagal memperbarui role', 'error'),
-                                }
-                              )
-                            }
-                            className="bg-slate-900 border border-slate-600 text-slate-200 rounded px-2 py-1 text-xs pr-6 appearance-none focus:outline-none focus:ring-1 focus:ring-sky-500"
-                          >
-                            {ROLES.map((r) => (
-                              <option key={r} value={r}>{ROLE_LABEL[r]}</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-3 py-3">
-                      {!isSelf && (
-                        <button
-                          onClick={() => setDeleteTarget({ uid: u.uid, email: u.email })}
-                          disabled={deletingUser}
-                          className="text-red-400 hover:text-red-300 text-xs px-2 py-1 border border-red-800/50 rounded hover:bg-red-900/20"
-                        >
-                          Hapus
-                        </button>
-                      )}
+                      <span className="text-[10px] font-semibold uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20 rounded px-2 py-0.5">
+                        {ROLE_LABEL[u.role]}
+                      </span>
                     </td>
                   </tr>
                 )
@@ -211,43 +180,8 @@ function UserManagement({ currentUid }: { currentUid: string }) {
           </table>
         </div>
       )}
-
-      {deleteTarget && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-sm w-full shadow-2xl">
-            <h3 className="text-base font-semibold text-slate-100 mb-2">Hapus Pengguna</h3>
-            <p className="text-sm text-slate-400 mb-5">
-              Hapus akses <span className="font-medium text-slate-200">{deleteTarget.email}</span>?
-              Dokumen di koleksi <code className="text-sky-400">users</code> akan dihapus, akun Firebase Auth tidak terpengaruh.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)} disabled={deletingUser}>
-                Batal
-              </Button>
-              <Button
-                size="sm"
-                className="bg-red-600 hover:bg-red-700"
-                onClick={() =>
-                  deleteUser(
-                    { uid: deleteTarget.uid, email: deleteTarget.email },
-                    {
-                      onSuccess: () => {
-                        setDeleteTarget(null)
-                        toast(`Akses ${deleteTarget.email} dicabut`, 'success')
-                      },
-                      onError: () => toast('Gagal menghapus pengguna', 'error'),
-                    }
-                  )
-                }
-                disabled={deletingUser}
-              >
-                {deletingUser ? 'Menghapus...' : 'Hapus'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
+
   )
 }
 
@@ -289,7 +223,7 @@ function WilayahForm() {
   }
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
         <MapPin className="w-5 h-5 text-sky-400" />
         <h2 className="font-semibold text-slate-100">Informasi Wilayah</h2>

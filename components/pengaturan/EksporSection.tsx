@@ -181,7 +181,7 @@ function EksporButton({ item }: { item: EksporItem }) {
   const loading = isFetching && triggered
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-slate-700/50 last:border-0">
+    <div className="flex items-center justify-between py-3 border-b border-white/[0.06] last:border-0">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-slate-200">{item.label}</p>
         <p className="text-xs text-slate-500 mt-0.5">{item.deskripsi}</p>
@@ -246,7 +246,7 @@ function LaporanBulananSection() {
   }
 
   return (
-    <div className="mt-5 pt-4 border-t border-slate-700/50">
+    <div className="mt-5 pt-4 border-t border-white/[0.06]">
       <div className="flex items-center gap-2 mb-3">
         <BarChart3 className="w-4 h-4 text-sky-400" />
         <p className="text-sm font-semibold text-slate-200">Laporan Bulanan</p>
@@ -256,7 +256,7 @@ function LaporanBulananSection() {
         <select
           value={bulan}
           onChange={(e) => setBulan(e.target.value)}
-          className="bg-slate-700 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50"
+          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50"
         >
           {BULAN_OPTS.map(([val, label]) => (
             <option key={val} value={val}>{label}</option>
@@ -265,7 +265,7 @@ function LaporanBulananSection() {
         <select
           value={tahun}
           onChange={(e) => setTahun(e.target.value)}
-          className="bg-slate-700 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50"
+          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50"
         >
           {tahunOptions.map((t) => (
             <option key={t} value={t}>{t}</option>
@@ -284,7 +284,7 @@ function LaporanBulananSection() {
 
 export function EksporSection() {
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center gap-2 mb-1">
         <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
         <h2 className="font-semibold text-slate-100">Ekspor Data</h2>
