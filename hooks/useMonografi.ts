@@ -82,21 +82,21 @@ async function fetchMonografi(): Promise<MonografiData> {
     if (p.jenis_kelamin === 'Laki-laki') laki++
     else perempuan++
 
-    // Agama — fallback agar tidak jadi key "undefined"
-    const agama = p.agama || 'Tidak Diketahui'
-    byAgama[agama] = (byAgama[agama] ?? 0) + 1
+    // Agama — skip jika kosong
+    const agama = p.agama?.trim()
+    if (agama) byAgama[agama] = (byAgama[agama] ?? 0) + 1
 
-    // Pendidikan — fallback
-    const pendidikan = p.pendidikan || 'Tidak Diketahui'
-    byPendidikan[pendidikan] = (byPendidikan[pendidikan] ?? 0) + 1
+    // Pendidikan — skip jika kosong, jangan masuk "Tidak Diketahui"
+    const pendidikan = p.pendidikan?.trim()
+    if (pendidikan) byPendidikan[pendidikan] = (byPendidikan[pendidikan] ?? 0) + 1
 
-    // Pekerjaan — semua, tidak top 10
-    const pekerjaan = p.pekerjaan || 'Tidak Diketahui'
-    byPekerjaan[pekerjaan] = (byPekerjaan[pekerjaan] ?? 0) + 1
+    // Pekerjaan — skip jika kosong
+    const pekerjaan = p.pekerjaan?.trim()
+    if (pekerjaan) byPekerjaan[pekerjaan] = (byPekerjaan[pekerjaan] ?? 0) + 1
 
-    // Status perkawinan
-    const statusPerkawinan = p.status_perkawinan || 'Tidak Diketahui'
-    byStatusPerkawinan[statusPerkawinan] = (byStatusPerkawinan[statusPerkawinan] ?? 0) + 1
+    // Status perkawinan — skip jika kosong
+    const statusPerkawinan = p.status_perkawinan?.trim()
+    if (statusPerkawinan) byStatusPerkawinan[statusPerkawinan] = (byStatusPerkawinan[statusPerkawinan] ?? 0) + 1
 
     // RT
     if (!byRT[p.rt]) byRT[p.rt] = { laki: 0, perempuan: 0 }

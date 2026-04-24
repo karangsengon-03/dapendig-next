@@ -83,11 +83,7 @@ export function RTChart({ data, loading }: RTChartProps) {
                 {data.map((entry, index) => (
                   <Cell
                     key={index}
-                    fill={
-                      entry.jumlah === max
-                        ? '#0ea5e9'
-                        : 'rgba(14,165,233,0.35)'
-                    }
+                    fill={entry.jumlah === max ? '#0ea5e9' : '#1e4a6e'}
                   />
                 ))}
               </Bar>

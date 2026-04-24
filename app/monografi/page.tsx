@@ -121,11 +121,19 @@ function KlasifikasiUmur({ byKlasifikasi }: { byKlasifikasi: Record<string, numb
   )
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ title, children, total, totalLabel = 'total data' }: {
+  title: string; children: React.ReactNode; total?: number; totalLabel?: string
+}) {
   return (
     <div className="bg-[#0d1424] rounded-xl p-4 border border-white/[0.06]">
-      <h3 className="font-semibold text-slate-200 mb-3">{title}</h3>
+      <h3 className="text-sm font-semibold text-slate-200 mb-3">{title}</h3>
       {children}
+      {total !== undefined && (
+        <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between">
+          <span className="text-[10px] text-slate-600 uppercase tracking-wider">Total tercatat</span>
+          <span className="text-xs font-semibold text-slate-400 tabular-nums">{total} {totalLabel}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -142,12 +150,9 @@ export default function MonografiPage() {
     <AppShell title="Monografi">
       <div className="flex flex-col gap-4 max-w-5xl mx-auto">
         {/* Sub-header */}
-        <div className="flex items-center gap-2">
-          <BarChart2 size={18} className="text-sky-400" />
-          <div>
-            <h1 className="text-base font-bold text-slate-100">Monografi Desa</h1>
-            <p className="text-xs text-slate-500">Statistik kependudukan · Klik item untuk lihat data penduduk</p>
-          </div>
+        <div className="flex items-center gap-2.5">
+          <BarChart2 size={18} className="text-sky-400 shrink-0" />
+          <h1 className="text-base font-semibold text-slate-100">Monografi</h1>
         </div>
 
         {isLoading ? (
@@ -166,36 +171,48 @@ export default function MonografiPage() {
             </div>
 
             <PiramidaUmur data={data.piramidaUmur} />
+            <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
+              <span className="text-[10px] text-slate-600 uppercase tracking-wider">Total tercatat dalam piramida</span>
+              <span className="text-xs font-semibold text-slate-400 tabular-nums">
+                {data.piramidaUmur.reduce((s,r)=>s+r.laki+r.perempuan,0)} jiwa
+              </span>
+            </div>
 
             <KlasifikasiUmur byKlasifikasi={data.byKlasifikasiUmur} />
+            <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
+              <span className="text-[10px] text-slate-600 uppercase tracking-wider">Total tercatat dalam klasifikasi</span>
+              <span className="text-xs font-semibold text-slate-400 tabular-nums">
+                {Object.values(data.byKlasifikasiUmur).reduce((a,b)=>a+b,0)} jiwa
+              </span>
+            </div>
 
-            <Card title="Sebaran per RT">
-              <div className="space-y-2">
+            <Card title="Sebaran per RT" total={data.totalAktif} totalLabel="jiwa aktif">
+              <div className="space-y-1.5">
                 {(Object.entries(data.byRT) as [string, { laki: number; perempuan: number }][])
                   .sort((a, b) => Number(a[0]) - Number(b[0])).map(([rt, val]) => (
                   <div key={rt} className="flex items-center gap-3 text-xs">
-                    <span className="w-12 text-slate-500 shrink-0">RT {rt}</span>
-                    <span className="text-sky-400 w-20">L: {val.laki}</span>
-                    <span className="text-rose-400 w-20">P: {val.perempuan}</span>
-                    <span className="text-slate-400">Total: {val.laki + val.perempuan}</span>
+                    <span className="w-12 text-slate-500 shrink-0 tabular-nums">RT {rt}</span>
+                    <span className="text-sky-400 w-16 tabular-nums">L: {val.laki}</span>
+                    <span className="text-rose-400 w-16 tabular-nums">P: {val.perempuan}</span>
+                    <span className="text-slate-400 tabular-nums">Total: {val.laki + val.perempuan}</span>
                   </div>
                 ))}
               </div>
             </Card>
 
             <div className="grid md:grid-cols-2 gap-4">
-              <Card title="Agama">
+              <Card title="Agama" total={Object.values(data.byAgama).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
                 <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {(Object.entries(data.byAgama) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([agama, n]) => (
                     <BarRow key={agama} label={agama} value={n} total={data.totalAktif} color="bg-emerald-500"
                       onClick={() => goFilter('agama', agama)} />
                   ))}
                 </div>
               </Card>
-              <Card title="Status Perkawinan">
+              <Card title="Status Perkawinan" total={Object.values(data.byStatusPerkawinan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
                 <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {(Object.entries(data.byStatusPerkawinan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([status, n]) => (
                     <BarRow key={status} label={status} value={n} total={data.totalAktif} color="bg-amber-500"
                       onClick={() => goFilter('statusPerkawinan', status)} />
@@ -204,9 +221,9 @@ export default function MonografiPage() {
               </Card>
             </div>
 
-            <Card title="Tingkat Pendidikan">
+            <Card title="Tingkat Pendidikan" total={Object.values(data.byPendidikan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
               <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {(Object.entries(data.byPendidikan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pend, n]) => (
                   <BarRow key={pend} label={pend} value={n} total={data.totalAktif} color="bg-sky-500"
                     onClick={() => goFilter('pendidikan', pend)} />
@@ -214,9 +231,9 @@ export default function MonografiPage() {
               </div>
             </Card>
 
-            <Card title="Pekerjaan">
+            <Card title="Pekerjaan" total={Object.values(data.byPekerjaan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
               <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {(Object.entries(data.byPekerjaan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pek, n]) => (
                   <BarRow key={pek} label={pek} value={n} total={data.totalAktif} color="bg-rose-400"
                     onClick={() => goFilter('pekerjaan', pek)} />

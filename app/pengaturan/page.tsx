@@ -49,12 +49,9 @@ export default function PengaturanPage() {
   return (
     <AppShell title="Pengaturan">
       <div className="p-4 max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center gap-2">
-          <Shield className="w-[18px] h-[18px] text-sky-400" />
-          <div>
-            <h1 className="text-base font-bold text-slate-100">Pengaturan</h1>
-            <p className="text-xs text-slate-500">Konfigurasi sistem dan manajemen akun</p>
-          </div>
+        <div className="flex items-center gap-2.5">
+          <Shield className="w-[18px] h-[18px] text-sky-400 shrink-0" />
+          <h1 className="text-base font-semibold text-slate-100">Pengaturan</h1>
         </div>
         <UserManagement currentUid={currentUser?.uid ?? ''} />
         <WilayahForm />

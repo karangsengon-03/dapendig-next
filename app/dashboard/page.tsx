@@ -66,12 +66,9 @@ export default function DashboardPage() {
     <AppShell title="Beranda">
       <div className="flex flex-col gap-4">
         {/* Sub-header */}
-        <div className="flex items-center gap-2">
-          <Home size={18} className="text-sky-400" />
-          <div>
-            <h1 className="text-base font-bold text-slate-100">Beranda</h1>
-            <p className="text-xs text-slate-500">Ringkasan data kependudukan Desa Karang Sengon</p>
-          </div>
+        <div className="flex items-center gap-2.5">
+          <Home size={18} className="text-sky-400 shrink-0" />
+          <h1 className="text-base font-semibold text-slate-100">Beranda</h1>
         </div>
         <WilayahBadge />
 

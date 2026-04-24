@@ -69,12 +69,9 @@ export default function RecycleBinPage() {
       <div className="flex flex-col gap-4">
         {/* Sub-header */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Trash2 size={18} className="text-sky-400" />
-            <div>
-              <h1 className="text-base font-bold text-slate-100">Tempat Sampah</h1>
-              <p className="text-xs text-slate-500">Data penduduk yang telah dihapus</p>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <Trash2 size={18} className="text-sky-400 shrink-0" />
+            <h1 className="text-base font-semibold text-slate-100">Tempat Sampah</h1>
           </div>
           {canAdmin && data.length > 0 && (
             <button

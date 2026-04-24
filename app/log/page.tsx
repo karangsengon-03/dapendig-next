@@ -276,13 +276,10 @@ export default function LogPage() {
   return (
     <AppShell title="Log Aktivitas">
       <div className="flex flex-col gap-4">
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <ClipboardList size={18} className="text-sky-400" />
-          <div>
-            <h1 className="text-base font-bold text-slate-100">Log Aktivitas</h1>
-            <p className="text-xs text-slate-500">Riwayat seluruh aksi yang tercatat di sistem</p>
-          </div>
+        {/* Sub-header */}
+        <div className="flex items-center gap-2.5">
+          <ClipboardList size={18} className="text-sky-400 shrink-0" />
+          <h1 className="text-base font-semibold text-slate-100">Log Aktivitas</h1>
         </div>
 
         {/* Filter */}

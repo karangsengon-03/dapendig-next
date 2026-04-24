@@ -1,11 +1,11 @@
 import { cn } from '@/lib/utils'
+import { APP_VERSION } from '@/lib/utils'
 
 interface AppLogoProps {
   className?: string
   size?: number
 }
 
-// Semua logo di seluruh apps pakai icon balai desa baru
 export function AppLogo({ className, size = 32 }: AppLogoProps) {
   return (
     <img
@@ -26,8 +26,8 @@ export function AppLogoFull({ className }: { className?: string }) {
         <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" />
       </div>
       <div className="flex flex-col leading-none">
-        <span className="text-sm font-bold text-slate-100 tracking-tight">DaPenDig Next</span>
-        <span className="text-[10px] text-slate-500 mt-0.5">Data Penduduk Digital</span>
+        <span className="text-sm font-semibold text-slate-100 tracking-tight">Data Penduduk Digital</span>
+        <span className="text-[10px] text-slate-500 mt-0.5">Desa Karang Sengon · {APP_VERSION}</span>
       </div>
     </div>
   )

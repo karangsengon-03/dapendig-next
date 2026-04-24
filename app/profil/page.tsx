@@ -205,12 +205,9 @@ export default function ProfilPage() {
     <AppShell title="Profil Saya">
       <div className="max-w-lg mx-auto space-y-5">
         {/* Sub-header */}
-        <div className="flex items-center gap-2">
-          <User className="w-[18px] h-[18px] text-sky-400" />
-          <div>
-            <h1 className="text-base font-bold text-slate-100">Profil Saya</h1>
-            <p className="text-xs text-slate-500">Informasi akun dan keamanan</p>
-          </div>
+        <div className="flex items-center gap-2.5">
+          <User className="w-[18px] h-[18px] text-sky-400 shrink-0" />
+          <h1 className="text-base font-semibold text-slate-100">Profil Saya</h1>
         </div>
         {/* Avatar card */}
         <div className="flex items-center gap-4 bg-[#0d1424] border border-white/[0.06] rounded-2xl px-5 py-4">

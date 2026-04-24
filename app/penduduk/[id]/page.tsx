@@ -81,17 +81,14 @@ export default function DetailPendudukPage() {
     <AppShell title="Detail Penduduk">
       <div className="flex flex-col gap-4">
         {/* Sub-header */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button onClick={() => router.back()}
-            className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 flex-shrink-0">
+            className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 shrink-0">
             <ArrowLeft size={15} />
           </button>
-          <div>
-            <h1 className="text-base font-bold text-slate-100">
-              {isLoading ? <Skeleton className="h-5 w-40 rounded" /> : (data?.nama_lengkap ?? 'Detail Penduduk')}
-            </h1>
-            <p className="text-xs text-slate-500">NIK: {isLoading ? '...' : (data?.nik ?? '—')}</p>
-          </div>
+          <h1 className="text-base font-semibold text-slate-100">
+            {isLoading ? <Skeleton className="h-5 w-40 rounded" /> : (data?.nama_lengkap ?? 'Detail Penduduk')}
+          </h1>
         </div>
 
         {isLoading ? (

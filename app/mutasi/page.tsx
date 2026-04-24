@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { UserMinus, UserPlus, Plus, Trash2, RotateCcw, Pencil, X, ArrowLeftRight } from 'lucide-react'
+import { ArrowRightFromLine, ArrowLeftFromLine, Plus, Trash2, RotateCcw, Pencil, X, ArrowLeftRight } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -255,37 +255,49 @@ export default function MutasiPage() {
       <div className="flex flex-col gap-4 max-w-5xl mx-auto">
         {/* Sub-header */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <ArrowLeftRight size={18} className="text-sky-400" />
-            <div>
-              <h1 className="text-base font-bold text-slate-100">Mutasi Penduduk</h1>
-              <p className="text-xs text-slate-500">Pindah masuk & keluar · Klik baris untuk detail</p>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <ArrowLeftRight size={18} className="text-sky-400 shrink-0" />
+            <h1 className="text-base font-semibold text-slate-100">Mutasi</h1>
           </div>
           {canAdd && (
-            <Button
-              size="sm"
-              onClick={() => setShowForm(!showForm)}
-              className={showForm
-                ? 'bg-slate-600/80 hover:bg-slate-600 border border-white/10 text-slate-200'
-                : ''}
+            <button
+              onClick={() => setShowForm(v => !v)}
+              className={[
+                'flex items-center justify-center gap-1.5 w-28 h-9 rounded-xl text-sm font-medium transition-colors border shrink-0',
+                showForm
+                  ? 'bg-slate-700/60 border-white/[0.08] text-slate-300 hover:bg-slate-700'
+                  : 'bg-sky-500 border-sky-500 text-white hover:bg-sky-400',
+              ].join(' ')}
             >
-              {showForm
-                ? <><X className="w-4 h-4 mr-1" />Tutup</>
-                : <><Plus className="w-4 h-4 mr-1" />Tambah</>
-              }
-            </Button>
+              {showForm ? <><X className="w-3.5 h-3.5" />Tutup</> : <><Plus className="w-3.5 h-3.5" />Tambah</>}
+            </button>
           )}
         </div>
 
         {/* Tab */}
         <div className="flex gap-2">
-          {(['keluar','masuk'] as Tab[]).map(t => (
-            <button key={t} onClick={() => { setTab(t); setShowForm(false) }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab===t?'bg-sky-500 text-white':'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'}`}>
-              {t==='keluar' ? <><UserMinus className="w-4 h-4"/>Pindah Keluar</> : <><UserPlus className="w-4 h-4"/>Pindah Masuk</>}
-            </button>
-          ))}
+          <button
+            onClick={() => { setTab('keluar'); setShowForm(false) }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              tab === 'keluar'
+                ? 'bg-rose-500/20 border border-rose-500/30 text-rose-400'
+                : 'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <ArrowRightFromLine className="w-4 h-4" />
+            Pindah Keluar
+          </button>
+          <button
+            onClick={() => { setTab('masuk'); setShowForm(false) }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              tab === 'masuk'
+                ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                : 'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <ArrowLeftFromLine className="w-4 h-4" />
+            Pindah Masuk
+          </button>
         </div>
 
         {showForm && tab === 'keluar' && <MutasiKeluarForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}

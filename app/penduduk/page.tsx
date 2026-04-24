@@ -109,12 +109,9 @@ function PendudukContent() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Users size={18} className="text-sky-400" />
-        <div>
-          <h1 className="text-base font-bold text-slate-100">Data Penduduk</h1>
-          <p className="text-xs text-slate-500">Desa Karang Sengon · Klik baris untuk detail</p>
-        </div>
+      <div className="flex items-center gap-2.5">
+        <Users size={18} className="text-sky-400 shrink-0" />
+        <h1 className="text-base font-semibold text-slate-100">Data Penduduk</h1>
       </div>
 
       <PendudukFilter

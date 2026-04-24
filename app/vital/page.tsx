@@ -248,37 +248,49 @@ export default function VitalPage() {
       <div className="flex flex-col gap-4 max-w-5xl mx-auto">
         {/* Sub-header */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <HeartPulse size={18} className="text-sky-400" />
-            <div>
-              <h1 className="text-base font-bold text-slate-100">Data Vital</h1>
-              <p className="text-xs text-slate-500">Kelahiran & kematian · Klik baris untuk detail</p>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <HeartPulse size={18} className="text-sky-400 shrink-0" />
+            <h1 className="text-base font-semibold text-slate-100">Vital</h1>
           </div>
           {canAdd && (
-            <Button
-              size="sm"
-              onClick={() => setShowForm(!showForm)}
-              className={showForm
-                ? 'bg-slate-600/80 hover:bg-slate-600 border border-white/10 text-slate-200'
-                : ''}
+            <button
+              onClick={() => setShowForm(v => !v)}
+              className={[
+                'flex items-center justify-center gap-1.5 w-28 h-9 rounded-xl text-sm font-medium transition-colors border shrink-0',
+                showForm
+                  ? 'bg-slate-700/60 border-white/[0.08] text-slate-300 hover:bg-slate-700'
+                  : 'bg-sky-500 border-sky-500 text-white hover:bg-sky-400',
+              ].join(' ')}
             >
-              {showForm
-                ? <><X className="w-4 h-4 mr-1" />Tutup</>
-                : <><Plus className="w-4 h-4 mr-1" />Tambah</>
-              }
-            </Button>
+              {showForm ? <><X className="w-3.5 h-3.5" />Tutup</> : <><Plus className="w-3.5 h-3.5" />Tambah</>}
+            </button>
           )}
         </div>
 
         {/* Tab */}
         <div className="flex gap-2">
-          {(['lahir','meninggal'] as Tab[]).map(t => (
-            <button key={t} onClick={() => { setTab(t); setShowForm(false) }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab===t?'bg-sky-500 text-white':'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'}`}>
-              {t==='lahir' ? <><Baby className="w-4 h-4"/>Kelahiran</> : <><HeartCrack className="w-4 h-4"/>Kematian</>}
-            </button>
-          ))}
+          <button
+            onClick={() => { setTab('lahir'); setShowForm(false) }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              tab === 'lahir'
+                ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                : 'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Baby className="w-4 h-4" />
+            Kelahiran
+          </button>
+          <button
+            onClick={() => { setTab('meninggal'); setShowForm(false) }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              tab === 'meninggal'
+                ? 'bg-slate-500/20 border border-slate-500/30 text-slate-300'
+                : 'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <HeartCrack className="w-4 h-4" />
+            Kematian
+          </button>
         </div>
 
         {showForm && tab === 'lahir' && <LahirForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}

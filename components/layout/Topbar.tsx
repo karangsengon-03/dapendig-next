@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
 
 interface TopbarProps {
-  title: string
+  title?: string
 }
 
 export function Topbar({ title }: TopbarProps) {
@@ -25,7 +25,7 @@ export function Topbar({ title }: TopbarProps) {
       <button
         onClick={toggleSidebar}
         className={cn(
-          'md:hidden flex items-center justify-center w-8 h-8 rounded-lg',
+          'md:hidden flex items-center justify-center w-8 h-8 rounded-lg shrink-0',
           'text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors'
         )}
         aria-label="Buka menu"
@@ -33,13 +33,20 @@ export function Topbar({ title }: TopbarProps) {
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Title */}
-      <h1 className="flex-1 text-[15px] font-bold text-slate-100 tracking-tight">{title}</h1>
+      {/* App name — 2 baris */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-bold text-slate-100 leading-tight tracking-tight">
+          Data Penduduk Digital
+        </p>
+        <p className="text-[10px] text-slate-500 leading-tight">
+          Desa Karang Sengon
+        </p>
+      </div>
 
-      {/* User avatar — desktop */}
+      {/* User avatar */}
       {user && (
         <div
-          className="hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-sky-500 text-xs font-bold text-white shrink-0"
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-sky-500 text-xs font-bold text-white shrink-0"
           title={`${user.nama || user.email} (${user.role})`}
         >
           {getInisial(user.nama || user.email)}
