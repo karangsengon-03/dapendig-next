@@ -54,6 +54,9 @@ export interface Lahir {
   status_perkawinan: StatusPerkawinan
   tanggal_lahir: string
   tempat_lahir: string
+  pendidikan: string
+  pekerjaan: string
+  alamat: string
   created_at?: Timestamp | string
   created_by?: string
 }
