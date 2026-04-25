@@ -39,14 +39,21 @@ interface PendudukFilterProps {
   pekerjaanOptions?: string[]
 }
 
+const FILTER_VIS_KEY = 'dapendig_filter_visible'
+
 export function PendudukFilter({
   filter, onChange, total, filtered,
   agamaOptions = [], pekerjaanOptions = [],
 }: PendudukFilterProps) {
-  // Filter mana saja yang ditampilkan — default semua tampil
-  const [visibleFilters, setVisibleFilters] = useState<Set<FilterKey>>(
-    new Set(ALL_FILTERS.map(f => f.key))
-  )
+  // Filter mana saja yang ditampilkan — ingat di localStorage antar session
+  const [visibleFilters, setVisibleFilters] = useState<Set<FilterKey>>(() => {
+    if (typeof window === 'undefined') return new Set(ALL_FILTERS.map(f => f.key))
+    try {
+      const stored = localStorage.getItem(FILTER_VIS_KEY)
+      if (stored) return new Set(JSON.parse(stored) as FilterKey[])
+    } catch {}
+    return new Set(ALL_FILTERS.map(f => f.key))
+  })
   const [showFilterMenu, setShowFilterMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -68,6 +75,8 @@ export function PendudukFilter({
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
       else next.add(key)
+      // Simpan ke localStorage agar diingat antar session
+      try { localStorage.setItem(FILTER_VIS_KEY, JSON.stringify([...next])) } catch {}
       return next
     })
   }
@@ -219,7 +228,7 @@ export function PendudukFilter({
         )}
 
         {/* Reset & count */}
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2.5 ml-auto">
           {hasActiveFilter && (
             <button
               onClick={() => onChange({ search: '', rt: '', jenisKelamin: '', agama: '', statusPerkawinan: '', pekerjaan: '', pendidikan: '', sortBy: 'rt_kk', sortDir: 'asc', status: 'aktif' })}

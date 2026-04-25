@@ -38,7 +38,7 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <div className="w-14 h-14 rounded-2xl bg-slate-800/60 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-2xl bg-[#0d1424] flex items-center justify-center">
           <User size={24} className="text-slate-600" />
         </div>
         <p className="text-sm text-slate-500">Tidak ada data penduduk</p>

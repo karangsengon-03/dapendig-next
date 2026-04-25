@@ -50,7 +50,7 @@ export function CatatPindahKeluarModal({ penduduk, onClose, onSuccess }: Props) 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/20 flex items-center justify-center">
-              <LogOut size={16} className="text-sky-400" />
+              <LogOut size={18} className="text-sky-400" />
             </div>
             <div>
               <p className="font-semibold text-slate-100 text-sm">Catat Pindah Keluar</p>

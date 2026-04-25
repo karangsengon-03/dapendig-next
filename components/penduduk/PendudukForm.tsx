@@ -156,7 +156,6 @@ export function PendudukForm({
     else if (!/^\d{16}$/.test(form.no_kk.trim())) errs.no_kk = 'No. KK harus 16 digit angka'
     if (!form.tempat_lahir.trim()) errs.tempat_lahir = 'Tempat lahir wajib diisi'
     if (!form.tanggal_lahir) errs.tanggal_lahir = 'Tanggal lahir wajib diisi'
-    if (!form.alamat?.trim()) errs.alamat = 'Alamat wajib diisi'
 
     // NIK uniqueness check
     if (!errs.nik) {
@@ -316,14 +315,6 @@ export function PendudukForm({
               options={RW_LIST}
             />
           </div>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label>Alamat</Label>
-          <Input
-            value={form.alamat ?? ''}
-            onChange={(v) => set({ alamat: v })}
-            placeholder="Alamat lengkap"
-          />
         </div>
       </section>
 

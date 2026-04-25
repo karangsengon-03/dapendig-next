@@ -271,7 +271,7 @@ export default function VitalPage() {
         <div className="flex gap-2">
           <button
             onClick={() => { setTab('lahir'); setShowForm(false) }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
               tab === 'lahir'
                 ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
                 : 'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'
@@ -282,7 +282,7 @@ export default function VitalPage() {
           </button>
           <button
             onClick={() => { setTab('meninggal'); setShowForm(false) }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
               tab === 'meninggal'
                 ? 'bg-slate-500/20 border border-slate-500/30 text-slate-300'
                 : 'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'

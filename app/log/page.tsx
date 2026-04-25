@@ -132,7 +132,7 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
       </div>
 
       {/* Filter row */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2.5 flex-wrap">
         <SlidersHorizontal size={13} className="text-slate-500 flex-shrink-0" />
 
         {/* Aksi */}
@@ -302,7 +302,7 @@ export default function LogPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-slate-800/60 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#0d1424] flex items-center justify-center">
                 <ClipboardList size={24} className="text-slate-600" />
               </div>
               <p className="text-sm text-slate-500">Tidak ada log ditemukan</p>
@@ -372,7 +372,7 @@ export default function LogPage() {
             <span className="text-xs text-slate-500">
               Hal {page} / {totalPages} · {filtered.length} log
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}

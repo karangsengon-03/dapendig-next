@@ -67,7 +67,7 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
   }
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4 mb-4 space-y-3">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-lg p-4 mb-4 space-y-3">
       <h3 className="text-sm font-semibold text-sky-400">Catat Pindah Keluar</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
@@ -187,10 +187,10 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
     mutate(data, { onSuccess })
   }
 
-  const selectClass = "w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+  const selectClass = "w-full bg-slate-900 border border-white/[0.06] text-slate-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4 mb-4 space-y-3">
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-lg p-4 mb-4 space-y-3">
       <h3 className="text-sm font-semibold text-sky-400">Catat Pindah Masuk</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>

@@ -15,7 +15,7 @@ import { getInisial } from '@/lib/utils'
 function StatusMsg({ ok, msg }: { ok: boolean; msg: string }) {
   return (
     <div
-      className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 ${
+      className={`flex items-center gap-2.5 text-sm rounded-lg px-3 py-2 ${
         ok
           ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
           : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
@@ -50,7 +50,7 @@ function EditNamaForm() {
 
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         <User className="w-4 h-4 text-sky-400" />
         <h2 className="font-semibold text-slate-100">Informasi Akun</h2>
       </div>
@@ -146,7 +146,7 @@ function GantiPasswordForm() {
 
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         <Lock className="w-4 h-4 text-sky-400" />
         <h2 className="font-semibold text-slate-100">Ganti Password</h2>
       </div>

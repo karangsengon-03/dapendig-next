@@ -43,7 +43,7 @@ function BarRow({ label, value, total, color = 'bg-sky-500', onClick }: {
         'w-36 truncate text-xs shrink-0',
         onClick ? 'text-slate-300 group-hover:text-sky-400' : 'text-slate-500',
       ].join(' ')}>{label}</span>
-      <div className="flex-1 bg-slate-800/60 rounded-full h-1.5">
+      <div className="flex-1 bg-[#0d1424] rounded-full h-1.5">
         <div className={`${color} h-1.5 rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
       <span className={[
@@ -143,6 +143,11 @@ export default function MonografiPage() {
   const router = useRouter()
 
   function goFilter(key: string, value: string) {
+    // Jika value '—' (field kosong di data), arahkan ke data penduduk tanpa filter spesifik
+    if (value === '—') {
+      router.push('/penduduk?status=aktif')
+      return
+    }
     router.push(`/penduduk?${key}=${encodeURIComponent(value)}&status=aktif`)
   }
 

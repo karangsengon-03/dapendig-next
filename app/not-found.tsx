@@ -17,7 +17,7 @@ export default function NotFound() {
       <p className="text-8xl font-black text-slate-800 leading-none select-none">404</p>
 
       {/* Pesan */}
-      <h1 className="mt-4 text-xl font-bold text-slate-200">Halaman tidak ditemukan</h1>
+      <h1 className="mt-4 text-base font-semibold text-slate-200">Halaman tidak ditemukan</h1>
       <p className="mt-2 text-sm text-slate-500 max-w-xs">
         Halaman yang Anda cari tidak ada atau telah dipindahkan.
       </p>

@@ -129,7 +129,7 @@ function PendudukContent() {
 
       {!isLoading && filtered.length > 0 && (
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="text-xs text-slate-500">Tampil</span>
             {PAGE_SIZE_OPTIONS.map((s) => (
               <button key={s} onClick={() => { setPageSize(s); setPage(1) }}
@@ -141,7 +141,7 @@ function PendudukContent() {
               >{s}</button>
             ))}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="text-xs text-slate-500">Hal {page} / {totalPages}</span>
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
               className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors">

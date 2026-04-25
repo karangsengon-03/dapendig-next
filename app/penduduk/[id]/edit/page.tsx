@@ -60,7 +60,7 @@ export default function EditPendudukPage() {
             <ArrowLeft size={15} />
           </button>
           <div>
-            <h1 className="text-base font-bold text-slate-100">Edit Penduduk</h1>
+            <h1 className="text-base font-semibold text-slate-100">Edit Penduduk</h1>
             <p className="text-xs text-slate-500">
               {isLoading ? 'Memuat...' : (data?.nama_lengkap ?? '')}
             </p>

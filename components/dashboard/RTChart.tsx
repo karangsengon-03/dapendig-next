@@ -23,7 +23,6 @@ interface RTChartProps {
 }
 
 export function RTChart({ data, loading }: RTChartProps) {
-  const max = data.length > 0 ? Math.max(...data.map((d) => d.jumlah)) : 0
 
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4 flex flex-col gap-3">
@@ -81,10 +80,7 @@ export function RTChart({ data, loading }: RTChartProps) {
               />
               <Bar dataKey="jumlah" radius={[6, 6, 0, 0]}>
                 {data.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={entry.jumlah === max ? '#0ea5e9' : '#1e4a6e'}
-                  />
+                  <Cell key={index} fill="#1e6fa8" />
                 ))}
               </Bar>
             </BarChart>

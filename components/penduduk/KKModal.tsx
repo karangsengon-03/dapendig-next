@@ -54,7 +54,7 @@ export function KKModal({ noKk, allPenduduk, onClose, onNavigate }: Props) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/20 flex items-center justify-center">
-              <Users size={16} className="text-sky-400" />
+              <Users size={18} className="text-sky-400" />
             </div>
             <div>
               <p className="font-semibold text-slate-100 text-sm">Anggota Keluarga</p>

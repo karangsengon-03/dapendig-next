@@ -26,15 +26,18 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1e] flex flex-col items-center justify-center gap-4">
-        <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-2xl shadow-sky-500/20 border border-white/10">
-          <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" />
+      <div className="min-h-screen bg-[#050810] flex flex-col items-center justify-center gap-4">
+        <div
+          className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
+          style={{ background: '#16447a' }}
+        >
+          <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" style={{ display: 'block' }} />
         </div>
-        <div className="flex flex-col items-center gap-1">
-          <p className="text-sm font-semibold text-slate-300">DaPenDig Next</p>
-          <p className="text-xs text-slate-500">Memuat data...</p>
+        <div className="flex flex-col items-center gap-0.5 text-center">
+          <p className="text-base font-semibold text-slate-100">Data Penduduk Digital</p>
+          <p className="text-xs text-slate-500">Desa Karang Sengon</p>
         </div>
-        <div className="w-5 h-5 border-2 border-slate-700 border-t-sky-500 rounded-full animate-spin mt-2" />
+        <div className="w-5 h-5 border-2 border-white/[0.06] border-t-sky-500 rounded-full animate-spin mt-1" />
       </div>
     )
   }

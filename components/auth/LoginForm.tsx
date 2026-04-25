@@ -59,7 +59,8 @@ export function LoginForm() {
       await signInWithEmailAndPassword(auth, targetEmail, password)
       localStorage.setItem(KEY_EMAIL, targetEmail)
       localStorage.setItem(KEY_PASS,  password)
-      router.replace('/dashboard')
+      // Hard redirect agar tidak ada race condition dengan onAuthStateChanged
+      window.location.href = '/dashboard'
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code ?? ''
       if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
@@ -103,7 +104,7 @@ export function LoginForm() {
         </div>
 
         {/* Card */}
-        <div className="w-full rounded-2xl border border-white/[0.08] bg-[#0d1424] p-6 shadow-2xl">
+        <div className="w-full rounded-2xl border border-white/[0.08] bg-[#0d1424] p-6 shadow-2xl" style={{ minHeight: '320px' }}>
           <p className="text-sm font-semibold text-slate-300 text-center mb-5">
             {isLanjut ? 'Selamat Datang Kembali' : 'Masuk ke Akun'}
           </p>

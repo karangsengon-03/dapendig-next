@@ -76,7 +76,7 @@ export default function RecycleBinPage() {
           {canAdmin && data.length > 0 && (
             <button
               onClick={() => setConfirmHapusSemua(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm hover:bg-rose-500/20 transition-colors"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm hover:bg-rose-500/20 transition-colors"
             >
               <Trash2 size={14} />
               <span className="hidden sm:inline text-xs">Hapus Semua</span>
@@ -94,7 +94,7 @@ export default function RecycleBinPage() {
             </div>
           ) : data.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-slate-800/60 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#0d1424] flex items-center justify-center">
                 <Trash2 size={24} className="text-slate-600" />
               </div>
               <p className="text-sm text-slate-500">Tempat sampah kosong</p>
@@ -125,7 +125,7 @@ export default function RecycleBinPage() {
                       <td className="px-4 py-3 text-slate-500 text-xs">{item.dihapus_oleh}</td>
                       <td className="px-4 py-3 text-slate-500 text-xs">{formatTanggal(item.dihapus_at)}</td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
                           <button
                             onClick={() => handleRestore(item)}
                             disabled={restoreMutation.isPending}

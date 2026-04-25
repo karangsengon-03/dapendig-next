@@ -85,7 +85,7 @@ function NormalisasiSection() {
 
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2.5 mb-1">
         <Wrench className="w-5 h-5 text-amber-400" />
         <h2 className="font-semibold text-slate-100">Pemeliharaan Data</h2>
       </div>
@@ -93,7 +93,7 @@ function NormalisasiSection() {
         Perbaiki inkonsistensi penulisan nilai di kolom Pekerjaan dan Hubungan Keluarga agar sesuai dengan standar sistem.
       </p>
       {confirm ? (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <span className="text-xs text-slate-400">Yakin menjalankan normalisasi?</span>
           <Button
             size="sm"
@@ -129,7 +129,7 @@ function UserManagement({ currentUid }: { currentUid: string }) {
 
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2.5 mb-4">
         <Users className="w-5 h-5 text-sky-400" />
         <div>
           <h2 className="font-semibold text-slate-100">Manajemen Pengguna</h2>
@@ -221,7 +221,7 @@ function WilayahForm() {
 
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2.5 mb-4">
         <MapPin className="w-5 h-5 text-sky-400" />
         <h2 className="font-semibold text-slate-100">Informasi Wilayah</h2>
         <span className="text-xs text-slate-500 ml-auto">Disimpan ke: config/wilayah</span>

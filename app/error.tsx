@@ -25,7 +25,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
         </svg>
       </div>
 
-      <h1 className="text-xl font-bold text-slate-200">Terjadi Kesalahan</h1>
+      <h1 className="text-base font-semibold text-slate-200">Terjadi Kesalahan</h1>
       <p className="mt-2 text-sm text-slate-500 max-w-xs">
         Aplikasi mengalami error yang tidak terduga. Coba muat ulang halaman.
       </p>
