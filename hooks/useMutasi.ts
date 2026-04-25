@@ -108,6 +108,7 @@ async function addMutasiMasuk(
     tanggal_lahir: data.tanggal_lahir,
     tempat_lahir: data.tempat_lahir,
     golongan_darah: data.golongan_darah ?? '',
+    alamat: data.alamat ?? '',
     status: 'aktif',
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),

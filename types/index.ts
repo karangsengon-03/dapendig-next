@@ -109,6 +109,7 @@ export interface MutasiMasuk {
   tanggal_lahir: string
   tempat_lahir: string
   golongan_darah?: string
+  alamat: string
   created_at?: Timestamp | string
   updated_at?: Timestamp | string
   created_by?: string
