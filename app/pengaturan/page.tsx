@@ -58,6 +58,24 @@ export default function PengaturanPage() {
         <NormalisasiSection />
         <EksporSection />
         <ImportSection />
+
+        {/* Migrasi data */}
+        {isAdmin && isAdmin() && (
+          <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Migrasi Alamat Penduduk</p>
+                <p className="text-xs text-slate-500 mt-0.5">Isi alamat KARANG SENGON untuk semua penduduk yang belum punya alamat</p>
+              </div>
+              <a
+                href="/pengaturan/migrate-alamat"
+                className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors"
+              >
+                Jalankan
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   )

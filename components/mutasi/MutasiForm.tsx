@@ -140,6 +140,7 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
     tanggal_lahir: '',
     tempat_lahir: '',
     golongan_darah: '',
+    alamat: 'KARANG SENGON',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -183,6 +184,7 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
       tanggal_lahir: form.tanggal_lahir,
       tempat_lahir: form.tempat_lahir.trim().toUpperCase(),
       golongan_darah: form.golongan_darah,
+      alamat: form.alamat.trim().toUpperCase(),
     }
     mutate(data, { onSuccess })
   }
@@ -285,6 +287,10 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
               {RW_LIST.map((v) => <option key={v}>{v}</option>)}
             </select>
           </div>
+        </div>
+        <div>
+          <Label>Alamat</Label>
+          <Input value={form.alamat} onChange={(e) => set('alamat', e.target.value)} placeholder="Contoh: KARANG SENGON" />
         </div>
       </div>
       <div className="flex gap-2 pt-1">

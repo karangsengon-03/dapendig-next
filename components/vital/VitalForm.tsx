@@ -45,7 +45,7 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
     // Bayi baru lahir — default otomatis, bisa diubah jika perlu
     pendidikan: 'Tidak/Belum Sekolah',
     pekerjaan: 'Tidak/Belum Bekerja',
-    alamat: '',
+    alamat: 'KARANG SENGON',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
