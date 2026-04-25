@@ -143,11 +143,6 @@ export default function MonografiPage() {
   const router = useRouter()
 
   function goFilter(key: string, value: string) {
-    // Jika value '—' (field kosong di data), arahkan ke data penduduk tanpa filter spesifik
-    if (value === '—') {
-      router.push('/penduduk?status=aktif')
-      return
-    }
     router.push(`/penduduk?${key}=${encodeURIComponent(value)}&status=aktif`)
   }
 

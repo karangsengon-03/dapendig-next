@@ -63,7 +63,7 @@ async function addLahir(
     tanggal_lahir: data.tanggal_lahir,
     status_perkawinan: 'Belum Kawin',
     pendidikan: 'Tidak/Belum Sekolah',
-    pekerjaan: 'Belum/Tidak Bekerja',
+    pekerjaan: 'Tidak/Belum Bekerja',
     golongan_darah: '',
     status: 'aktif',
     created_at: serverTimestamp(),

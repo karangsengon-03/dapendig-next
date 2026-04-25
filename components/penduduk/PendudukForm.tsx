@@ -26,7 +26,7 @@ const EMPTY: PendudukFormData = {
   tanggal_lahir: '',
   agama: 'Islam',
   pendidikan: 'Tamat SD/Sederajat',
-  pekerjaan: 'Belum/Tidak Bekerja',
+  pekerjaan: 'Tidak/Belum Bekerja',
   status_perkawinan: 'Belum Kawin',
   rt: '1',
   rw: '1',
@@ -35,7 +35,7 @@ const EMPTY: PendudukFormData = {
 }
 
 interface PendudukFormProps {
-  mode: 'tambah' | 'edit'
+  mode: 'edit'
   initial?: Partial<PendudukFormData>
   editId?: string
   onSubmit: (data: PendudukFormData) => Promise<void>
@@ -316,6 +316,15 @@ export function PendudukForm({
             />
           </div>
         </div>
+        <div className="flex flex-col gap-1">
+          <Label>Alamat</Label>
+          <Input
+            value={form.alamat ?? ''}
+            onChange={(v) => set({ alamat: v })}
+            placeholder="Contoh: KARANG SENGON"
+            error={errors.alamat}
+          />
+        </div>
       </section>
 
       {/* Status */}
@@ -360,7 +369,7 @@ export function PendudukForm({
           ) : (
             <Save size={15} />
           )}
-          {mode === 'tambah' ? 'Simpan Data' : 'Simpan Perubahan'}
+          {mode === 'edit' ? 'Simpan Perubahan' : 'Simpan'}
         </button>
       </div>
     </div>

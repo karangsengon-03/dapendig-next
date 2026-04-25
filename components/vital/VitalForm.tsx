@@ -42,6 +42,10 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
     status_perkawinan: 'Belum Kawin' as typeof STATUS_PERKAWINAN[number],
     tanggal_lahir: '',
     tempat_lahir: '',
+    // Bayi baru lahir — default otomatis, bisa diubah jika perlu
+    pendidikan: 'Tidak/Belum Sekolah',
+    pekerjaan: 'Tidak/Belum Bekerja',
+    alamat: '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -80,6 +84,9 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
       status_perkawinan: form.status_perkawinan,
       tanggal_lahir: form.tanggal_lahir,
       tempat_lahir: form.tempat_lahir.trim().toUpperCase(),
+      pendidikan: form.pendidikan,
+      pekerjaan: form.pekerjaan,
+      alamat: form.alamat.trim().toUpperCase(),
     }
     mutate(data, { onSuccess })
   }
@@ -156,6 +163,20 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
               {RW_LIST.map((v) => <option key={v}>{v}</option>)}
             </select>
           </div>
+        </div>
+        <div className="sm:col-span-2">
+          <Label>Alamat</Label>
+          <Input value={form.alamat} onChange={(e) => set('alamat', e.target.value)} placeholder="Contoh: KARANG SENGON" />
+        </div>
+        <div>
+          <Label>Pendidikan</Label>
+          <Input value={form.pendidikan} onChange={(e) => set('pendidikan', e.target.value)} placeholder="Tidak/Belum Sekolah" />
+          <p className="text-[10px] text-slate-600 mt-0.5">Default: Tidak/Belum Sekolah</p>
+        </div>
+        <div>
+          <Label>Pekerjaan</Label>
+          <Input value={form.pekerjaan} onChange={(e) => set('pekerjaan', e.target.value)} placeholder="Tidak/Belum Bekerja" />
+          <p className="text-[10px] text-slate-600 mt-0.5">Default: Tidak/Belum Bekerja</p>
         </div>
       </div>
       <div className="flex gap-2 pt-1">
