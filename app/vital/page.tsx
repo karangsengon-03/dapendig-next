@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Baby, HeartCrack, Plus, Trash2, RotateCcw, Pencil, X, HeartPulse } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { PENDIDIKAN, PEKERJAAN } from '@/lib/penduduk-constants'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { LahirForm, MeninggalForm } from '@/components/vital/VitalForm'
@@ -182,8 +183,6 @@ function EditLahirModal({ row, onClose }: { row: Lahir; onClose: () => void }) {
           ['RT','rt','text'],
           ['RW','rw','text'],
           ['Alamat','alamat','text'],
-          ['Pendidikan','pendidikan','text'],
-          ['Pekerjaan','pekerjaan','text'],
         ] as [string,string,string][]).map(([label,key,type]) => (
           <div key={key} className="flex flex-col gap-1">
             <label className="text-xs text-slate-400">{label}</label>
@@ -191,6 +190,22 @@ function EditLahirModal({ row, onClose }: { row: Lahir; onClose: () => void }) {
               className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"/>
           </div>
         ))}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Pendidikan</label>
+          <select value={form.pendidikan} onChange={e => set('pendidikan', e.target.value)}
+            className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50">
+            <option value="">-- Pilih --</option>
+            {PENDIDIKAN.map(v => <option key={v} value={v}>{v}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">Pekerjaan</label>
+          <select value={form.pekerjaan} onChange={e => set('pekerjaan', e.target.value)}
+            className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50">
+            <option value="">-- Pilih --</option>
+            {PEKERJAAN.map(v => <option key={v} value={v}>{v}</option>)}
+          </select>
+        </div>
         <div className="flex gap-2 pt-1">
           <Button size="sm" variant="outline" onClick={onClose} className="flex-1">Batal</Button>
           <Button size="sm" onClick={handleSave} disabled={isPending} className="flex-1">{isPending ? 'Menyimpan...' : 'Simpan'}</Button>

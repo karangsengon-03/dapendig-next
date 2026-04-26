@@ -21,8 +21,8 @@ export interface Penduduk {
   tanggal_lahir: string // YYYY-MM-DD
   agama: Agama
   golongan_darah?: string
-  pendidikan: Pendidikan
-  pekerjaan: Pekerjaan
+  pendidikan: string
+  pekerjaan: string
   status_perkawinan: StatusPerkawinan
   rt: string
   rw: string
@@ -99,8 +99,8 @@ export interface MutasiMasuk {
   jenis_kelamin: JenisKelamin
   nama_ayah: string
   nama_ibu: string
-  pekerjaan: Pekerjaan
-  pendidikan: Pendidikan
+  pekerjaan: string
+  pendidikan: string
   rt: string
   rw: string
   status: 'aktif' | 'tidak aktif'

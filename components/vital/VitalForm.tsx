@@ -13,6 +13,8 @@ import {
   STATUS_PERKAWINAN,
   RT_LIST,
   RW_LIST,
+  PENDIDIKAN,
+  PEKERJAAN,
 } from '@/lib/penduduk-constants'
 
 // ── Form Kelahiran ───────────────────────────────────────────────────────────
@@ -42,9 +44,9 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
     status_perkawinan: 'Belum Kawin' as typeof STATUS_PERKAWINAN[number],
     tanggal_lahir: '',
     tempat_lahir: '',
-    // Bayi baru lahir — default otomatis, bisa diubah jika perlu
-    pendidikan: 'Tidak/Belum Sekolah',
-    pekerjaan: 'Tidak/Belum Bekerja',
+    // Bayi baru lahir — tidak ada default, user isi sesuai kondisi
+    pendidikan: '',
+    pekerjaan: '',
     alamat: 'KARANG SENGON',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -170,13 +172,25 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
         </div>
         <div>
           <Label>Pendidikan</Label>
-          <Input value={form.pendidikan} onChange={(e) => set('pendidikan', e.target.value)} placeholder="Tidak/Belum Sekolah" />
-          <p className="text-[10px] text-slate-600 mt-0.5">Default: Tidak/Belum Sekolah</p>
+          <select
+            className="w-full bg-slate-900 border border-white/[0.06] text-slate-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            value={form.pendidikan}
+            onChange={(e) => set('pendidikan', e.target.value)}
+          >
+            <option value="">-- Pilih Pendidikan --</option>
+            {PENDIDIKAN.map((v) => <option key={v} value={v}>{v}</option>)}
+          </select>
         </div>
         <div>
           <Label>Pekerjaan</Label>
-          <Input value={form.pekerjaan} onChange={(e) => set('pekerjaan', e.target.value)} placeholder="Tidak/Belum Bekerja" />
-          <p className="text-[10px] text-slate-600 mt-0.5">Default: Tidak/Belum Bekerja</p>
+          <select
+            className="w-full bg-slate-900 border border-white/[0.06] text-slate-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            value={form.pekerjaan}
+            onChange={(e) => set('pekerjaan', e.target.value)}
+          >
+            <option value="">-- Pilih Pekerjaan --</option>
+            {PEKERJAAN.map((v) => <option key={v} value={v}>{v}</option>)}
+          </select>
         </div>
       </div>
       <div className="flex gap-2 pt-1">
