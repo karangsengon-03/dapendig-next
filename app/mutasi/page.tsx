@@ -102,6 +102,9 @@ function DetailMasukModal({
     ['Tanggal', formatTanggal(row.tanggal)],
     ['Asal Daerah', row.asal_daerah ?? '—'],
     ['RT / RW', `RT ${row.rt} / RW ${row.rw}`],
+    ['Alamat', row.alamat ?? '—'],
+    ['Pendidikan', row.pendidikan ?? '—'],
+    ['Pekerjaan', row.pekerjaan ?? '—'],
   ]
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -176,7 +179,18 @@ function EditKeluarModal({ row, onClose }: { row: MutasiKeluar; onClose: () => v
 function EditMasukModal({ row, onClose }: { row: MutasiMasuk; onClose: () => void }) {
   const { mutateAsync, isPending } = useEditMutasiMasuk()
   const { toast } = useToast()
-  const [form, setForm] = useState({ nama_lengkap: row.nama_lengkap??'', nik: row.nik??'', no_kk: row.no_kk??'', asal_daerah: row.asal_daerah??'', tanggal: row.tanggal??'', rt: row.rt??'', rw: row.rw??'' })
+  const [form, setForm] = useState({
+    nama_lengkap: row.nama_lengkap ?? '',
+    nik: row.nik ?? '',
+    no_kk: row.no_kk ?? '',
+    asal_daerah: row.asal_daerah ?? '',
+    tanggal: row.tanggal ?? '',
+    rt: row.rt ?? '',
+    rw: row.rw ?? '',
+    alamat: row.alamat ?? '',
+    pendidikan: row.pendidikan ?? '',
+    pekerjaan: row.pekerjaan ?? '',
+  })
   function set(k: string, v: string) { setForm(p => ({ ...p, [k]: v })) }
   async function save() {
     try { await mutateAsync({ id: row.id, data: form }); toast('Data diperbarui', 'success'); onClose() }
@@ -184,17 +198,32 @@ function EditMasukModal({ row, onClose }: { row: MutasiMasuk; onClose: () => voi
   }
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-[#0d1424] border border-white/[0.08] rounded-2xl p-5 w-full max-w-md flex flex-col gap-3">
-        <div className="flex items-center justify-between"><p className="font-semibold text-slate-100 text-sm">Edit Pindah Masuk</p><button onClick={onClose} className="p-1.5 text-slate-500 hover:text-slate-300"><X size={15}/></button></div>
-        {([['Nama','nama_lengkap','text'],['NIK','nik','text'],['No. KK','no_kk','text'],['Asal Daerah','asal_daerah','text'],['Tanggal','tanggal','date'],['RT','rt','text'],['RW','rw','text']] as [string,string,string][]).map(([label,key,type])=>(
+      <div className="bg-[#0d1424] border border-white/[0.08] rounded-2xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-slate-100 text-sm">Edit Pindah Masuk</p>
+          <button onClick={onClose} className="p-1.5 text-slate-500 hover:text-slate-300"><X size={15}/></button>
+        </div>
+        {([
+          ['Nama','nama_lengkap','text'],
+          ['NIK','nik','text'],
+          ['No. KK','no_kk','text'],
+          ['Asal Daerah','asal_daerah','text'],
+          ['Tanggal','tanggal','date'],
+          ['RT','rt','text'],
+          ['RW','rw','text'],
+          ['Alamat','alamat','text'],
+          ['Pendidikan','pendidikan','text'],
+          ['Pekerjaan','pekerjaan','text'],
+        ] as [string,string,string][]).map(([label,key,type]) => (
           <div key={key} className="flex flex-col gap-1">
             <label className="text-xs text-slate-400">{label}</label>
-            <input type={type} value={form[key as keyof typeof form]} onChange={e=>set(key,e.target.value)} className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"/>
+            <input type={type} value={form[key as keyof typeof form]} onChange={e => set(key, e.target.value)}
+              className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"/>
           </div>
         ))}
         <div className="flex gap-2 pt-1">
           <Button size="sm" variant="outline" onClick={onClose} className="flex-1">Batal</Button>
-          <Button size="sm" onClick={save} disabled={isPending} className="flex-1">{isPending?'Menyimpan...':'Simpan'}</Button>
+          <Button size="sm" onClick={save} disabled={isPending} className="flex-1">{isPending ? 'Menyimpan...' : 'Simpan'}</Button>
         </div>
       </div>
     </div>
