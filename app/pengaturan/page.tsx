@@ -61,7 +61,8 @@ export default function PengaturanPage() {
 
         {/* Migrasi data */}
         {isAdmin && isAdmin() && (
-          <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
+          <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 flex flex-col gap-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-600">Migrasi Data</p>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-slate-200">Migrasi Alamat Penduduk</p>
@@ -69,6 +70,19 @@ export default function PengaturanPage() {
               </div>
               <a
                 href="/pengaturan/migrate-alamat"
+                className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors"
+              >
+                Jalankan
+              </a>
+            </div>
+            <div className="border-t border-white/[0.06]" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Migrasi Pendidikan</p>
+                <p className="text-xs text-slate-500 mt-0.5">Ganti SLTP → SMP dan SLTA → SMA untuk semua data penduduk</p>
+              </div>
+              <a
+                href="/pengaturan/migrate-pendidikan"
                 className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors"
               >
                 Jalankan
