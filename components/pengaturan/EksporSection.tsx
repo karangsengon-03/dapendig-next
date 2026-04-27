@@ -12,6 +12,7 @@ import { useLahir, useMeninggal } from '@/hooks/useVital'
 // ── Definisi kolom per koleksi ───────────────────────────────────────────────
 
 const KOLOM_PENDUDUK: ExportColumn[] = [
+  { key: 'id', header: 'ID' },
   { key: 'nik', header: 'NIK' },
   { key: 'nama_lengkap', header: 'Nama Lengkap' },
   { key: 'no_kk', header: 'No. KK' },

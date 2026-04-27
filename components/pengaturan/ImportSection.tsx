@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useImportPenduduk } from '@/hooks/useImport'
 
 const KDPD = [
+  { k: 'id', l: 'ID Dokumen' },
   { k: 'no_kk', l: 'No. KK' },
   { k: 'nik', l: 'NIK' },
   { k: 'nama_lengkap', l: 'Nama Lengkap' },
@@ -24,6 +25,8 @@ const KDPD = [
   { k: 'nama_ayah', l: 'Nama Ayah' },
   { k: 'rt', l: 'RT' },
   { k: 'rw', l: 'RW' },
+  { k: 'alamat', l: 'Alamat' },
+  { k: 'status', l: 'Status' },
 ]
 
 const TEMPLATE_HEADERS = ['No.KK', 'NIK', 'Nama', 'JK', 'Hub.KK', 'Kawin', 'Pendidikan', 'Pekerjaan', 'Gol.Darah', 'Agama', 'Tmp.Lahir', 'Tgl.Lahir', 'Nama Ibu', 'Nama Ayah', 'RT', 'RW', 'Status']
@@ -38,6 +41,7 @@ function autoMap(excelCol: string): string {
     if (normalize(k) === n || normalize(l) === n) return k
   }
   // Partial match heuristics
+  if (n === 'id' || n === 'iddokumen' || n === 'docid') return 'id'
   if (n.includes('kk')) return 'no_kk'
   if (n.includes('nik')) return 'nik'
   if (n.includes('nama') && n.includes('ibu')) return 'nama_ibu'
@@ -50,11 +54,12 @@ function autoMap(excelCol: string): string {
   if (n.includes('kerja') || n.includes('pekerjaan')) return 'pekerjaan'
   if (n.includes('darah') || n.includes('gol')) return 'golongan_darah'
   if (n.includes('agama')) return 'agama'
-  if (n.includes('tmp') || n.includes('tempat') || n.includes('lahir') && n.includes('tmp')) return 'tempat_lahir'
+  if (n.includes('tmp') || (n.includes('tempat') && n.includes('lahir'))) return 'tempat_lahir'
   if (n.includes('tgl') || n.includes('tanggal') || n.includes('lahir')) return 'tanggal_lahir'
+  if (n.includes('alamat')) return 'alamat'
   if (n === 'rt') return 'rt'
   if (n === 'rw') return 'rw'
-  if (n.includes('status')) return ''
+  if (n.includes('status')) return 'status'
   return ''
 }
 
@@ -67,7 +72,7 @@ export function ImportSection() {
   const [rawRows, setRawRows] = useState<Record<string, unknown>[]>([])
   const [excelCols, setExcelCols] = useState<string[]>([])
   const [mapping, setMapping] = useState<Record<string, string>>({})
-  const [result, setResult] = useState<{ berhasil: number; gagal: number } | null>(null)
+  const [result, setResult] = useState<{ berhasil: number; diperbarui: number; gagal: number } | null>(null)
   const [dragging, setDragging] = useState(false)
   const importMutation = useImportPenduduk()
 
@@ -240,10 +245,20 @@ export function ImportSection() {
           <div className="text-center">
             <p className="font-semibold text-slate-100">Import Selesai!</p>
             <p className="text-sm text-slate-400 mt-1">
-              <span className="text-emerald-400 font-semibold">{result.berhasil}</span> data berhasil diimport
-              {result.gagal > 0 && <>, <span className="text-rose-400 font-semibold">{result.gagal}</span> gagal</>}
+              {result.diperbarui > 0 && (
+                <><span className="text-sky-400 font-semibold">{result.diperbarui}</span> data diperbarui<br /></>
+              )}
+              {result.berhasil > 0 && (
+                <><span className="text-emerald-400 font-semibold">{result.berhasil}</span> data baru ditambahkan<br /></>
+              )}
+              {result.gagal > 0 && (
+                <><span className="text-rose-400 font-semibold">{result.gagal}</span> gagal</>
+              )}
             </p>
           </div>
+          <p className="text-xs text-slate-600 text-center max-w-xs">
+            Data yang sudah ada diperbarui berdasarkan kolom ID. Data baru ditambahkan jika NIK belum terdaftar.
+          </p>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={reset}>Import Lagi</Button>
             <Button size="sm" onClick={() => router.push('/penduduk')}>
