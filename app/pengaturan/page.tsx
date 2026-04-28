@@ -91,6 +91,17 @@ export default function PengaturanPage() {
             <div className="border-t border-white/[0.06]" />
             <div className="flex items-center justify-between gap-3">
               <div>
+                <p className="text-sm font-semibold text-slate-200">Standarisasi Pendidikan & Pekerjaan</p>
+                <p className="text-xs text-slate-500 mt-0.5">Sesuai Permendagri 6/2026 — PNS→ASN (PNS), Ibu RT→Mengurus RT, dll</p>
+              </div>
+              <a href="/pengaturan/migrate-standarisasi"
+                className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors">
+                Jalankan
+              </a>
+            </div>
+            <div className="border-t border-white/[0.06]" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
                 <p className="text-sm font-semibold text-slate-200">Migrasi ID Dokumen → NIK</p>
                 <p className="text-xs text-slate-500 mt-0.5">Seragamkan semua ID dokumen penduduk menggunakan NIK</p>
               </div>

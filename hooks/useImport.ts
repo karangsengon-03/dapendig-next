@@ -42,13 +42,73 @@ function normImportVal(key: string, rawValue: unknown): unknown {
   }
 
   if (key === 'pendidikan') {
-    if (v.toUpperCase() === 'SLTP/SEDERAJAT') return 'SMP/Sederajat'
-    if (v.toUpperCase() === 'SLTA/SEDERAJAT') return 'SMA/Sederajat'
+    const upper = v.toUpperCase()
+    // Standarisasi Permendagri 109/2019
+    const PDDK: Record<string, string> = {
+      'BELUM TAMAT SD': 'Belum Tamat SD/Sederajat',
+      'SD': 'Tamat SD/Sederajat',
+      'SD/SEDERAJAT': 'Tamat SD/Sederajat',
+      'TAMAT SD': 'Tamat SD/Sederajat',
+      'SMP': 'SMP/Sederajat',
+      'SLTP': 'SMP/Sederajat',
+      'SLTP/SEDERAJAT': 'SMP/Sederajat',
+      'SMA': 'SMA/Sederajat',
+      'SLTA': 'SMA/Sederajat',
+      'SLTA/SEDERAJAT': 'SMA/Sederajat',
+      'D1': 'Diploma I/II',
+      'D2': 'Diploma I/II',
+      'D1/D2': 'Diploma I/II',
+      'DIPLOMA I': 'Diploma I/II',
+      'DIPLOMA II': 'Diploma I/II',
+      'D3': 'Diploma III',
+      'AKADEMI/DIPLOMA III/S. MUDA': 'Diploma III',
+      'DIPLOMA III': 'Diploma III',
+      'D4': 'Diploma IV/Strata I',
+      'S1': 'Diploma IV/Strata I',
+      'D4/S1': 'Diploma IV/Strata I',
+      'DIPLOMA IV': 'Diploma IV/Strata I',
+      'S2': 'Strata II',
+      'S3': 'Strata III',
+    }
+    const mapped = PDDK[upper]
+    if (mapped) return mapped
     const match = (PENDIDIKAN as readonly string[]).find(p => p.toLowerCase() === v.toLowerCase())
     return match ?? v
   }
 
   if (key === 'pekerjaan') {
+    const upper = v.toUpperCase()
+    // Standarisasi Permendagri 6/2026
+    const PKRJ: Record<string, string> = {
+      'PEGAWAI NEGERI SIPIL': 'ASN (PNS)',
+      'PNS': 'ASN (PNS)',
+      'PPPK': 'ASN (PPPK)',
+      'ASN PNS': 'ASN (PNS)',
+      'ASN PPPK': 'ASN (PPPK)',
+      'IBU RUMAH TANGGA': 'Mengurus Rumah Tangga',
+      'MENGURUS RUMAH TANGGA': 'Mengurus Rumah Tangga',
+      'TNI': 'Tentara Nasional Indonesia',
+      'TENTARA NASIONAL INDONESIA': 'Tentara Nasional Indonesia',
+      'POLRI': 'Kepolisian RI',
+      'KEPOLISIAN RI': 'Kepolisian RI',
+      'GURU/DOSEN': 'Guru',
+      'GURU': 'Guru',
+      'BIDAN': 'Bidan',
+      'TUKANG/MONTIR': 'Mekanik',
+      'PEDAGANG': 'Pedagang',
+      'PETANI/PEKEBUN': 'Petani/Pekebun',
+      'BURUH HARIAN LEPAS': 'Buruh Harian Lepas',
+      'BURUH TANI/PERKEBUNAN': 'Buruh Tani/Perkebunan',
+      'KARYAWAN SWASTA': 'Karyawan Swasta',
+      'KARYAWAN HONORER': 'Karyawan Honorer',
+      'PELAJAR/MAHASISWA': 'Pelajar/Mahasiswa',
+      'PERANGKAT DESA': 'Perangkat Desa',
+      'WIRASWASTA': 'Wiraswasta',
+      'TIDAK/BELUM BEKERJA': 'Tidak/Belum Bekerja',
+      'BELUM/TIDAK BEKERJA': 'Tidak/Belum Bekerja',
+    }
+    const mapped = PKRJ[upper]
+    if (mapped) return mapped
     const match = (PEKERJAAN as readonly string[]).find(p => p.toLowerCase() === v.toLowerCase())
     return match ?? v
   }
