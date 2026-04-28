@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   collection,
   getDocs,
+  getDoc,
   addDoc,
   setDoc,
   deleteDoc,
@@ -48,11 +49,12 @@ async function addMutasiKeluar(
     created_at: serverTimestamp(),
     created_by: email,
   })
-  // Update status penduduk jika nik_target ada
+  // Update status penduduk — NIK adalah document ID
   if (data.nik_target) {
-    const snap = await getDocs(query(collection(db, 'penduduk'), where('nik', '==', data.nik_target)))
-    if (!snap.empty) {
-      await updateDoc(doc(db, 'penduduk', snap.docs[0].id), { status: 'mutasi-keluar', updated_at: serverTimestamp() })
+    const pendudukRef = doc(db, 'penduduk', data.nik_target)
+    const pendudukSnap = await getDoc(pendudukRef)
+    if (pendudukSnap.exists()) {
+      await updateDoc(pendudukRef, { status: 'mutasi-keluar', updated_at: serverTimestamp() })
     }
   }
   await writeLog('tambah', `Pindah keluar: ${data.nama}`, email, data.nik_target)
@@ -65,9 +67,11 @@ async function deleteMutasiKeluar(id: string, nama: string, email: string): Prom
 }
 
 async function rollbackMutasiKeluar(mutasiId: string, nik_target: string, nama: string, email: string): Promise<void> {
-  const snap = await getDocs(query(collection(db, 'penduduk'), where('nik', '==', nik_target)))
-  if (!snap.empty) {
-    await updateDoc(doc(db, 'penduduk', snap.docs[0].id), { status: 'aktif', updated_at: serverTimestamp() })
+  // NIK adalah document ID — langsung getDoc
+  const pendudukRef = doc(db, 'penduduk', nik_target)
+  const pendudukSnap = await getDoc(pendudukRef)
+  if (pendudukSnap.exists()) {
+    await updateDoc(pendudukRef, { status: 'aktif', updated_at: serverTimestamp() })
   }
   await deleteDoc(doc(db, 'mutasi_keluar', mutasiId))
   await writeLog('rollback', `Batalkan mutasi keluar: ${nama}`, email, nik_target)

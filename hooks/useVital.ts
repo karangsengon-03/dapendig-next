@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   collection,
   getDocs,
+  getDoc,
   addDoc,
   setDoc,
   deleteDoc,
@@ -101,11 +102,12 @@ async function addMeninggal(
     created_at: serverTimestamp(),
     created_by: email,
   })
-  // Update status penduduk jika nik_target ada
+  // Update status penduduk — NIK adalah document ID
   if (data.nik_target) {
-    const snap = await getDocs(query(collection(db, 'penduduk'), where('nik', '==', data.nik_target)))
-    if (!snap.empty) {
-      await updateDoc(doc(db, 'penduduk', snap.docs[0].id), { status: 'meninggal', updated_at: serverTimestamp() })
+    const pendudukRef = doc(db, 'penduduk', data.nik_target)
+    const pendudukSnap = await getDoc(pendudukRef)
+    if (pendudukSnap.exists()) {
+      await updateDoc(pendudukRef, { status: 'meninggal', updated_at: serverTimestamp() })
     }
   }
   await writeLog('tambah', `Kematian: ${data.nama}`, email, data.nik_target)
@@ -125,11 +127,13 @@ async function rollbackMeninggal(
   no_kk: string,
   email: string
 ): Promise<void> {
-  const snap = await getDocs(query(collection(db, 'penduduk'), where('nik', '==', nik_target)))
-  if (!snap.empty) {
+  // NIK adalah document ID — langsung getDoc
+  const pendudukRef = doc(db, 'penduduk', nik_target)
+  const pendudukSnap = await getDoc(pendudukRef)
+  if (pendudukSnap.exists()) {
     const updateData: Record<string, unknown> = { status: 'aktif', updated_at: serverTimestamp() }
     if (hub_asli) updateData.hubungan_keluarga = hub_asli
-    await updateDoc(doc(db, 'penduduk', snap.docs[0].id), updateData)
+    await updateDoc(pendudukRef, updateData)
   }
   // KK Restoration: jika hub_asli adalah Kepala Keluarga, cari pengganti sementara
   if (hub_asli === 'Kepala Keluarga' && no_kk) {
