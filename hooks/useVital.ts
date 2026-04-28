@@ -5,6 +5,7 @@ import {
   collection,
   getDocs,
   addDoc,
+  setDoc,
   deleteDoc,
   doc,
   orderBy,
@@ -47,10 +48,12 @@ async function addLahir(
     created_at: serverTimestamp(),
     created_by: email,
   })
-  // Otomatis tambah ke penduduk
-  await addDoc(collection(db, 'penduduk'), {
+  // Otomatis tambah ke penduduk — gunakan NIK sebagai document ID
+  const nik = data.nik?.trim() ?? ''
+  if (!nik) throw new Error('NIK bayi wajib diisi')
+  await setDoc(doc(db, 'penduduk', nik), {
     nama_lengkap: data.nama_lengkap,
-    nik: data.nik ?? '',
+    nik,
     no_kk: data.no_kk,
     jenis_kelamin: data.jenis_kelamin,
     agama: data.agama,
@@ -62,8 +65,8 @@ async function addLahir(
     tempat_lahir: data.tempat_lahir,
     tanggal_lahir: data.tanggal_lahir,
     status_perkawinan: 'Belum Kawin',
-    pendidikan: 'Tidak/Belum Sekolah',
-    pekerjaan: 'Tidak/Belum Bekerja',
+    pendidikan: data.pendidikan || 'Tidak/Belum Sekolah',
+    pekerjaan: data.pekerjaan || 'Tidak/Belum Bekerja',
     alamat: data.alamat ?? '',
     golongan_darah: '',
     status: 'aktif',
@@ -71,7 +74,7 @@ async function addLahir(
     updated_at: serverTimestamp(),
     created_by: email,
   })
-  await writeLog('tambah', `Kelahiran: ${data.nama_lengkap}`, email, data.nik)
+  await writeLog('tambah', `Kelahiran: ${data.nama_lengkap}`, email, nik)
   return ref.id
 }
 

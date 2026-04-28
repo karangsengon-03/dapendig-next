@@ -2,8 +2,8 @@
 
 import { useMutation } from '@tanstack/react-query'
 import {
-  collection, addDoc, updateDoc, getDocs,
-  query, where, doc, serverTimestamp, writeBatch,
+  collection, addDoc, setDoc,
+  doc, serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
@@ -42,7 +42,6 @@ function normImportVal(key: string, rawValue: unknown): unknown {
   }
 
   if (key === 'pendidikan') {
-    // Normalisasi SLTP/SLTA → SMP/SMA otomatis saat import
     if (v.toUpperCase() === 'SLTP/SEDERAJAT') return 'SMP/Sederajat'
     if (v.toUpperCase() === 'SLTA/SEDERAJAT') return 'SMA/Sederajat'
     const match = (PENDIDIKAN as readonly string[]).find(p => p.toLowerCase() === v.toLowerCase())
@@ -50,7 +49,6 @@ function normImportVal(key: string, rawValue: unknown): unknown {
   }
 
   if (key === 'pekerjaan') {
-    // Normalisasi format SIAK uppercase → Title Case
     const match = (PEKERJAAN as readonly string[]).find(p => p.toLowerCase() === v.toLowerCase())
     return match ?? v
   }
@@ -65,7 +63,7 @@ function normImportVal(key: string, rawValue: unknown): unknown {
   }
 
   if (key === 'status') return v || 'aktif'
-  if (key === 'id') return v  // akan dipakai sebagai referensi, tidak disimpan sebagai field
+  if (key === 'id') return v  // referensi saja, tidak disimpan sebagai field
 
   return v
 }
@@ -80,81 +78,47 @@ export function useImportPenduduk() {
       let diperbarui = 0
       let gagal = 0
 
-      // Batch write untuk efisiensi
-      let batch = writeBatch(db)
-      let batchCount = 0
-
       for (const row of rows) {
-        const firestoreId = String(row.id ?? '').trim()
-        const nik = String(row.nik ?? '').trim()
+        // NIK adalah ID dokumen — wajib ada
+        const nik = String(row.nik ?? row.NIK ?? '').trim()
         const nama = String(row.nama_lengkap ?? '').trim()
 
         if (!nik && !nama) continue
+        if (!nik) { gagal++; continue }  // tanpa NIK tidak bisa disimpan
 
         try {
-          // Bangun objek data — skip field 'id' (itu referensi dokumen, bukan field data)
+          // Bangun data — skip field 'id' (hanya referensi)
           const data: Record<string, unknown> = {
             updated_at: serverTimestamp(),
             updated_by: email,
           }
           for (const [k, v] of Object.entries(row)) {
-            if (k === 'id') continue  // skip ID dokumen
+            if (k === 'id' || k === 'ID') continue
             data[k] = normImportVal(k, v)
           }
           if (!data.status) data.status = 'aktif'
+          data.nik = nik  // pastikan NIK tersimpan sebagai field juga
 
-          if (firestoreId) {
-            // Ada ID dokumen — langsung update dokumen tersebut
-            batch.update(doc(db, 'penduduk', firestoreId), data)
+          // Cek apakah dokumen sudah ada
+          const docRef = doc(db, 'penduduk', nik)
+          const { getDoc } = await import('firebase/firestore')
+          const existing = await getDoc(docRef)
+
+          if (existing.exists()) {
+            // Update — pakai setDoc dengan merge agar field lain tidak hilang
+            await setDoc(docRef, data, { merge: true })
             diperbarui++
-          } else if (nik) {
-            // Tidak ada ID — cari berdasarkan NIK
-            const snap = await getDocs(query(collection(db, 'penduduk'), where('nik', '==', nik)))
-            if (!snap.empty) {
-              // NIK ditemukan — update dokumen yang ada
-              batch.update(snap.docs[0].ref, data)
-              diperbarui++
-            } else {
-              // NIK baru — tambah dokumen baru
-              data.created_at = serverTimestamp()
-              data.created_by = email
-              // addDoc tidak bisa di batch — commit batch dulu lalu addDoc
-              if (batchCount > 0) {
-                await batch.commit()
-                batch = writeBatch(db)
-                batchCount = 0
-              }
-              await addDoc(collection(db, 'penduduk'), data)
-              berhasil++
-              continue
-            }
           } else {
-            // Tidak ada ID dan tidak ada NIK — tambah baru
+            // Baru — tambah dengan NIK sebagai ID
             data.created_at = serverTimestamp()
             data.created_by = email
-            if (batchCount > 0) {
-              await batch.commit()
-              batch = writeBatch(db)
-              batchCount = 0
-            }
-            await addDoc(collection(db, 'penduduk'), data)
+            await setDoc(docRef, data)
             berhasil++
-            continue
-          }
-
-          batchCount++
-          if (batchCount >= 499) {
-            await batch.commit()
-            batch = writeBatch(db)
-            batchCount = 0
           }
         } catch {
           gagal++
         }
       }
-
-      // Commit sisa batch
-      if (batchCount > 0) await batch.commit()
 
       // Log aktivitas
       await addDoc(collection(db, 'log'), {

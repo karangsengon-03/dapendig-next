@@ -5,6 +5,7 @@ import {
   collection,
   getDocs,
   addDoc,
+  setDoc,
   deleteDoc,
   doc,
   orderBy,
@@ -90,10 +91,12 @@ async function addMutasiMasuk(
     created_at: serverTimestamp(),
     created_by: email,
   })
-  // Otomatis tambah ke penduduk
-  await addDoc(collection(db, 'penduduk'), {
+  // Otomatis tambah ke penduduk — gunakan NIK sebagai document ID
+  const nik = data.nik?.trim()
+  if (!nik) throw new Error('NIK wajib diisi untuk pindah masuk')
+  await setDoc(doc(db, 'penduduk', nik), {
     nama_lengkap: data.nama_lengkap,
-    nik: data.nik,
+    nik,
     no_kk: data.no_kk,
     jenis_kelamin: data.jenis_kelamin,
     agama: data.agama,

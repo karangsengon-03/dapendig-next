@@ -5,7 +5,7 @@ import {
   collection,
   getDocs,
   getDoc,
-  addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   doc,
@@ -63,13 +63,15 @@ async function addPenduduk(
   data: PendudukFormData,
   email: string
 ): Promise<string> {
-  const ref = await addDoc(collection(db, COL), {
+  const nik = data.nik?.trim()
+  if (!nik) throw new Error('NIK wajib diisi untuk menyimpan data penduduk')
+  await setDoc(doc(db, COL, nik), {
     ...data,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
   })
-  await writeLog('tambah', `Tambah penduduk: ${data.nama_lengkap}`, email)
-  return ref.id
+  await writeLog('tambah', `Tambah penduduk: ${data.nama_lengkap}`, email, nik)
+  return nik
 }
 
 // ── Update ───────────────────────────────────────────────────────────────────
@@ -195,13 +197,10 @@ export async function checkNikExists(
   nik: string,
   excludeId?: string
 ): Promise<boolean> {
-  const snap = await getDocs(
-    query(collection(db, COL), where('nik', '==', nik))
-  )
-  if (snap.empty) return false
-  if (excludeId && snap.docs.length === 1 && snap.docs[0].id === excludeId)
-    return false
-  return true
+  if (!nik) return false
+  if (excludeId && excludeId === nik) return false  // sedang edit dokumen ini sendiri
+  const snap = await getDoc(doc(db, COL, nik))
+  return snap.exists()
 }
 
 // ── Exported hooks ────────────────────────────────────────────────────────────
