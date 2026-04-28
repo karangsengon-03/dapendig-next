@@ -142,7 +142,8 @@ async function rollbackMeninggal(
     )
     for (const d of kkSnap.docs) {
       const pData = d.data()
-      if (pData.hub_asli_backup && d.id !== (snap.empty ? '' : snap.docs[0].id)) {
+      // Skip dokumen yang baru dikembalikan (NIK = nik_target = document ID)
+      if (pData.hub_asli_backup && d.id !== nik_target) {
         await updateDoc(doc(db, 'penduduk', d.id), {
           hubungan_keluarga: pData.hub_asli_backup,
           hub_asli_backup: null,
