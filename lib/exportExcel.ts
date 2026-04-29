@@ -18,26 +18,37 @@ export interface ExportColumn {
  * @param filename - Nama file tanpa ekstensi (akan diberi .xlsx otomatis)
  * @param sheetName - Nama sheet dalam workbook (maks 31 karakter)
  */
+// Konversi YYYY-MM-DD → DD/MM/YYYY untuk ekspor
+function toDisplayDate(val: string): string {
+  if (!val || !/^\d{4}-\d{2}-\d{2}$/.test(val)) return val
+  const [y, m, d] = val.split('-')
+  return `${d}/${m}/${y}`
+}
+
 export function exportToExcel(
   rows: Record<string, unknown>[],
   columns: ExportColumn[],
   filename: string,
   sheetName = 'Data'
 ): void {
-  // Bangun array of arrays: baris pertama = header
   const header = columns.map((c) => c.header)
   const body = rows.map((row) =>
     columns.map((c) => {
       const val = row[c.key]
       if (val === null || val === undefined) return ''
-      // Firestore Timestamp → string tanggal
+      // Firestore Timestamp → DD/MM/YYYY
       if (
         typeof val === 'object' &&
         'seconds' in (val as object) &&
         'nanoseconds' in (val as object)
       ) {
         const ts = val as { seconds: number; nanoseconds: number }
-        return new Date(ts.seconds * 1000).toLocaleDateString('id-ID')
+        const d = new Date(ts.seconds * 1000)
+        return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
+      }
+      // Tanggal format YYYY-MM-DD → DD/MM/YYYY
+      if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+        return toDisplayDate(val)
       }
       return String(val)
     })
@@ -107,25 +118,25 @@ export function exportBulanan(data: DataBulanan, bulan: string, tahun: string): 
 
   // Sheet Mutasi Keluar
   if (mk.length > 0) {
-    const rows = [['Nama', 'NIK', 'No. KK', 'Tujuan', 'Tanggal'], ...mk.map((r) => [r.nama, r.nik_target, r.no_kk, r.tujuan, r.tanggal])]
+    const rows = [['Nama', 'NIK', 'No. KK', 'Tujuan', 'Tanggal'], ...mk.map((r) => [r.nama, r.nik_target, r.no_kk, r.tujuan, toDisplayDate(r.tanggal)])]
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Mutasi Keluar')
   }
 
   // Sheet Mutasi Masuk
   if (mm.length > 0) {
-    const rows = [['Nama', 'NIK', 'No. KK', 'Asal Daerah', 'Tanggal'], ...mm.map((r) => [r.nama_lengkap, r.nik, r.no_kk, r.asal_daerah, r.tanggal])]
+    const rows = [['Nama', 'NIK', 'No. KK', 'Asal Daerah', 'Tanggal'], ...mm.map((r) => [r.nama_lengkap, r.nik, r.no_kk, r.asal_daerah, toDisplayDate(r.tanggal)])]
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Mutasi Masuk')
   }
 
   // Sheet Kelahiran
   if (lh.length > 0) {
-    const rows = [['Nama Bayi', 'JK', 'Tgl Lahir', 'Nama Ibu', 'Nama Ayah', 'RT', 'RW'], ...lh.map((r) => [r.nama_lengkap, r.jenis_kelamin, r.tanggal_lahir, r.nama_ibu, r.nama_ayah, r.rt, r.rw])]
+    const rows = [['Nama Bayi', 'JK', 'Tgl Lahir', 'Nama Ibu', 'Nama Ayah', 'RT', 'RW'], ...lh.map((r) => [r.nama_lengkap, r.jenis_kelamin, toDisplayDate(r.tanggal_lahir), r.nama_ibu, r.nama_ayah, r.rt, r.rw])]
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Kelahiran')
   }
 
   // Sheet Kematian
   if (mn.length > 0) {
-    const rows = [['Nama', 'NIK', 'Tgl Meninggal', 'Sebab'], ...mn.map((r) => [r.nama, r.nik_target, r.tanggal, r.sebab])]
+    const rows = [['Nama', 'NIK', 'Tgl Meninggal', 'Sebab'], ...mn.map((r) => [r.nama, r.nik_target, toDisplayDate(r.tanggal), r.sebab])]
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Kematian')
   }
 

@@ -185,6 +185,7 @@ export function useAddLahir() {
       qc.invalidateQueries({ queryKey: ['vital'], exact: false })
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -199,6 +200,7 @@ export function useAddMeninggal() {
       qc.invalidateQueries({ queryKey: ['vital'], exact: false })
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -212,6 +214,7 @@ export function useDeleteLahir() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['vital'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -225,6 +228,7 @@ export function useDeleteMeninggal() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['vital'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -240,6 +244,7 @@ export function useRollbackMeninggal() {
       qc.invalidateQueries({ queryKey: ['vital'], exact: false })
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }

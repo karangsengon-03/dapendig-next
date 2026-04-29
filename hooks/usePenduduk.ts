@@ -232,6 +232,7 @@ export function useAddPenduduk() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -246,6 +247,7 @@ export function useUpdatePenduduk(id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -261,6 +263,7 @@ export function useDeletePenduduk() {
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
       qc.invalidateQueries({ queryKey: ['recycle-bin'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -276,6 +279,7 @@ export function useCatatPindahKeluar() {
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -291,6 +295,7 @@ export function useCatatMeninggal() {
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['vital'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }

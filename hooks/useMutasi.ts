@@ -157,6 +157,7 @@ export function useAddMutasiKeluar() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -171,6 +172,7 @@ export function useAddMutasiMasuk() {
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -184,6 +186,7 @@ export function useDeleteMutasiKeluar() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -198,6 +201,7 @@ export function useRollbackMutasiKeluar() {
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
@@ -211,6 +215,7 @@ export function useDeleteMutasiMasuk() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
   })
 }
