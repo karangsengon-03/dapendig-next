@@ -100,6 +100,9 @@ export default function PengaturanPage() {
               </a>
             </div>
             <div className="border-t border-white/[0.06]" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Standarisasi Pendidikan & Pekerjaan</p>
                 <p className="text-xs text-slate-500 mt-0.5">Sesuai Permendagri 6/2026 — PNS→ASN (PNS), Ibu RT→Mengurus RT, dll</p>
               </div>
               <a href="/pengaturan/migrate-standarisasi"
