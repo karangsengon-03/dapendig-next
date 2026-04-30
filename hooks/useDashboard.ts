@@ -51,21 +51,60 @@ async function fetchPendudukStats() {
     (r) => r.hubungan_keluarga === 'Kepala Keluarga'
   ).length
 
-  // Per RT
-  const byRT: Record<string, number> = {}
+  // Per RT dengan L dan P
+  const byRT: Record<string, { laki: number; perempuan: number }> = {}
   for (const r of rows) {
-    const key = `RT ${r.rt}`
-    byRT[key] = (byRT[key] ?? 0) + 1
+    const key = r.rt ?? '000'
+    if (!byRT[key]) byRT[key] = { laki: 0, perempuan: 0 }
+    if (r.jenis_kelamin === 'Laki-laki') byRT[key].laki++
+    else byRT[key].perempuan++
   }
-  const rtData = Object.entries(byRT)
-    .map(([rt, jumlah]) => ({ rt, jumlah }))
-    .sort((a, b) => a.rt.localeCompare(b.rt, 'id', { numeric: true }))
+
+  // RT_LIST resmi
+  const RT_VALID = ['001','002','003','004','005','006','007','008','009','010','011']
+
+  const rtData = RT_VALID.map(rt => ({
+    rt,
+    laki: byRT[rt]?.laki ?? 0,
+    perempuan: byRT[rt]?.perempuan ?? 0,
+    jumlah: (byRT[rt]?.laki ?? 0) + (byRT[rt]?.perempuan ?? 0),
+  }))
+
+  // Data RT di luar RT_VALID → Lain-lain
+  const lainLaki = Object.entries(byRT).filter(([rt]) => !RT_VALID.includes(rt)).reduce((s,[,v])=>s+v.laki,0)
+  const lainPerempuan = Object.entries(byRT).filter(([rt]) => !RT_VALID.includes(rt)).reduce((s,[,v])=>s+v.perempuan,0)
+  if (lainLaki + lainPerempuan > 0) {
+    rtData.push({ rt: 'Lain-lain', laki: lainLaki, perempuan: lainPerempuan, jumlah: lainLaki + lainPerempuan })
+  }
+
+  // Dusun — peta RT ke Dusun
+  const DUSUN_MAP: Record<string, string> = {
+    '001': 'Pesanggrahan', '002': 'Pesanggrahan', '003': 'Pesanggrahan', '007': 'Pesanggrahan',
+    '004': 'Paleran', '005': 'Paleran', '006': 'Paleran',
+    '008': 'Sumber', '009': 'Sumber',
+    '010': 'Blangguan', '011': 'Blangguan',
+  }
+  const DUSUN_ORDER = ['Pesanggrahan', 'Paleran', 'Sumber', 'Blangguan']
+  const byDusun: Record<string, { laki: number; perempuan: number }> = {}
+  for (const r of rows) {
+    const rt = r.rt ?? ''
+    const dusun = DUSUN_MAP[rt] ?? 'Lain-lain'
+    if (!byDusun[dusun]) byDusun[dusun] = { laki: 0, perempuan: 0 }
+    if (r.jenis_kelamin === 'Laki-laki') byDusun[dusun].laki++
+    else byDusun[dusun].perempuan++
+  }
+  const dusunData = [...DUSUN_ORDER, ...(byDusun['Lain-lain'] ? ['Lain-lain'] : [])].map(dusun => ({
+    dusun,
+    laki: byDusun[dusun]?.laki ?? 0,
+    perempuan: byDusun[dusun]?.perempuan ?? 0,
+    jumlah: (byDusun[dusun]?.laki ?? 0) + (byDusun[dusun]?.perempuan ?? 0),
+  }))
 
   // Per jenis kelamin
   const lakiLaki = rows.filter((r) => r.jenis_kelamin === 'Laki-laki').length
   const perempuan = rows.filter((r) => r.jenis_kelamin === 'Perempuan').length
 
-  return { totalPenduduk, totalKK, rtData, lakiLaki, perempuan }
+  return { totalPenduduk, totalKK, rtData, dusunData, lakiLaki, perempuan }
 }
 
 // ── Kelahiran bulan ini ─────────────────────────────────────────────────────

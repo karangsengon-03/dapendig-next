@@ -36,13 +36,11 @@ function toProper(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
 }
 
+import { hitungUmur as calcUmur, formatTanggalLahir } from '@/lib/dateUtils'
+
 function hitungUmur(tanggalLahir: string): string {
-  if (!tanggalLahir) return '—'
-  const lahir = new Date(tanggalLahir + 'T00:00:00')
-  const now = new Date()
-  let umur = now.getFullYear() - lahir.getFullYear()
-  if (now.getMonth() - lahir.getMonth() < 0 ||
-    (now.getMonth() - lahir.getMonth() === 0 && now.getDate() < lahir.getDate())) umur--
+  const umur = calcUmur(tanggalLahir)
+  if (umur < 0) return '—'
   return `${umur} tahun`
 }
 
@@ -131,7 +129,7 @@ export default function DetailPendudukPage() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-sky-400/70 pt-3 pb-1">Data Diri</p>
                 <DetailRow label="Jenis Kelamin">{data.jenis_kelamin}</DetailRow>
                 <DetailRow label="Tempat, Tanggal Lahir">
-                  {`${toProper(data.tempat_lahir)}, ${new Date(data.tanggal_lahir + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+                  {`${toProper(data.tempat_lahir)}, ${formatTanggalLahir(data.tanggal_lahir)}`}
                 </DetailRow>
                 <DetailRow label="Umur">{hitungUmur(data.tanggal_lahir)}</DetailRow>
                 <DetailRow label="Agama">{data.agama}</DetailRow>

@@ -12,13 +12,11 @@ interface PendudukTableProps {
   pageSize: number
 }
 
+import { hitungUmur as calcUmur } from '@/lib/dateUtils'
+
 function hitungUmur(tanggalLahir: string): string {
-  if (!tanggalLahir) return '—'
-  const lahir = new Date(tanggalLahir + 'T00:00:00')
-  const now = new Date()
-  let umur = now.getFullYear() - lahir.getFullYear()
-  const bln = now.getMonth() - lahir.getMonth()
-  if (bln < 0 || (bln === 0 && now.getDate() < lahir.getDate())) umur--
+  const umur = calcUmur(tanggalLahir)
+  if (umur < 0) return '—'
   return `${umur} th`
 }
 

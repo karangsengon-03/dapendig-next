@@ -53,9 +53,13 @@ async function fetchAllPenduduk(): Promise<Penduduk[]> {
 // ── Fetch single ─────────────────────────────────────────────────────────────
 
 async function fetchPendudukById(id: string): Promise<Penduduk | null> {
+  // Coba langsung by document ID (NIK = doc ID setelah migrasi)
   const snap = await getDoc(doc(db, COL, id))
-  if (!snap.exists()) return null
-  return { id: snap.id, ...snap.data() } as Penduduk
+  if (snap.exists()) return { id: snap.id, ...snap.data() } as Penduduk
+  // Fallback: cari by field nik (untuk dokumen yang belum termigrasi)
+  const q = await getDocs(query(collection(db, COL), where('nik', '==', id)))
+  if (!q.empty) return { id: q.docs[0].id, ...q.docs[0].data() } as Penduduk
+  return null
 }
 
 // ── Add ───────────────────────────────────────────────────────────────────────

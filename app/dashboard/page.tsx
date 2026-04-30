@@ -5,13 +5,10 @@ import { ChevronLeft, ChevronRight, Users, Home, Baby, HeartPulse, ArrowRightFro
 import { AppShell } from '@/components/layout/AppShell'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { GenderChart } from '@/components/dashboard/GenderChart'
-import { RTChart } from '@/components/dashboard/RTChart'
-import { UmurChart } from '@/components/dashboard/UmurChart'
 import { WilayahBadge } from '@/components/dashboard/WilayahBadge'
 import {
   usePendudukStats,
   usePendudukBaruBulanIni,
-  useUmurStats,
 } from '@/hooks/useDashboard'
 import { useLahir } from '@/hooks/useVital'
 import { useMeninggal } from '@/hooks/useVital'
@@ -38,7 +35,6 @@ export default function DashboardPage() {
 
   const { data: stats, isLoading: loadingStats } = usePendudukStats()
   const { data: pendudukBaru = 0 } = usePendudukBaruBulanIni()
-  const { data: umurData = [], isLoading: loadingUmur } = useUmurStats()
   const { data: allLahir = [] } = useLahir()
   const { data: allMeninggal = [] } = useMeninggal()
   const { data: allKeluar = [] } = useMutasiKeluar()
@@ -106,11 +102,81 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <GenderChart lakiLaki={stats?.lakiLaki ?? 0} perempuan={stats?.perempuan ?? 0} loading={loadingStats} />
-          <RTChart data={stats?.rtData ?? []} loading={loadingStats} />
+        <GenderChart lakiLaki={stats?.lakiLaki ?? 0} perempuan={stats?.perempuan ?? 0} loading={loadingStats} />
+
+        {/* Tabel Penduduk per RT */}
+        <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Penduduk per RT</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  {['RT','L','P','Total'].map(h => (
+                    <th key={h} className="py-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-center">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loadingStats ? (
+                  <tr><td colSpan={4} className="text-center py-4 text-slate-600 text-xs">Memuat...</td></tr>
+                ) : (stats?.rtData ?? []).map(row => (
+                  <tr key={row.rt} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                    <td className="py-2 px-2 text-center text-slate-300 font-medium text-xs">
+                      {row.rt === 'Lain-lain' ? row.rt : `RT ${row.rt}`}
+                    </td>
+                    <td className="py-2 px-2 text-center text-sky-400 tabular-nums text-xs">{row.laki}</td>
+                    <td className="py-2 px-2 text-center text-pink-400 tabular-nums text-xs">{row.perempuan}</td>
+                    <td className="py-2 px-2 text-center text-slate-200 font-semibold tabular-nums text-xs">{row.jumlah}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-white/[0.08]">
+                  <td className="py-2 px-2 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</td>
+                  <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-xs">{stats?.lakiLaki ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-xs">{stats?.perempuan ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-xs">{stats?.totalPenduduk ?? 0}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
-        <UmurChart data={umurData} loading={loadingUmur} />
+
+        {/* Tabel Penduduk per Dusun */}
+        <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Penduduk per Dusun</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  {['Dusun','L','P','Total'].map(h => (
+                    <th key={h} className="py-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-center">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loadingStats ? (
+                  <tr><td colSpan={4} className="text-center py-4 text-slate-600 text-xs">Memuat...</td></tr>
+                ) : (stats?.dusunData ?? []).map(row => (
+                  <tr key={row.dusun} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                    <td className="py-2 px-2 text-slate-300 font-medium text-xs text-center">{row.dusun}</td>
+                    <td className="py-2 px-2 text-center text-sky-400 tabular-nums text-xs">{row.laki}</td>
+                    <td className="py-2 px-2 text-center text-pink-400 tabular-nums text-xs">{row.perempuan}</td>
+                    <td className="py-2 px-2 text-center text-slate-200 font-semibold tabular-nums text-xs">{row.jumlah}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-white/[0.08]">
+                  <td className="py-2 px-2 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</td>
+                  <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-xs">{stats?.lakiLaki ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-xs">{stats?.perempuan ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-xs">{stats?.totalPenduduk ?? 0}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
       </div>
     </AppShell>
   )

@@ -7,7 +7,9 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
+import { normalisasiTanggal } from '@/lib/dateUtils'
 import { AGAMA, PENDIDIKAN, PEKERJAAN, HUBUNGAN_KELUARGA } from '@/lib/penduduk-constants'
+import { toISODate } from '@/lib/utils'
 
 function normImportVal(key: string, rawValue: unknown): unknown {
   const v = String(rawValue ?? '').trim()
@@ -124,6 +126,9 @@ function normImportVal(key: string, rawValue: unknown): unknown {
 
   if (key === 'status') return v || 'aktif'
   if (key === 'id') return v  // referensi saja, tidak disimpan sebagai field
+
+  // Semua field tanggal → simpan sebagai YYYY-MM-DD di Firestore
+  if (key === 'tanggal_lahir' || key === 'tanggal') return toISODate(v)
 
   return v
 }

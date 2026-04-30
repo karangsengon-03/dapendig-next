@@ -46,13 +46,10 @@ const KLASIFIKASI = [
   { label: 'Lansia',     min: 45, max: 999 },
 ]
 
+import { hitungUmur as calcUmur } from '@/lib/dateUtils'
+
 function hitungUmur(tanggalLahir: string): number {
-  const lahir = new Date(tanggalLahir)
-  const sekarang = new Date()
-  let umur = sekarang.getFullYear() - lahir.getFullYear()
-  const m = sekarang.getMonth() - lahir.getMonth()
-  if (m < 0 || (m === 0 && sekarang.getDate() < lahir.getDate())) umur--
-  return umur
+  return calcUmur(tanggalLahir)
 }
 
 async function fetchMonografi(): Promise<MonografiData> {

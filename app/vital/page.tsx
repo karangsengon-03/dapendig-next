@@ -17,9 +17,13 @@ import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/components/ui/toast'
 import type { Lahir, Meninggal } from '@/types'
 
+import { parseDate } from '@/lib/dateUtils'
+
 function formatTanggal(tgl: string) {
   if (!tgl) return '-'
-  return new Date(tgl + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+  const d = parseDate(tgl)
+  if (!d) return tgl
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 // ── Detail Modal Kelahiran ────────────────────────────────────────────────────
