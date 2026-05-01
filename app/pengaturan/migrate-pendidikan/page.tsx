@@ -6,7 +6,8 @@ import { db } from '@/lib/firebase'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react'
+import { MigrasiProgress } from '@/components/ui/migrasi-progress'
+import { CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
 
 // Pemetaan nilai lama → nilai baru
 const MIGRATION_MAP: Record<string, string> = {
@@ -22,6 +23,8 @@ export default function MigratePendidikanPage() {
   const [skipped, setSkipped] = useState(0)
   const [detail, setDetail] = useState<Record<string, number>>({})
   const [errorMsg, setErrorMsg] = useState('')
+  const [progressCurrent, setProgressCurrent] = useState(0)
+  const [progressTotal, setProgressTotal] = useState(0)
 
   async function handleMigrate() {
     if (!isAdmin()) return
@@ -107,10 +110,7 @@ export default function MigratePendidikanPage() {
           )}
 
           {status === 'loading' && (
-            <div className="flex items-center gap-2.5 py-2">
-              <Loader2 size={18} className="text-sky-400 animate-spin" />
-              <p className="text-sm text-slate-400">Memproses data penduduk...</p>
-            </div>
+            <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diperiksa" />
           )}
 
           {status === 'done' && (

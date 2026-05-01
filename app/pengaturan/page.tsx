@@ -113,7 +113,14 @@ export default function PengaturanPage() {
             <div className="border-t border-white/[0.06]" />
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-slate-200">Migrasi ID Dokumen → NIK</p>
+                <p className="text-sm font-semibold text-slate-200">Fix Duplikat Dokumen</p>
+                <p className="text-xs text-slate-500 mt-0.5">Hapus dokumen lama yang ID-nya masih random jika NIK sudah ada</p>
+              </div>
+              <a href="/pengaturan/fix-duplikat"
+                className="shrink-0 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium hover:bg-rose-500/20 transition-colors">
+                Jalankan
+              </a>
+            </div>
                 <p className="text-xs text-slate-500 mt-0.5">Seragamkan semua ID dokumen penduduk menggunakan NIK</p>
               </div>
               <a href="/pengaturan/migrate-docid"

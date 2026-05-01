@@ -137,13 +137,22 @@ export function useImportPenduduk() {
   const user = useAuthStore((s) => s.user)
 
   return useMutation({
-    mutationFn: async (rows: Record<string, unknown>[]): Promise<{ berhasil: number; diperbarui: number; gagal: number }> => {
+    mutationFn: async ({
+      rows,
+      onProgress,
+    }: {
+      rows: Record<string, unknown>[]
+      onProgress?: (current: number, total: number) => void
+    }): Promise<{ berhasil: number; diperbarui: number; gagal: number }> => {
       const email = user?.email ?? 'unknown'
       let berhasil = 0
       let diperbarui = 0
       let gagal = 0
+      const total = rows.length
 
-      for (const row of rows) {
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i]
+        onProgress?.(i + 1, total)
         // NIK adalah ID dokumen — wajib ada
         const nik = String(row.nik ?? row.NIK ?? '').trim()
         const nama = String(row.nama_lengkap ?? '').trim()

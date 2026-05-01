@@ -6,7 +6,8 @@ import { db } from '@/lib/firebase'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react'
+import { MigrasiProgress } from '@/components/ui/migrasi-progress'
+import { CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
 import { normalisasiTanggal } from '@/lib/dateUtils'
 
 const KOLEKSI_TANGGAL: { koleksi: string; fields: string[] }[] = [
@@ -23,6 +24,8 @@ export default function MigrateTanggalPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [result, setResult] = useState<{ updated: number; skipped: number; detail: Record<string, number> } | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [progressCurrent, setProgressCurrent] = useState(0)
+  const [progressTotal, setProgressTotal] = useState(0)
 
   async function handleMigrate() {
     if (!isAdmin()) return
@@ -34,10 +37,13 @@ export default function MigrateTanggalPage() {
 
       for (const { koleksi, fields } of KOLEKSI_TANGGAL) {
         const snap = await getDocs(collection(db, koleksi))
+        if (koleksi === 'penduduk') { setProgressTotal(snap.docs.length); setProgressCurrent(0) }
         let batch = writeBatch(db)
         let batchSize = 0
 
-        for (const d of snap.docs) {
+        for (let _i = 0; _i < snap.docs.length; _i++) {
+          const d = snap.docs[_i]
+          if (koleksi === 'penduduk') setProgressCurrent(_i + 1)
           const data = d.data()
           const updates: Record<string, string> = {}
 
@@ -115,10 +121,7 @@ export default function MigrateTanggalPage() {
           )}
 
           {status === 'loading' && (
-            <div className="flex items-center gap-2.5 py-2">
-              <Loader2 size={18} className="text-sky-400 animate-spin" />
-              <p className="text-sm text-slate-400">Memproses semua koleksi...</p>
-            </div>
+            <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diperiksa" />
           )}
 
           {status === 'done' && result && (

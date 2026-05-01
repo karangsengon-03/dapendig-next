@@ -6,6 +6,7 @@ import { Upload, FileSpreadsheet, Download, CheckCircle2, ArrowLeft } from 'luci
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useImportPenduduk } from '@/hooks/useImport'
+import { MigrasiProgress } from '@/components/ui/migrasi-progress'
 
 const KDPD = [
   { k: 'id', l: 'ID Dokumen' },
@@ -63,7 +64,7 @@ function autoMap(excelCol: string): string {
   return ''
 }
 
-type Step = 'upload' | 'mapping' | 'done'
+type Step = 'upload' | 'mapping' | 'importing' | 'done'
 
 export function ImportSection() {
   const router = useRouter()
@@ -74,6 +75,8 @@ export function ImportSection() {
   const [mapping, setMapping] = useState<Record<string, string>>({})
   const [result, setResult] = useState<{ berhasil: number; diperbarui: number; gagal: number } | null>(null)
   const [dragging, setDragging] = useState(false)
+  const [progressCurrent, setProgressCurrent] = useState(0)
+  const [progressTotal, setProgressTotal] = useState(0)
   const importMutation = useImportPenduduk()
 
   function downloadTemplate() {
@@ -115,7 +118,6 @@ export function ImportSection() {
   }
 
   async function handleImport() {
-    // Map rawRows ke field DAPENDIG
     const mapped = rawRows.map((row) => {
       const out: Record<string, unknown> = {}
       for (const [excelCol, fieldKey] of Object.entries(mapping)) {
@@ -123,7 +125,16 @@ export function ImportSection() {
       }
       return out
     })
-    const res = await importMutation.mutateAsync(mapped)
+    setProgressCurrent(0)
+    setProgressTotal(mapped.length)
+    setStep('importing' as Step)
+    const res = await importMutation.mutateAsync({
+      rows: mapped,
+      onProgress: (current, total) => {
+        setProgressCurrent(current)
+        setProgressTotal(total)
+      },
+    })
     setResult(res)
     setStep('done')
   }
@@ -237,6 +248,14 @@ export function ImportSection() {
       )}
 
       {/* Step 3 — Done */}
+      {step === 'importing' && (
+        <div className="flex flex-col gap-4 py-4">
+          <p className="text-sm font-medium text-slate-300 text-center">Mengimport data...</p>
+          <MigrasiProgress current={progressCurrent} total={progressTotal} label="data diproses" />
+          <p className="text-xs text-slate-600 text-center">Jangan tutup halaman ini</p>
+        </div>
+      )}
+
       {step === 'done' && result && (
         <div className="flex flex-col items-center gap-4 py-4">
           <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 flex items-center justify-center">

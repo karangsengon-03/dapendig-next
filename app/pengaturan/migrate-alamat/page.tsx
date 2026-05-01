@@ -6,7 +6,8 @@ import { db } from '@/lib/firebase'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react'
+import { MigrasiProgress } from '@/components/ui/migrasi-progress'
+import { CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
 
 export default function MigrateAlamatPage() {
   const { isAdmin } = useAuthStore()
@@ -15,6 +16,8 @@ export default function MigrateAlamatPage() {
   const [updated, setUpdated] = useState(0)
   const [skipped, setSkipped] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
+  const [progressCurrent, setProgressCurrent] = useState(0)
+  const [progressTotal, setProgressTotal] = useState(0)
 
   async function handleMigrate() {
     if (!isAdmin()) return
@@ -22,15 +25,20 @@ export default function MigrateAlamatPage() {
     try {
       const snap = await getDocs(collection(db, 'penduduk'))
       const toUpdate = snap.docs.filter(d => !d.data().alamat?.trim())
+      setProgressTotal(snap.docs.length)
+      setProgressCurrent(0)
 
       let updatedCount = 0
       let batchSize = 0
       let batch = writeBatch(db)
+      let processed = 0
 
       for (const d of toUpdate) {
         batch.update(doc(db, 'penduduk', d.id), { alamat: 'KARANG SENGON' })
         batchSize++
         updatedCount++
+        processed++
+        setProgressCurrent(processed)
         if (batchSize === 499) {
           await batch.commit()
           batch = writeBatch(db)
@@ -82,10 +90,7 @@ export default function MigrateAlamatPage() {
           )}
 
           {status === 'loading' && (
-            <div className="flex items-center gap-2.5 py-2">
-              <Loader2 size={18} className="text-sky-400 animate-spin" />
-              <p className="text-sm text-slate-400">Memproses data penduduk...</p>
-            </div>
+            <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diproses" />
           )}
 
           {status === 'done' && (

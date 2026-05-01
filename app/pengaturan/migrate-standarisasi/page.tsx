@@ -6,7 +6,8 @@ import { db } from '@/lib/firebase'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react'
+import { MigrasiProgress } from '@/components/ui/migrasi-progress'
+import { CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
 
 // ── Pemetaan Pendidikan ───────────────────────────────────────────────────────
 // Standar: Permendagri 109/2019 (tidak berubah di Permendagri 6/2026)
@@ -89,12 +90,16 @@ export default function MigrateStandarisasiPage() {
     detail: Record<string, number>
   } | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [progressCurrent, setProgressCurrent] = useState(0)
+  const [progressTotal, setProgressTotal] = useState(0)
 
   async function handleMigrate() {
     if (!isAdmin()) return
     setStatus('loading')
     try {
       const snap = await getDocs(collection(db, 'penduduk'))
+      setProgressTotal(snap.docs.length)
+      setProgressCurrent(0)
       const detail: Record<string, number> = {}
       let pendidikanUpdated = 0
       let pekerjaanUpdated = 0
@@ -102,7 +107,9 @@ export default function MigrateStandarisasiPage() {
       let batchSize = 0
       let batch = writeBatch(db)
 
-      for (const d of snap.docs) {
+      for (let _i = 0; _i < snap.docs.length; _i++) {
+        const d = snap.docs[_i]
+        setProgressCurrent(_i + 1)
         const data = d.data()
         const updates: Record<string, string> = {}
 
@@ -195,10 +202,7 @@ export default function MigrateStandarisasiPage() {
           )}
 
           {status === 'loading' && (
-            <div className="flex items-center gap-2.5 py-2">
-              <Loader2 size={18} className="text-sky-400 animate-spin" />
-              <p className="text-sm text-slate-400">Memproses semua data penduduk...</p>
-            </div>
+            <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diproses" />
           )}
 
           {status === 'done' && result && (

@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
+import { MigrasiProgress } from '@/components/ui/migrasi-progress'
 import { CheckCircle, AlertCircle, Loader2, ArrowLeft, AlertTriangle } from 'lucide-react'
 
 export default function MigrateDocIdPage() {
@@ -15,13 +16,17 @@ export default function MigrateDocIdPage() {
   const [preview, setPreview] = useState<{ sudahBenar: number; perluMigrasi: number; tanpaNik: number }>({ sudahBenar: 0, perluMigrasi: 0, tanpaNik: 0 })
   const [result, setResult] = useState<{ dipindah: number; dilewati: number; gagal: number }>({ dipindah: 0, dilewati: 0, gagal: 0 })
   const [errorMsg, setErrorMsg] = useState('')
+  const [progressCurrent, setProgressCurrent] = useState(0)
+  const [progressTotal, setProgressTotal] = useState(0)
 
   async function handlePreview() {
     setStatus('loading')
     try {
       const snap = await getDocs(collection(db, 'penduduk'))
       let sudahBenar = 0, perluMigrasi = 0, tanpaNik = 0
-      for (const d of snap.docs) {
+      for (let _i = 0; _i < snap.docs.length; _i++) {
+        const d = snap.docs[_i]
+        setProgressCurrent(_i + 1)
         const nik = String(d.data().nik ?? '').trim()
         if (!nik) { tanpaNik++; continue }
         if (d.id === nik) sudahBenar++
@@ -39,9 +44,13 @@ export default function MigrateDocIdPage() {
     setStatus('loading')
     try {
       const snap = await getDocs(collection(db, 'penduduk'))
+      setProgressTotal(snap.docs.length)
+      setProgressCurrent(0)
       let dipindah = 0, dilewati = 0, gagal = 0
 
-      for (const d of snap.docs) {
+      for (let _i = 0; _i < snap.docs.length; _i++) {
+        const d = snap.docs[_i]
+        setProgressCurrent(_i + 1)
         const nik = String(d.data().nik ?? '').trim()
 
         // Skip jika tidak ada NIK atau ID sudah benar
@@ -105,10 +114,7 @@ export default function MigrateDocIdPage() {
           )}
 
           {status === 'loading' && (
-            <div className="flex items-center gap-2.5 py-2">
-              <Loader2 size={18} className="text-sky-400 animate-spin" />
-              <p className="text-sm text-slate-400">Memproses...</p>
-            </div>
+            <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diperiksa" />
           )}
 
           {status === 'preview' && (
