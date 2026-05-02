@@ -121,6 +121,10 @@ export default function PengaturanPage() {
                 Jalankan
               </a>
             </div>
+            <div className="border-t border-white/[0.06]" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Standarisasi ID Dokumen</p>
                 <p className="text-xs text-slate-500 mt-0.5">Seragamkan semua ID dokumen penduduk menggunakan NIK</p>
               </div>
               <a href="/pengaturan/migrate-docid"
