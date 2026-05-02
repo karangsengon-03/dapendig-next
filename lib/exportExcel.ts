@@ -90,7 +90,11 @@ const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Ag
 
 function filterByBulanTahun(tgl: string, bulan: string, tahun: string): boolean {
   if (!tgl) return false
-  const d = new Date(tgl)
+  // Parse YYYY-MM-DD langsung tanpa Date object untuk hindari timezone shift
+  const m = tgl.match(/^(\d{4})-(\d{2})-\d{2}/)
+  if (m) return m[2] === bulan.padStart(2, '0') && m[1] === tahun
+  // Fallback untuk format lain
+  const d = new Date(tgl.length === 10 ? tgl + 'T00:00:00' : tgl)
   if (isNaN(d.getTime())) return false
   return String(d.getMonth() + 1).padStart(2, '0') === bulan && String(d.getFullYear()) === tahun
 }

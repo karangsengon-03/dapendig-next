@@ -90,9 +90,12 @@ export function ImportSection() {
     const reader = new FileReader()
     reader.onload = (e) => {
       const buffer = e.target?.result as ArrayBuffer
-      const wb = XLSX.read(buffer, { type: 'array' })
+      // cellDates:true + dateNF memastikan sel tanggal Excel dikonversi ke string YYYY-MM-DD
+      // langsung oleh SheetJS, bukan Date object yang rentan timezone shift
+      const wb = XLSX.read(buffer, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
       const ws = wb.Sheets[wb.SheetNames[0]]
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '' })
+      // raw:false agar Date object dari SheetJS diformat pakai dateNF jadi string YYYY-MM-DD
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: false })
       if (!rows.length) return
       const cols = Object.keys(rows[0])
       const initMap: Record<string, string> = {}

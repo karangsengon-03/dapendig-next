@@ -132,6 +132,28 @@ export default function PengaturanPage() {
                 Jalankan
               </a>
             </div>
+            <div className="border-t border-white/[0.06]" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Fix Tanggal Lahir (Timezone Bug)</p>
+                <p className="text-xs text-slate-500 mt-0.5">Koreksi tanggal yang bergeser -1/-2/-3 hari akibat bug konversi UTC — gunakan NIK sebagai sumber kebenaran</p>
+              </div>
+              <a href="/pengaturan/fix-tanggal-lahir"
+                className="shrink-0 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors">
+                Jalankan
+              </a>
+            </div>
+            <div className="border-t border-white/[0.06]" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-200">Sinkronisasi Tanggal Lahir dari Excel</p>
+                <p className="text-xs text-slate-500 mt-0.5">Update tanggal_lahir dari file Semua.xls Dispenduk (1.187 penduduk) — field lain tidak disentuh</p>
+              </div>
+              <a href="/pengaturan/fix-tanggal-excel"
+                className="shrink-0 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors">
+                Jalankan
+              </a>
+            </div>
           </div>
         )}
       </div>
