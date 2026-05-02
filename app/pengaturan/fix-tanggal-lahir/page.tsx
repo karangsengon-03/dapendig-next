@@ -7,7 +7,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
 import { MigrasiProgress } from '@/components/ui/migrasi-progress'
-import { CheckCircle, AlertCircle, ArrowLeft, Info, Calendar } from 'lucide-react'
+import { CheckCircle, AlertCircle, ArrowLeft, Info, Calendar, Check, Loader2 } from 'lucide-react'
 
 // ── Helper: extract tanggal lahir dari NIK ──────────────────────────────────
 // NIK format: [2 prov][2 kab][2 kec][2 tgl][2 bln][2 thn][4 urut]
@@ -65,6 +65,8 @@ export default function FixTanggalLahirPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [progressCurrent, setProgressCurrent] = useState(0)
   const [progressTotal, setProgressTotal] = useState(0)
+  const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set())
+  const [doneItems, setDoneItems] = useState<Set<string>>(new Set())
 
   // Tahap 1: scan dan preview dulu sebelum eksekusi
   async function handlePreview() {
@@ -146,6 +148,19 @@ export default function FixTanggalLahirPage() {
       setErrorMsg(String(e))
       setStatus('error')
     }
+  }
+
+  async function handleOneItem(nik: string, baru: string) {
+    setLoadingItems(prev => new Set([...prev, nik]))
+    try {
+      const { writeBatch: wb, doc: d } = await import('firebase/firestore')
+      const b = wb(db)
+      b.update(d(db, 'penduduk', nik), { tanggal_lahir: baru })
+      await b.commit()
+      setDoneItems(prev => new Set([...prev, nik]))
+      setPreviewData(prev => prev.map(x => x.nik === nik ? { ...x } : x))
+    } catch { /* ignore */ }
+    setLoadingItems(prev => { const s = new Set(prev); s.delete(nik); return s })
   }
 
   function formatTgl(s: string) {
@@ -249,6 +264,7 @@ export default function FixTanggalLahirPage() {
                           <th className="px-3 py-2 text-left text-[10px] font-semibold text-rose-500 uppercase tracking-wider">Tersimpan (salah)</th>
                           <th className="px-3 py-2 text-left text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Dari NIK (benar)</th>
                           <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Selisih</th>
+                          <th className="px-3 py-2 text-right text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -266,6 +282,14 @@ export default function FixTanggalLahirPage() {
                                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${selisih > 0 ? 'bg-sky-500/10 text-sky-400' : 'bg-rose-500/10 text-rose-400'}`}>
                                   {selisih > 0 ? '+' : ''}{selisih}h
                                 </span>
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                {doneItems.has(item.nik)
+                                  ? <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]"><Check size={11} />Selesai</span>
+                                  : <button onClick={() => handleOneItem(item.nik, item.baru)} disabled={loadingItems.has(item.nik)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-40">
+                                      {loadingItems.has(item.nik) ? <Loader2 size={10} className="animate-spin" /> : null}
+                                      {loadingItems.has(item.nik) ? 'Proses...' : 'Perbaiki'}
+                                    </button>}
                               </td>
                             </tr>
                           )

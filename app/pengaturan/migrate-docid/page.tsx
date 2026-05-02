@@ -7,7 +7,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
 import { MigrasiProgress } from '@/components/ui/migrasi-progress'
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft, AlertTriangle } from 'lucide-react'
+import { CheckCircle, AlertCircle, Loader2, ArrowLeft, AlertTriangle, Check } from 'lucide-react'
 
 export default function MigrateDocIdPage() {
   const { isAdmin } = useAuthStore()
@@ -15,6 +15,7 @@ export default function MigrateDocIdPage() {
   const [status, setStatus] = useState<'idle' | 'preview' | 'loading' | 'done' | 'error'>('idle')
   const [preview, setPreview] = useState<{ sudahBenar: number; perluMigrasi: number; tanpaNik: number }>({ sudahBenar: 0, perluMigrasi: 0, tanpaNik: 0 })
   const [result, setResult] = useState<{ dipindah: number; dilewati: number; gagal: number }>({ dipindah: 0, dilewati: 0, gagal: 0 })
+  const [previewItems, setPreviewItems] = useState<{ id: string; nik: string; nama: string; done: boolean; loading: boolean }[]>([])
   const [errorMsg, setErrorMsg] = useState('')
   const [progressCurrent, setProgressCurrent] = useState(0)
   const [progressTotal, setProgressTotal] = useState(0)
@@ -33,6 +34,11 @@ export default function MigrateDocIdPage() {
         else perluMigrasi++
       }
       setPreview({ sudahBenar, perluMigrasi, tanpaNik })
+      // Simpan daftar item yang perlu migrasi untuk opsi per-baris
+      const toMigrate = snap.docs
+        .filter(d => { const nik = String(d.data().nik ?? '').trim(); return nik && d.id !== nik })
+        .map(d => ({ id: d.id, nik: String(d.data().nik ?? '').trim(), nama: String(d.data().nama_lengkap ?? ''), done: false, loading: false }))
+      setPreviewItems(toMigrate)
       setStatus('preview')
     } catch (e) {
       setErrorMsg(String(e))
@@ -74,6 +80,18 @@ export default function MigrateDocIdPage() {
       setErrorMsg(String(e))
       setStatus('error')
     }
+  }
+
+  async function handleOneItem(id: string, nik: string) {
+    setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, loading: true } : x))
+    try {
+      const snapDoc = await import('firebase/firestore').then(m => m.getDoc(m.doc(db, 'penduduk', id)))
+      if (!snapDoc.exists()) { setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, loading: false } : x)); return }
+      await setDoc(doc(db, 'penduduk', nik), snapDoc.data())
+      await deleteDoc(doc(db, 'penduduk', id))
+      setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, done: true, loading: false } : x))
+      setPreview(prev => ({ ...prev, perluMigrasi: prev.perluMigrasi - 1, sudahBenar: prev.sudahBenar + 1 }))
+    } catch { setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, loading: false } : x)) }
   }
 
   return (
@@ -143,10 +161,45 @@ export default function MigrateDocIdPage() {
                   <p className="text-sm text-emerald-400">Semua dokumen sudah menggunakan NIK sebagai ID. Tidak perlu migrasi.</p>
                 </div>
               ) : (
-                <button onClick={handleMigrate}
-                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-sm font-semibold text-white transition-colors">
-                  Mulai Migrasi {preview.perluMigrasi} Dokumen
-                </button>
+                <>
+                  {previewItems.length > 0 && (
+                    <div className="rounded-xl border border-white/[0.06] overflow-hidden max-h-64 overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-[#0d1424] z-10">
+                          <tr className="border-b border-white/[0.06]">
+                            <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
+                            <th className="px-3 py-2 text-left text-[10px] font-semibold text-rose-500 uppercase tracking-wider">ID Lama</th>
+                            <th className="px-3 py-2 text-left text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">ID Baru (NIK)</th>
+                            <th className="px-3 py-2 text-right text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {previewItems.map(item => (
+                            <tr key={item.id} className={`border-b border-white/[0.04] last:border-0 transition-colors ${item.done ? 'opacity-40' : 'hover:bg-white/[0.02]'}`}>
+                              <td className="px-3 py-2 text-slate-300 font-medium truncate max-w-[120px]">{item.nama || '—'}</td>
+                              <td className="px-3 py-2 text-rose-400 font-mono text-[10px] truncate max-w-[90px]">{item.id}</td>
+                              <td className="px-3 py-2 text-emerald-400 font-mono text-[10px]">{item.nik}</td>
+                              <td className="px-3 py-2 text-right">
+                                {item.done
+                                  ? <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]"><Check size={11} />Selesai</span>
+                                  : <button onClick={() => handleOneItem(item.id, item.nik)} disabled={item.loading} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-40">
+                                      {item.loading ? <Loader2 size={10} className="animate-spin" /> : null}
+                                      {item.loading ? 'Proses...' : 'Migrasi'}
+                                    </button>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  <div className="flex gap-2.5">
+                    <button onClick={() => setStatus('idle')} className="flex-1 py-2 rounded-xl border border-white/[0.08] bg-white/[0.03] text-sm text-slate-400 hover:bg-white/[0.06] transition-colors">Batal</button>
+                    <button onClick={handleMigrate} className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-sm font-semibold text-white transition-colors">
+                      Migrasi Semua ({preview.perluMigrasi})
+                    </button>
+                  </div>
+                </>
               )}
 
               <button onClick={() => setStatus('idle')} className="text-xs text-slate-500 hover:text-slate-300 text-center">

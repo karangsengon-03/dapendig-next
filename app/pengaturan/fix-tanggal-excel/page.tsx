@@ -7,7 +7,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
 import { MigrasiProgress } from '@/components/ui/migrasi-progress'
-import { CheckCircle, AlertCircle, ArrowLeft, Info, FileSpreadsheet } from 'lucide-react'
+import { CheckCircle, AlertCircle, ArrowLeft, Info, FileSpreadsheet, Check, Loader2 } from 'lucide-react'
 
 // ── Data tanggal lahir dari file Excel "Semua.xls" ─────────────────────────
 // Diekstrak pada: 2026-05-02
@@ -54,6 +54,8 @@ export default function FixTanggalExcelPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [progressCurrent, setProgressCurrent] = useState(0)
   const [progressTotal, setProgressTotal] = useState(0)
+  const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set())
+  const [doneItems, setDoneItems] = useState<Set<string>>(new Set())
 
   // Tahap 1: scan Firestore, bandingkan dengan data Excel, tampilkan preview
   async function handlePreview() {
@@ -138,6 +140,18 @@ export default function FixTanggalExcelPage() {
       setErrorMsg(String(e))
       setStatus('error')
     }
+  }
+
+  async function handleOneItem(nik: string, baru: string) {
+    setLoadingItems(prev => new Set([...prev, nik]))
+    try {
+      const { writeBatch: wb, doc: d } = await import('firebase/firestore')
+      const b = wb(db)
+      b.update(d(db, 'penduduk', nik), { tanggal_lahir: baru })
+      await b.commit()
+      setDoneItems(prev => new Set([...prev, nik]))
+    } catch { /* ignore */ }
+    setLoadingItems(prev => { const s = new Set(prev); s.delete(nik); return s })
   }
 
   return (
@@ -230,6 +244,7 @@ export default function FixTanggalExcelPage() {
                           <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">NIK</th>
                           <th className="px-3 py-2 text-left text-[10px] font-semibold text-rose-500 uppercase tracking-wider">Di Firestore</th>
                           <th className="px-3 py-2 text-left text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Dari Excel</th>
+                          <th className="px-3 py-2 text-right text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -239,6 +254,14 @@ export default function FixTanggalExcelPage() {
                             <td className="px-3 py-2 text-slate-500 font-mono text-[10px]">{item.nik}</td>
                             <td className="px-3 py-2 text-rose-400 font-mono">{formatTgl(item.lama) || <span className="text-slate-600 italic">kosong</span>}</td>
                             <td className="px-3 py-2 text-emerald-400 font-mono">{formatTgl(item.baru)}</td>
+                            <td className="px-3 py-2 text-right">
+                              {doneItems.has(item.nik)
+                                ? <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]"><Check size={11} />Selesai</span>
+                                : <button onClick={() => handleOneItem(item.nik, item.baru)} disabled={loadingItems.has(item.nik)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-medium hover:bg-sky-500/20 transition-colors disabled:opacity-40">
+                                    {loadingItems.has(item.nik) ? <Loader2 size={10} className="animate-spin" /> : null}
+                                    {loadingItems.has(item.nik) ? 'Proses...' : 'Update'}
+                                  </button>}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
