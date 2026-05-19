@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { BarChart2 } from 'lucide-react'
+import { useState } from 'react'
+import { BarChart2, Settings2, X, Check } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
-import { useMonografi } from '@/hooks/useMonografi'
+import { useMonografi, useSaveKelompokUmurConfig, DEFAULT_KELOMPOK_UMUR_CONFIG, type KelompokUmurConfig } from '@/hooks/useMonografi'
 import { Skeleton } from '@/components/ui/skeleton'
 
 function StatCard({ label, value, sub, color = 'sky' }: {
@@ -138,21 +139,173 @@ function Card({ title, children, total, totalLabel = 'total data' }: {
   )
 }
 
+// ── Modal Pengaturan Rentang Umur Piramida ───────────────────────────────────
+
+function PengaturanPiramidaModal({
+  config,
+  onClose,
+  onSave,
+}: {
+  config: KelompokUmurConfig
+  onClose: () => void
+  onSave: (c: KelompokUmurConfig) => void
+}) {
+  const [interval, setInterval] = useState(String(config.interval))
+  const [batasAkhir, setBatasAkhir] = useState(String(config.batasAkhir))
+  const [error, setError] = useState('')
+
+  function buildPreview(ivStr: string, baStr: string): string[] {
+    const iv = parseInt(ivStr, 10)
+    const ba = parseInt(baStr, 10)
+    if (isNaN(iv) || isNaN(ba) || iv < 1 || ba < iv) return []
+    const labels: string[] = []
+    let cur = 0
+    while (cur < ba) {
+      labels.push(`${cur}\u2013${cur + iv - 1}`)
+      cur += iv
+    }
+    labels.push(`${ba}+`)
+    return labels
+  }
+
+  const preview = buildPreview(interval, batasAkhir)
+
+  function handleSave() {
+    const iv = parseInt(interval, 10)
+    const ba = parseInt(batasAkhir, 10)
+    if (isNaN(iv) || iv < 1) { setError('Interval harus angka positif'); return }
+    if (isNaN(ba) || ba < iv) { setError('Batas kelompok terakhir harus lebih besar dari interval'); return }
+    if (iv > 20) { setError('Interval maksimal 20 tahun'); return }
+    if (ba > 120) { setError('Batas akhir maksimal 120 tahun'); return }
+    if (preview.length > 30) { setError('Terlalu banyak kelompok umur (maks 30)'); return }
+    setError('')
+    onSave({ interval: iv, batasAkhir: ba })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-[#0d1424] border border-white/[0.08] rounded-2xl p-6 max-w-sm w-full flex flex-col gap-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/20 flex items-center justify-center">
+              <Settings2 size={18} className="text-sky-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-slate-100 text-sm">Pengaturan Rentang Umur</p>
+              <p className="text-xs text-slate-500 mt-0.5">Konfigurasi piramida umur</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5">
+            <X size={15} />
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-slate-400">
+              Interval rentang umur (tahun) <span className="text-rose-400">*</span>
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={interval}
+              onChange={(e) => { setInterval(e.target.value); setError('') }}
+              className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
+            />
+            <p className="text-[10px] text-slate-600">
+              Contoh: 5 → kelompok 0-4, 5-9, 10-14, dst. &nbsp;|&nbsp; 4 → 0-3, 4-7, dst.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-slate-400">
+              Batas kelompok terakhir (umur mulai &#8220;+&#8221;) <span className="text-rose-400">*</span>
+            </label>
+            <input
+              type="number"
+              min={10}
+              max={120}
+              value={batasAkhir}
+              onChange={(e) => { setBatasAkhir(e.target.value); setError('') }}
+              className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
+            />
+            <p className="text-[10px] text-slate-600">
+              Contoh: 65 → kelompok terakhir adalah 65+
+            </p>
+          </div>
+
+          {error && <p className="text-xs text-rose-400">{error}</p>}
+
+          {/* Preview kelompok */}
+          {preview.length > 0 && (
+            <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-400/70 mb-2">
+                Preview — {preview.length} kelompok
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {preview.map((lbl) => (
+                  <span key={lbl} className="text-[10px] bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded-full border border-sky-500/20">
+                    {lbl}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-white/[0.08] text-slate-400 text-sm hover:text-slate-200 transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-sky-500 text-white text-sm font-medium hover:bg-sky-600 transition-colors flex items-center justify-center gap-2"
+          >
+            <Check size={14} />
+            Terapkan
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MonografiPage() {
   const { data, isLoading } = useMonografi()
+  const saveMutation = useSaveKelompokUmurConfig()
   const router = useRouter()
+  const [showPengaturan, setShowPengaturan] = useState(false)
 
   function goFilter(key: string, value: string) {
     router.push(`/penduduk?${key}=${encodeURIComponent(value)}&status=aktif`)
+  }
+
+  function handleSaveConfig(config: KelompokUmurConfig) {
+    saveMutation.mutate(config, {
+      onSuccess: () => setShowPengaturan(false),
+    })
   }
 
   return (
     <AppShell title="Monografi">
       <div className="flex flex-col gap-4 max-w-5xl mx-auto">
         {/* Sub-header */}
-        <div className="flex items-center gap-2.5">
-          <BarChart2 size={18} className="text-sky-400 shrink-0" />
-          <h1 className="text-base font-semibold text-slate-100">Monografi</h1>
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <BarChart2 size={18} className="text-sky-400 shrink-0" />
+            <h1 className="text-base font-semibold text-slate-100">Monografi</h1>
+          </div>
+          <button
+            onClick={() => setShowPengaturan(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-slate-200 text-xs transition-colors"
+          >
+            <Settings2 size={13} />
+            Rentang Umur
+          </button>
         </div>
 
         {isLoading ? (
@@ -170,7 +323,14 @@ export default function MonografiPage() {
                 sub={`${Math.round((data.perempuan / Math.max(data.totalAktif, 1)) * 100)}%`} color="rose" />
             </div>
 
-            <PiramidaUmur data={data.piramidaUmur} />
+            <div className="relative">
+              <PiramidaUmur data={data.piramidaUmur} />
+              <div className="absolute top-3 right-3">
+                <span className="text-[10px] text-slate-600 bg-[#0d1424] px-2 py-0.5 rounded-full border border-white/[0.06]">
+                  interval {data.kelompokUmurConfig.interval} th · {data.kelompokUmurConfig.batasAkhir}+
+                </span>
+              </div>
+            </div>
             <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
               <span className="text-[10px] text-slate-600 uppercase tracking-wider">Total tercatat dalam piramida</span>
               <span className="text-xs font-semibold text-slate-400 tabular-nums">
@@ -243,6 +403,13 @@ export default function MonografiPage() {
           </>
         )}
       </div>
+      {showPengaturan && (
+        <PengaturanPiramidaModal
+          config={data?.kelompokUmurConfig ?? DEFAULT_KELOMPOK_UMUR_CONFIG}
+          onClose={() => setShowPengaturan(false)}
+          onSave={handleSaveConfig}
+        />
+      )}
     </AppShell>
   )
 }

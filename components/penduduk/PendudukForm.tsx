@@ -21,6 +21,8 @@ const EMPTY: PendudukFormData = {
   nama_lengkap: '',
   no_kk: '',
   hubungan_keluarga: 'Kepala Keluarga',
+  nama_ayah: '',
+  nama_ibu: '',
   jenis_kelamin: 'Laki-laki',
   tempat_lahir: '',
   tanggal_lahir: '',
@@ -223,6 +225,24 @@ export function PendudukForm({
             onChange={(v) => set({ hubungan_keluarga: v as typeof form.hubungan_keluarga })}
             options={HUBUNGAN_KELUARGA}
           />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1">
+            <Label>Nama Ayah</Label>
+            <Input
+              value={form.nama_ayah ?? ''}
+              onChange={(v) => set({ nama_ayah: v })}
+              placeholder="Nama ayah kandung"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label>Nama Ibu</Label>
+            <Input
+              value={form.nama_ibu ?? ''}
+              onChange={(v) => set({ nama_ibu: v })}
+              placeholder="Nama ibu kandung"
+            />
+          </div>
         </div>
       </section>
 

@@ -142,6 +142,38 @@ async function catatPindahKeluar(params: {
   await writeLog('mutasi_keluar', `${nama} pindah ke ${tujuan}`, email, nik)
 }
 
+// ── Catat Pindah Keluar Satu Keluarga ────────────────────────────────────────
+
+async function catatPindahKeluarKeluarga(params: {
+  noKk: string
+  anggotaIds: string[] // semua id anggota KK aktif
+  tujuan: string
+  alasan: string
+  tanggal: string
+  email: string
+  allPenduduk: Penduduk[]
+}): Promise<void> {
+  const { noKk, anggotaIds, tujuan, alasan, tanggal, email, allPenduduk } = params
+  const anggota = allPenduduk.filter((p) => anggotaIds.includes(p.id))
+  for (const p of anggota) {
+    await addDoc(collection(db, 'mutasi_keluar'), {
+      nik_target: p.nik,
+      nama: p.nama_lengkap,
+      no_kk: noKk,
+      tujuan,
+      alasan,
+      tanggal,
+      created_at: serverTimestamp(),
+      created_by: email,
+    })
+    await updateDoc(doc(db, COL, p.id), {
+      status: 'mutasi-keluar',
+      updated_at: serverTimestamp(),
+    })
+    await writeLog('mutasi_keluar', `${p.nama_lengkap} pindah ke ${tujuan} (pindah keluarga)`, email, p.nik)
+  }
+}
+
 // ── Catat Meninggal ──────────────────────────────────────────────────────────
 
 async function catatMeninggal(params: {
@@ -279,6 +311,22 @@ export function useCatatPindahKeluar() {
   return useMutation({
     mutationFn: (params: Omit<Parameters<typeof catatPindahKeluar>[0], 'email'>) =>
       catatPindahKeluar({ ...params, email: user?.email ?? 'unknown' }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
+      qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
+      qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
+    },
+  })
+}
+
+export function useCatatPindahKeluarKeluarga() {
+  const qc = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: (params: Omit<Parameters<typeof catatPindahKeluarKeluarga>[0], 'email'>) =>
+      catatPindahKeluarKeluarga({ ...params, email: user?.email ?? 'unknown' }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })

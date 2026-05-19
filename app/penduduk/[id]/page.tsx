@@ -117,6 +117,8 @@ export default function DetailPendudukPage() {
                 </DetailRow>
                 <DetailRow label="Nama Lengkap">{data.nama_lengkap}</DetailRow>
                 <DetailRow label="Hubungan Keluarga">{data.hubungan_keluarga}</DetailRow>
+                <DetailRow label="Nama Ayah">{data.nama_ayah || '—'}</DetailRow>
+                <DetailRow label="Nama Ibu">{data.nama_ibu || '—'}</DetailRow>
                 <DetailRow label="Status">
                   <span className={STATUS_COLOR[data.status] ?? 'text-slate-200'}>
                     {STATUS_LABEL[data.status] ?? data.status}
@@ -198,7 +200,7 @@ export default function DetailPendudukPage() {
       <DeleteDialog open={showDelete} nama={data?.nama_lengkap ?? ''} loading={deleteMutation.isPending}
         onConfirm={handleDelete} onCancel={() => setShowDelete(false)} />
       {showCatatPindah && data && (
-        <CatatPindahKeluarModal penduduk={data} onClose={() => setShowCatatPindah(false)}
+        <CatatPindahKeluarModal penduduk={data} allPenduduk={allPenduduk} onClose={() => setShowCatatPindah(false)}
           onSuccess={() => { setShowCatatPindah(false); router.refresh() }} />
       )}
       {showCatatMeninggal && data && (

@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { User, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAddMutasiKeluar, useAddMutasiMasuk } from '@/hooks/useMutasi'
+import { useCatatPindahKeluarKeluarga, usePendudukList } from '@/hooks/usePenduduk'
+import { useToast } from '@/components/ui/toast'
 import type { MutasiKeluar, MutasiMasuk } from '@/types'
 import {
   AGAMA,
@@ -26,7 +29,11 @@ interface MutasiKeluarFormProps {
 }
 
 export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps) {
-  const { mutate, isPending } = useAddMutasiKeluar()
+  const { mutate, isPending: isPendingSatu } = useAddMutasiKeluar()
+  const mutasiKeluarga = useCatatPindahKeluarKeluarga()
+  const { data: allPenduduk = [] } = usePendudukList()
+  const { toast } = useToast()
+  const [opsi, setOpsi] = useState<'perorangan' | 'keluarga'>('perorangan')
   const [form, setForm] = useState({
     nama: '',
     nik_target: '',
@@ -42,44 +49,104 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
     setErrors((p) => ({ ...p, [field]: '' }))
   }
 
+  // Anggota KK aktif berdasarkan no_kk yang diisi (opsi keluarga)
+  const anggotaKK = form.no_kk.length === 16
+    ? allPenduduk.filter((p) => p.no_kk === form.no_kk && p.status === 'aktif')
+    : []
+
   function validate() {
     const e: Record<string, string> = {}
-    if (!form.nama.trim()) e.nama = 'Nama wajib diisi'
-    if (!/^\d{16}$/.test(form.nik_target)) e.nik_target = 'NIK harus 16 digit angka'
-    if (!/^\d{16}$/.test(form.no_kk)) e.no_kk = 'No. KK harus 16 digit angka'
+    if (opsi === 'perorangan') {
+      if (!form.nama.trim()) e.nama = 'Nama wajib diisi'
+      if (!/^\d{16}$/.test(form.nik_target)) e.nik_target = 'NIK harus 16 digit angka'
+      if (!/^\d{16}$/.test(form.no_kk)) e.no_kk = 'No. KK harus 16 digit angka'
+    } else {
+      if (!/^\d{16}$/.test(form.no_kk)) e.no_kk = 'No. KK harus 16 digit angka'
+      if (anggotaKK.length === 0 && form.no_kk.length === 16) e.no_kk = 'Tidak ada anggota aktif ditemukan untuk No. KK ini'
+    }
     if (!form.tujuan.trim()) e.tujuan = 'Tujuan wajib diisi'
     if (!form.tanggal) e.tanggal = 'Tanggal wajib diisi'
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!validate()) return
-    const data: Omit<MutasiKeluar, 'id' | 'created_at' | 'created_by'> = {
-      nama: form.nama.trim(),
-      nik_target: form.nik_target,
-      no_kk: form.no_kk,
-      tujuan: form.tujuan.trim(),
-      alasan: form.alasan.trim(),
-      tanggal: form.tanggal,
+    if (opsi === 'perorangan') {
+      const data: Omit<MutasiKeluar, 'id' | 'created_at' | 'created_by'> = {
+        nama: form.nama.trim(),
+        nik_target: form.nik_target,
+        no_kk: form.no_kk,
+        tujuan: form.tujuan.trim(),
+        alasan: form.alasan.trim(),
+        tanggal: form.tanggal,
+      }
+      mutate(data, { onSuccess })
+    } else {
+      try {
+        await mutasiKeluarga.mutateAsync({
+          noKk: form.no_kk,
+          anggotaIds: anggotaKK.map((p) => p.id),
+          tujuan: form.tujuan.trim(),
+          alasan: form.alasan.trim(),
+          tanggal: form.tanggal,
+          allPenduduk,
+        })
+        toast(`${anggotaKK.length} anggota KK berhasil dicatat pindah keluar`, 'success')
+        onSuccess()
+      } catch {
+        toast('Gagal mencatat pindah keluar keluarga', 'error')
+      }
     }
-    mutate(data, { onSuccess })
   }
+
+  const isPending = isPendingSatu || mutasiKeluarga.isPending
 
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-lg p-4 mb-4 space-y-3">
       <h3 className="text-sm font-semibold text-sky-400">Catat Pindah Keluar</h3>
+
+      {/* Opsi Jenis Pindah */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => setOpsi('perorangan')}
+          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-xs font-medium transition-colors ${
+            opsi === 'perorangan'
+              ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
+              : 'bg-white/[0.03] border-white/[0.08] text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <User size={13} className="shrink-0" />
+          1 Orang
+        </button>
+        <button
+          onClick={() => setOpsi('keluarga')}
+          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-xs font-medium transition-colors ${
+            opsi === 'keluarga'
+              ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
+              : 'bg-white/[0.03] border-white/[0.08] text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <Users size={13} className="shrink-0" />
+          1 Keluarga (KK)
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <Label>Nama Lengkap</Label>
-          <Input value={form.nama} onChange={(e) => set('nama', e.target.value)} placeholder="Nama penduduk" />
-          {errors.nama && <p className="text-xs text-red-400 mt-1">{errors.nama}</p>}
-        </div>
-        <div>
-          <Label>NIK</Label>
-          <Input value={form.nik_target} onChange={(e) => set('nik_target', e.target.value)} placeholder="16 digit" maxLength={16} />
-          {errors.nik_target && <p className="text-xs text-red-400 mt-1">{errors.nik_target}</p>}
-        </div>
+        {opsi === 'perorangan' && (
+          <>
+            <div>
+              <Label>Nama Lengkap</Label>
+              <Input value={form.nama} onChange={(e) => set('nama', e.target.value)} placeholder="Nama penduduk" />
+              {errors.nama && <p className="text-xs text-red-400 mt-1">{errors.nama}</p>}
+            </div>
+            <div>
+              <Label>NIK</Label>
+              <Input value={form.nik_target} onChange={(e) => set('nik_target', e.target.value)} placeholder="16 digit" maxLength={16} />
+              {errors.nik_target && <p className="text-xs text-red-400 mt-1">{errors.nik_target}</p>}
+            </div>
+          </>
+        )}
         <div>
           <Label>No. KK</Label>
           <Input value={form.no_kk} onChange={(e) => set('no_kk', e.target.value)} placeholder="16 digit" maxLength={16} />
@@ -100,8 +167,30 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
           <Input value={form.alasan} onChange={(e) => set('alasan', e.target.value)} placeholder="Menikah, Pekerjaan, dll" />
         </div>
       </div>
+
+      {/* Preview anggota KK (opsi keluarga) */}
+      {opsi === 'keluarga' && form.no_kk.length === 16 && (
+        <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-400/70 mb-1">
+            {anggotaKK.length} anggota KK aktif akan dicatat pindah
+          </p>
+          {anggotaKK.length > 0 ? (
+            <div className="flex flex-col gap-0.5">
+              {anggotaKK.map((p) => (
+                <p key={p.id} className="text-xs text-slate-400">
+                  {p.nama_lengkap}
+                  <span className="text-slate-600 ml-1">({p.hubungan_keluarga})</span>
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500">Tidak ada anggota aktif untuk No. KK ini.</p>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-2 pt-1">
-        <Button onClick={handleSubmit} disabled={isPending} size="sm">
+        <Button onClick={handleSubmit} disabled={isPending || (opsi === 'keluarga' && form.no_kk.length === 16 && anggotaKK.length === 0)} size="sm">
           {isPending ? 'Menyimpan...' : 'Simpan'}
         </Button>
         <Button variant="outline" size="sm" onClick={onCancel} disabled={isPending}>Batal</Button>
