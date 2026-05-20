@@ -79,16 +79,36 @@ export default function DashboardPage() {
 
         {/* Navigasi bulan */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between px-0.5">
+          <div className="flex items-center justify-between gap-2 px-0.5">
             <button onClick={prevBulan}
-              className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
+              className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors shrink-0">
               <ChevronLeft size={15} />
             </button>
-            <p className="text-sm font-semibold text-slate-300">
-              {NAMA_BULAN[bulan]} {tahun}
-            </p>
+            {/* Picker bulan + tahun langsung */}
+            <div className="flex items-center gap-1.5 flex-1 justify-center">
+              <select
+                value={bulan}
+                onChange={(e) => { setBulan(Number(e.target.value)); }}
+                className="bg-[#111827] border border-white/[0.08] rounded-xl px-2 py-1.5 text-sm font-semibold text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 cursor-pointer"
+              >
+                {NAMA_BULAN.map((nm, i) => (
+                  <option key={i} value={i}>{nm}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min={2000}
+                max={now.getFullYear()}
+                value={tahun}
+                onChange={(e) => {
+                  const val = Number(e.target.value)
+                  if (val >= 2000 && val <= now.getFullYear()) setTahun(val)
+                }}
+                className="w-[72px] bg-[#111827] border border-white/[0.08] rounded-xl px-2 py-1.5 text-sm font-semibold text-slate-200 text-center focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
+              />
+            </div>
             <button onClick={nextBulan} disabled={isCurrentMonth}
-              className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-30">
+              className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-30 shrink-0">
               <ChevronRight size={15} />
             </button>
           </div>

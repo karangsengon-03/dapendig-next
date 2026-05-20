@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { PendudukTable } from '@/components/penduduk/PendudukTable'
@@ -24,24 +24,60 @@ const DEFAULT_FILTER: FilterState = {
 }
 
 function PendudukContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { data: allData = [], isLoading } = usePendudukList()
 
-  const [filter, setFilter] = useState<FilterState>(() => ({
-    ...DEFAULT_FILTER,
-    agama: searchParams.get('agama') ?? '',
-    pekerjaan: searchParams.get('pekerjaan') ?? '',
-    pendidikan: searchParams.get('pendidikan') ?? '',
-    statusPerkawinan: searchParams.get('statusPerkawinan') ?? '',
-    status: searchParams.get('status') ?? 'aktif',
-  }))
-  const [pageSize, setPageSize] = useState<25 | 50 | 100>(25)
-  const [page, setPage] = useState(1)
+  // Restore filter dari sessionStorage jika kembali dari detail penduduk
+  // Jika ada URL params (dari monografi), prioritaskan URL params
+  const hasUrlParams = ['agama','pekerjaan','pendidikan','statusPerkawinan','status'].some(
+    (k) => searchParams.get(k) !== null
+  )
+  const [filter, setFilter] = useState<FilterState>(() => {
+    if (hasUrlParams) {
+      return {
+        ...DEFAULT_FILTER,
+        agama: searchParams.get('agama') ?? '',
+        pekerjaan: searchParams.get('pekerjaan') ?? '',
+        pendidikan: searchParams.get('pendidikan') ?? '',
+        statusPerkawinan: searchParams.get('statusPerkawinan') ?? '',
+        status: searchParams.get('status') ?? 'aktif',
+      }
+    }
+    // Coba restore dari sessionStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('penduduk_filter')
+        if (saved) {
+          const parsed = JSON.parse(saved) as FilterState
+          return { ...DEFAULT_FILTER, ...parsed }
+        }
+      } catch { /* ignore */ }
+    }
+    return { ...DEFAULT_FILTER }
+  })
+  const [pageSize, setPageSize] = useState<25 | 50 | 100>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('penduduk_page_size')
+        if (saved) return Number(saved) as 25 | 50 | 100
+      } catch { /* ignore */ }
+    }
+    return 25
+  })
+  const [page, setPage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('penduduk_page')
+        if (saved) return Number(saved)
+      } catch { /* ignore */ }
+    }
+    return 1
+  })
 
   // Sync filter bila URL params berubah (navigasi dari monografi)
   useEffect(() => {
-    setFilter({
+    if (!hasUrlParams) return
+    setFilter({ // eslint-disable-line react-hooks/set-state-in-effect
       ...DEFAULT_FILTER,
       agama: searchParams.get('agama') ?? '',
       pekerjaan: searchParams.get('pekerjaan') ?? '',
@@ -50,7 +86,27 @@ function PendudukContent() {
       status: searchParams.get('status') ?? 'aktif',
     })
     setPage(1)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
+
+  // Simpan filter + page ke sessionStorage setiap kali berubah
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('penduduk_filter', JSON.stringify(filter))
+    } catch { /* ignore */ }
+  }, [filter])
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('penduduk_page_size', String(pageSize))
+    } catch { /* ignore */ }
+  }, [pageSize])
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('penduduk_page', String(page))
+    } catch { /* ignore */ }
+  }, [page])
 
   // Dynamic options dari data aktif
   const baseData = useMemo(() => {

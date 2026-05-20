@@ -48,7 +48,7 @@ export default function PengaturanPage() {
 
   return (
     <AppShell title="Pengaturan">
-      <div className="p-4 max-w-3xl mx-auto space-y-6">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2.5">
           <Shield className="w-[18px] h-[18px] text-sky-400 shrink-0" />
           <h1 className="text-base font-semibold text-slate-100">Pengaturan</h1>
@@ -62,7 +62,7 @@ export default function PengaturanPage() {
         {/* Migrasi data */}
         {isAdmin && isAdmin() && (
           <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 flex flex-col gap-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-600">Migrasi Data</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Migrasi Data</p>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-slate-200">Migrasi Alamat Penduduk</p>
@@ -184,7 +184,7 @@ function NormalisasiSection() {
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center gap-2.5 mb-1">
-        <Wrench className="w-5 h-5 text-amber-400" />
+        <Wrench className="w-4 h-4 text-amber-400" />
         <h2 className="font-semibold text-slate-100">Pemeliharaan Data</h2>
       </div>
       <p className="text-xs text-slate-500 mb-4">
@@ -228,7 +228,7 @@ function UserManagement({ currentUid }: { currentUid: string }) {
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center gap-2.5 mb-4">
-        <Users className="w-5 h-5 text-sky-400" />
+        <Users className="w-4 h-4 text-sky-400" />
         <div>
           <h2 className="font-semibold text-slate-100">Manajemen Pengguna</h2>
           <p className="text-[11px] text-slate-500 mt-0.5">Tambah atau ubah pengguna melalui Firebase Console</p>
@@ -320,7 +320,7 @@ function WilayahForm() {
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center gap-2.5 mb-4">
-        <MapPin className="w-5 h-5 text-sky-400" />
+        <MapPin className="w-4 h-4 text-sky-400" />
         <h2 className="font-semibold text-slate-100">Informasi Wilayah</h2>
         <span className="text-xs text-slate-500 ml-auto">Disimpan ke: config/wilayah</span>
       </div>

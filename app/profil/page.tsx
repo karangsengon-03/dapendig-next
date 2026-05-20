@@ -203,7 +203,7 @@ export default function ProfilPage() {
 
   return (
     <AppShell title="Profil Saya">
-      <div className="max-w-lg mx-auto space-y-5">
+      <div className="flex flex-col gap-4">
         {/* Sub-header */}
         <div className="flex items-center gap-2.5">
           <User className="w-[18px] h-[18px] text-sky-400 shrink-0" />

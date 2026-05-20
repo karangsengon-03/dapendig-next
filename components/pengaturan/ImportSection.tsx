@@ -204,9 +204,9 @@ export function ImportSection() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                  <th className="px-3 py-2.5 text-left font-semibold text-slate-500 uppercase tracking-wider">Kolom di Excel</th>
-                  <th className="px-3 py-2.5 text-left font-semibold text-slate-500 uppercase tracking-wider">→ Field DAPENDIG</th>
-                  <th className="px-3 py-2.5 text-left font-semibold text-slate-500 uppercase tracking-wider">Contoh Nilai</th>
+                  <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Kolom di Excel</th>
+                  <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">→ Field DAPENDIG</th>
+                  <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Contoh Nilai</th>
                 </tr>
               </thead>
               <tbody>

@@ -8,7 +8,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AppLogoFull } from './AppLogo'
-import { useAuthStore } from '@/store/authStore'
 import { useAppStore } from '@/store/appStore'
 import { logout } from '@/hooks/useAuth'
 import { APP_VERSION } from '@/lib/utils'
@@ -32,7 +31,6 @@ const bottomItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user } = useAuthStore()
   const { sidebarOpen, setSidebarOpen } = useAppStore()
   const { data: pendudukBaru = 0 } = usePendudukBaruBulanIni()
 
@@ -47,12 +45,6 @@ export function Sidebar() {
   const handleLogout = async () => {
     setSidebarOpen(false)
     await logout(router)
-  }
-
-  const getInisial = (nama: string) => {
-    const parts = nama.trim().split(' ')
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
   }
 
   return (
@@ -172,21 +164,6 @@ export function Sidebar() {
               </Link>
             )
           })}
-
-          {/* User info — mobile only */}
-          {user && (
-            <div className="md:hidden mx-1 mt-2 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-sky-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
-                  {getInisial(user.nama || user.email)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-200 truncate">{user.nama || user.email}</p>
-                  <p className="text-[10px] text-slate-500 capitalize">{user.role}</p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Logout */}
           <button
