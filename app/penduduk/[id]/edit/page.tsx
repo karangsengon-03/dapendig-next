@@ -34,6 +34,8 @@ export default function EditPendudukPage() {
         nama_lengkap: data.nama_lengkap,
         no_kk: data.no_kk,
         hubungan_keluarga: data.hubungan_keluarga,
+        nama_ayah: data.nama_ayah ?? '',
+        nama_ibu: data.nama_ibu ?? '',
         jenis_kelamin: data.jenis_kelamin,
         tempat_lahir: data.tempat_lahir,
         tanggal_lahir: data.tanggal_lahir,

@@ -125,6 +125,15 @@ async function addMutasiMasuk(
   return ref.id
 }
 
+async function addMutasiMasukBatch(
+  anggotaList: Omit<MutasiMasuk, 'id' | 'created_at' | 'updated_at' | 'created_by'>[],
+  email: string
+): Promise<void> {
+  for (const data of anggotaList) {
+    await addMutasiMasuk(data, email)
+  }
+}
+
 async function deleteMutasiMasuk(id: string, nama: string, email: string): Promise<void> {
   await deleteDoc(doc(db, 'mutasi_masuk', id))
   await writeLog('hapus', `Hapus pindah masuk: ${nama}`, email)
@@ -168,6 +177,21 @@ export function useAddMutasiMasuk() {
   return useMutation({
     mutationFn: (data: Omit<MutasiMasuk, 'id' | 'created_at' | 'updated_at' | 'created_by'>) =>
       addMutasiMasuk(data, user?.email ?? 'unknown'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
+      qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
+      qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
+    },
+  })
+}
+
+export function useAddMutasiMasukBatch() {
+  const qc = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+  return useMutation({
+    mutationFn: (anggotaList: Omit<MutasiMasuk, 'id' | 'created_at' | 'updated_at' | 'created_by'>[]) =>
+      addMutasiMasukBatch(anggotaList, user?.email ?? 'unknown'),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })

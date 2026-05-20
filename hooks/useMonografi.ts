@@ -4,15 +4,40 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { collection, getDocs, query, where, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Penduduk } from '@/types'
+import { hitungUmur as calcUmur } from '@/lib/dateUtils'
 
-export interface KelompokUmurConfig {
-  interval: number // rentang per kelompok: misal 5 artinya 0-4,5-9,... atau 4 artinya 0-3,4-7,...
-  batasAkhir: number // umur mulai kelompok terakhir: misal 65
+// ── Tipe konfigurasi kelompok umur ──────────────────────────────────────────
+// Setiap entry adalah satu "batang" piramida umur yang didefinisikan bebas
+
+export interface KelompokUmurEntry {
+  min: number // umur minimum inklusif
+  max: number // umur maksimum inklusif (999 untuk "X+")
 }
 
-export const DEFAULT_KELOMPOK_UMUR_CONFIG: KelompokUmurConfig = {
-  interval: 5,
-  batasAkhir: 65,
+// Array dari entry, misal: [{min:0,max:4},{min:5,max:14},{min:15,max:19},...]
+export type KelompokUmurConfig = KelompokUmurEntry[]
+
+export const DEFAULT_KELOMPOK_UMUR_CONFIG: KelompokUmurConfig = [
+  { min: 0,  max: 4  },
+  { min: 5,  max: 9  },
+  { min: 10, max: 14 },
+  { min: 15, max: 19 },
+  { min: 20, max: 24 },
+  { min: 25, max: 29 },
+  { min: 30, max: 34 },
+  { min: 35, max: 39 },
+  { min: 40, max: 44 },
+  { min: 45, max: 49 },
+  { min: 50, max: 54 },
+  { min: 55, max: 59 },
+  { min: 60, max: 64 },
+  { min: 65, max: 999 },
+]
+
+// Format label untuk satu entry
+export function formatKelompokLabel(entry: KelompokUmurEntry): string {
+  if (entry.max === 999) return `${entry.min}+`
+  return `${entry.min}\u2013${entry.max}`
 }
 
 export interface MonografiData {
@@ -31,59 +56,41 @@ export interface MonografiData {
   kelompokUmurConfig: KelompokUmurConfig
 }
 
-// Klasifikasi: Balita(0-5), Anak-anak(6-10), Remaja(11-19), Dewasa(20-44), Lansia(45+)
+// Klasifikasi tetap (tidak dipengaruhi konfigurasi piramida)
 const KLASIFIKASI = [
-  { label: 'Balita',     min: 0,  max: 5   },
-  { label: 'Anak-anak',  min: 6,  max: 10  },
-  { label: 'Remaja',     min: 11, max: 19  },
-  { label: 'Dewasa',     min: 20, max: 44  },
-  { label: 'Lansia',     min: 45, max: 999 },
+  { label: 'Balita',    min: 0,  max: 5   },
+  { label: 'Anak-anak', min: 6,  max: 10  },
+  { label: 'Remaja',    min: 11, max: 19  },
+  { label: 'Dewasa',    min: 20, max: 44  },
+  { label: 'Lansia',    min: 45, max: 999 },
 ]
-
-import { hitungUmur as calcUmur } from '@/lib/dateUtils'
 
 function hitungUmur(tanggalLahir: string): number {
   return calcUmur(tanggalLahir)
 }
 
-function buildKelompokUmur(config: KelompokUmurConfig): { label: string; min: number; max: number }[] {
-  const { interval, batasAkhir } = config
-  const groups: { label: string; min: number; max: number }[] = []
-  let current = 0
-  while (current < batasAkhir) {
-    const min = current
-    const max = current + interval - 1
-    groups.push({
-      label: `${min}\u2013${max}`,
-      min,
-      max,
-    })
-    current += interval
-  }
-  // Last group: batasAkhir+
-  groups.push({
-    label: `${batasAkhir}+`,
-    min: batasAkhir,
-    max: 999,
-  })
-  return groups
-}
+// ── Baca konfigurasi dari Firestore ─────────────────────────────────────────
 
 async function fetchKelompokUmurConfig(): Promise<KelompokUmurConfig> {
   try {
     const snap = await getDoc(doc(db, 'config', 'kelompok_umur'))
     if (snap.exists()) {
       const data = snap.data()
-      return {
-        interval: typeof data.interval === 'number' ? data.interval : DEFAULT_KELOMPOK_UMUR_CONFIG.interval,
-        batasAkhir: typeof data.batasAkhir === 'number' ? data.batasAkhir : DEFAULT_KELOMPOK_UMUR_CONFIG.batasAkhir,
+      // Format baru: array of {min, max}
+      if (Array.isArray(data.kelompok) && data.kelompok.length > 0) {
+        const valid = (data.kelompok as KelompokUmurEntry[]).every(
+          (e) => typeof e.min === 'number' && typeof e.max === 'number'
+        )
+        if (valid) return data.kelompok as KelompokUmurConfig
       }
     }
   } catch {
-    // fallback
+    // fallback ke default
   }
   return DEFAULT_KELOMPOK_UMUR_CONFIG
 }
+
+// ── Fetch monografi ──────────────────────────────────────────────────────────
 
 async function fetchMonografi(): Promise<MonografiData> {
   const [kelompokUmurConfig, snap, snapAll] = await Promise.all([
@@ -97,8 +104,6 @@ async function fetchMonografi(): Promise<MonografiData> {
   const totalTidakAktif = snapAll.size - totalAktif
   const total = snapAll.size
 
-  const KELOMPOK_UMUR = buildKelompokUmur(kelompokUmurConfig)
-
   const byAgama: Record<string, number> = {}
   const byPendidikan: Record<string, number> = {}
   const byPekerjaan: Record<string, number> = {}
@@ -106,7 +111,11 @@ async function fetchMonografi(): Promise<MonografiData> {
   const byRT: Record<string, { laki: number; perempuan: number }> = {}
   const byKlasifikasiUmur: Record<string, number> = {}
 
-  const piramida = KELOMPOK_UMUR.map((k) => ({ kelompok: k.label, laki: 0, perempuan: 0 }))
+  const piramida = kelompokUmurConfig.map((k) => ({
+    kelompok: formatKelompokLabel(k),
+    laki: 0,
+    perempuan: 0,
+  }))
 
   let laki = 0
   let perempuan = 0
@@ -133,16 +142,17 @@ async function fetchMonografi(): Promise<MonografiData> {
 
     if (p.tanggal_lahir) {
       const umur = hitungUmur(p.tanggal_lahir)
-      const idx = KELOMPOK_UMUR.findIndex((k) => umur >= k.min && umur <= k.max)
+
+      // Piramida umur: cari kelompok yang cocok
+      const idx = kelompokUmurConfig.findIndex((k) => umur >= k.min && umur <= k.max)
       if (idx >= 0) {
         if (p.jenis_kelamin === 'Laki-laki') piramida[idx].laki++
         else piramida[idx].perempuan++
       }
 
+      // Klasifikasi umur (tetap)
       const kls = KLASIFIKASI.find((k) => umur >= k.min && umur <= k.max)
-      if (kls) {
-        byKlasifikasiUmur[kls.label] = (byKlasifikasiUmur[kls.label] ?? 0) + 1
-      }
+      if (kls) byKlasifikasiUmur[kls.label] = (byKlasifikasiUmur[kls.label] ?? 0) + 1
     }
   }
 
@@ -163,12 +173,16 @@ async function fetchMonografi(): Promise<MonografiData> {
   }
 }
 
+// ── Simpan konfigurasi ke Firestore ─────────────────────────────────────────
+
 async function saveKelompokUmurConfig(config: KelompokUmurConfig): Promise<void> {
   await setDoc(doc(db, 'config', 'kelompok_umur'), {
-    ...config,
+    kelompok: config,
     updated_at: serverTimestamp(),
   })
 }
+
+// ── Exported hooks ────────────────────────────────────────────────────────────
 
 export function useMonografi() {
   return useQuery({

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { BarChart2, Settings2, X, Check } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
-import { useMonografi, useSaveKelompokUmurConfig, DEFAULT_KELOMPOK_UMUR_CONFIG, type KelompokUmurConfig } from '@/hooks/useMonografi'
+import { useMonografi, useSaveKelompokUmurConfig, DEFAULT_KELOMPOK_UMUR_CONFIG, formatKelompokLabel, type KelompokUmurConfig, type KelompokUmurEntry } from '@/hooks/useMonografi'
 import { Skeleton } from '@/components/ui/skeleton'
 
 function StatCard({ label, value, sub, color = 'sky' }: {
@@ -139,7 +139,14 @@ function Card({ title, children, total, totalLabel = 'total data' }: {
   )
 }
 
-// ── Modal Pengaturan Rentang Umur Piramida ───────────────────────────────────
+// ── Modal Pengaturan Rentang Umur Piramida (Custom Bebas) ───────────────────
+//
+// User bisa definisikan kelompok umur sepenuhnya bebas:
+//   - Tambah baris: isi min & max lalu klik Tambah
+//   - Hapus baris yang tidak diinginkan
+//   - Tidak ada batasan interval — bebas: 0-4, 5-14, 15-19, 20-40, dst.
+//
+// Satu aturan validasi utama: kelompok tidak boleh overlap dan harus urut.
 
 function PengaturanPiramidaModal({
   config,
@@ -150,49 +157,69 @@ function PengaturanPiramidaModal({
   onClose: () => void
   onSave: (c: KelompokUmurConfig) => void
 }) {
-  const [interval, setInterval] = useState(String(config.interval))
-  const [batasAkhir, setBatasAkhir] = useState(String(config.batasAkhir))
-  const [error, setError] = useState('')
+  // Editable list of entries; kita tampilkan sebagai rows
+  const [rows, setRows] = useState<KelompokUmurEntry[]>(() =>
+    config.length > 0 ? config.map((e) => ({ ...e })) : [...DEFAULT_KELOMPOK_UMUR_CONFIG]
+  )
+  // Input untuk tambah baru
+  const [newMin, setNewMin] = useState('')
+  const [newMax, setNewMax] = useState('')
+  const [addError, setAddError] = useState('')
+  const [saveError, setSaveError] = useState('')
 
-  function buildPreview(ivStr: string, baStr: string): string[] {
-    const iv = parseInt(ivStr, 10)
-    const ba = parseInt(baStr, 10)
-    if (isNaN(iv) || isNaN(ba) || iv < 1 || ba < iv) return []
-    const labels: string[] = []
-    let cur = 0
-    while (cur < ba) {
-      labels.push(`${cur}\u2013${cur + iv - 1}`)
-      cur += iv
-    }
-    labels.push(`${ba}+`)
-    return labels
+  function handleTambah() {
+    setAddError('')
+    const mn = parseInt(newMin, 10)
+    const mx = newMax.trim() === '+' || newMax.trim() === '' ? 999 : parseInt(newMax, 10)
+    if (isNaN(mn) || mn < 0) { setAddError('Umur min tidak valid'); return }
+    if (isNaN(mx) || (mx !== 999 && mx < mn)) { setAddError('Umur maks tidak valid atau lebih kecil dari min'); return }
+    // Cek overlap dengan yang sudah ada
+    const overlap = rows.some((r) => !(mx < r.min || mn > r.max))
+    if (overlap) { setAddError('Rentang umur ini overlap dengan kelompok yang sudah ada'); return }
+    const newRows = [...rows, { min: mn, max: mx }].sort((a, b) => a.min - b.min)
+    setRows(newRows)
+    setNewMin('')
+    setNewMax('')
   }
 
-  const preview = buildPreview(interval, batasAkhir)
+  function handleHapus(idx: number) {
+    setRows((prev) => prev.filter((_, i) => i !== idx))
+    setSaveError('')
+  }
+
+  function handleReset() {
+    setRows([...DEFAULT_KELOMPOK_UMUR_CONFIG])
+    setSaveError('')
+    setAddError('')
+  }
 
   function handleSave() {
-    const iv = parseInt(interval, 10)
-    const ba = parseInt(batasAkhir, 10)
-    if (isNaN(iv) || iv < 1) { setError('Interval harus angka positif'); return }
-    if (isNaN(ba) || ba < iv) { setError('Batas kelompok terakhir harus lebih besar dari interval'); return }
-    if (iv > 20) { setError('Interval maksimal 20 tahun'); return }
-    if (ba > 120) { setError('Batas akhir maksimal 120 tahun'); return }
-    if (preview.length > 30) { setError('Terlalu banyak kelompok umur (maks 30)'); return }
-    setError('')
-    onSave({ interval: iv, batasAkhir: ba })
+    setSaveError('')
+    if (rows.length === 0) { setSaveError('Minimal harus ada 1 kelompok umur'); return }
+    if (rows.length > 30) { setSaveError('Maksimal 30 kelompok umur'); return }
+    // Pastikan sorted dan tidak overlap
+    const sorted = [...rows].sort((a, b) => a.min - b.min)
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i].min <= sorted[i - 1].max && sorted[i - 1].max !== 999) {
+        setSaveError('Ada kelompok umur yang overlap — harap perbaiki')
+        return
+      }
+    }
+    onSave(sorted)
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-[#0d1424] border border-white/[0.08] rounded-2xl p-6 max-w-sm w-full flex flex-col gap-5">
+      <div className="bg-[#0d1424] border border-white/[0.08] rounded-2xl p-6 max-w-md w-full flex flex-col gap-5 max-h-[90dvh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/20 flex items-center justify-center">
               <Settings2 size={18} className="text-sky-400" />
             </div>
             <div>
-              <p className="font-semibold text-slate-100 text-sm">Pengaturan Rentang Umur</p>
-              <p className="text-xs text-slate-500 mt-0.5">Konfigurasi piramida umur</p>
+              <p className="font-semibold text-slate-100 text-sm">Rentang Umur Piramida</p>
+              <p className="text-xs text-slate-500 mt-0.5">Atur kelompok umur sesuai kebutuhan</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5">
@@ -200,60 +227,79 @@ function PengaturanPiramidaModal({
           </button>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">
-              Interval rentang umur (tahun) <span className="text-rose-400">*</span>
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={20}
-              value={interval}
-              onChange={(e) => { setInterval(e.target.value); setError('') }}
-              className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
-            />
-            <p className="text-[10px] text-slate-600">
-              Contoh: 5 → kelompok 0-4, 5-9, 10-14, dst. &nbsp;|&nbsp; 4 → 0-3, 4-7, dst.
-            </p>
+        {/* Daftar kelompok yang sudah ada */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-slate-400">{rows.length} Kelompok Umur</p>
+            <button
+              onClick={handleReset}
+              className="text-[10px] text-slate-500 hover:text-slate-300 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              Reset ke default
+            </button>
           </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">
-              Batas kelompok terakhir (umur mulai &#8220;+&#8221;) <span className="text-rose-400">*</span>
-            </label>
-            <input
-              type="number"
-              min={10}
-              max={120}
-              value={batasAkhir}
-              onChange={(e) => { setBatasAkhir(e.target.value); setError('') }}
-              className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
-            />
-            <p className="text-[10px] text-slate-600">
-              Contoh: 65 → kelompok terakhir adalah 65+
-            </p>
-          </div>
-
-          {error && <p className="text-xs text-rose-400">{error}</p>}
-
-          {/* Preview kelompok */}
-          {preview.length > 0 && (
-            <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-400/70 mb-2">
-                Preview — {preview.length} kelompok
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {preview.map((lbl) => (
-                  <span key={lbl} className="text-[10px] bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded-full border border-sky-500/20">
-                    {lbl}
-                  </span>
-                ))}
-              </div>
+          {rows.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center py-4">Belum ada kelompok. Tambah di bawah.</p>
+          ) : (
+            <div className="flex flex-col gap-1 max-h-52 overflow-y-auto">
+              {[...rows].sort((a, b) => a.min - b.min).map((row, i) => (
+                <div key={i} className="flex items-center justify-between bg-white/[0.03] rounded-xl px-3 py-2 border border-white/[0.06]">
+                  <span className="text-sm text-slate-200 font-mono">{formatKelompokLabel(row)}</span>
+                  <button
+                    onClick={() => handleHapus(rows.indexOf(row))}
+                    className="text-rose-400/60 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
+        {/* Tambah kelompok baru */}
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-medium text-slate-400">Tambah Kelompok Baru</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-[10px] text-slate-600">Umur Min</label>
+              <input
+                type="number"
+                min={0}
+                max={120}
+                value={newMin}
+                onChange={(e) => { setNewMin(e.target.value); setAddError('') }}
+                placeholder="0"
+                className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
+              />
+            </div>
+            <span className="text-slate-600 pt-5">—</span>
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-[10px] text-slate-600">Umur Maks (+ = tak terbatas)</label>
+              <input
+                type="text"
+                value={newMax}
+                onChange={(e) => { setNewMax(e.target.value); setAddError('') }}
+                placeholder="4 atau +"
+                className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
+              />
+            </div>
+            <button
+              onClick={handleTambah}
+              className="px-3 py-2 mt-5 rounded-xl bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-medium hover:bg-sky-500/30 transition-colors shrink-0"
+            >
+              + Tambah
+            </button>
+          </div>
+          {addError && <p className="text-xs text-rose-400">{addError}</p>}
+          <p className="text-[10px] text-slate-600">
+            Contoh: min=0 maks=4 → &ldquo;0–4&rdquo; &nbsp;|&nbsp; min=65 maks=+ → &ldquo;65+&rdquo;
+          </p>
+        </div>
+
+        {saveError && <p className="text-xs text-rose-400">{saveError}</p>}
+
+        {/* Actions */}
         <div className="flex gap-2">
           <button
             onClick={onClose}
@@ -327,7 +373,7 @@ export default function MonografiPage() {
               <PiramidaUmur data={data.piramidaUmur} />
               <div className="absolute top-3 right-3">
                 <span className="text-[10px] text-slate-600 bg-[#0d1424] px-2 py-0.5 rounded-full border border-white/[0.06]">
-                  interval {data.kelompokUmurConfig.interval} th · {data.kelompokUmurConfig.batasAkhir}+
+                  {data.kelompokUmurConfig.length} kelompok
                 </span>
               </div>
             </div>
@@ -346,19 +392,6 @@ export default function MonografiPage() {
               </span>
             </div>
 
-            <Card title="Sebaran per RT" total={data.totalAktif} totalLabel="jiwa aktif">
-              <div className="space-y-1.5">
-                {(Object.entries(data.byRT) as [string, { laki: number; perempuan: number }][])
-                  .sort((a, b) => Number(a[0]) - Number(b[0])).map(([rt, val]) => (
-                  <div key={rt} className="flex items-center gap-3 text-xs">
-                    <span className="w-12 text-slate-500 shrink-0 tabular-nums">RT {rt}</span>
-                    <span className="text-sky-400 w-16 tabular-nums">L: {val.laki}</span>
-                    <span className="text-rose-400 w-16 tabular-nums">P: {val.perempuan}</span>
-                    <span className="text-slate-400 tabular-nums">Total: {val.laki + val.perempuan}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
 
             <div className="grid md:grid-cols-2 gap-4">
               <Card title="Agama" total={Object.values(data.byAgama).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
