@@ -55,12 +55,12 @@ export function AppShell({ children, title }: AppShellProps) {
   return (
     <ToastProvider>
       <AuthGuard>
-        <div className="min-h-screen bg-[#0a0f1e] flex">
+        <div className="h-[100dvh] bg-[#0a0f1e] flex overflow-hidden">
           <Sidebar />
           {/* Main content — offset for desktop icon sidebar */}
-          <div className="flex-1 flex flex-col min-w-0 md:ml-14">
+          <div className="flex-1 flex flex-col min-w-0 md:ml-14 overflow-hidden">
             <Topbar title={title} />
-            <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 relative">
               {children}
             </main>
           </div>

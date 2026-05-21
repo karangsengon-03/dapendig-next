@@ -58,7 +58,7 @@ function Sel({ children, value, onChange: onCh, show }: {
       <select value={value} onChange={e => onCh(e.target.value)} className={SEL_CLS}>
         {children}
       </select>
-      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">▾</span>
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-xs">▾</span>
     </div>
   )
 }
@@ -147,7 +147,7 @@ export function PendudukFilter({
           {/* Popup checklist */}
           {showFilterMenu && (
             <div className="absolute left-0 top-10 z-50 bg-[#0d1424] border border-white/[0.10] rounded-xl shadow-2xl shadow-black/50 py-2 min-w-[180px]">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 px-3 pb-1.5">Tampilkan Filter</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-600 px-3 pb-1.5">Tampilkan Filter</p>
               {ALL_FILTERS.map(f => {
                 const active = visibleFilters.has(f.key)
                 return (
@@ -223,7 +223,7 @@ export function PendudukFilter({
               <option value="tanggal_lahir:asc">Umur Tertua</option>
               <option value="tanggal_lahir:desc">Umur Termuda</option>
             </select>
-            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">▾</span>
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-xs">▾</span>
           </div>
         )}
 

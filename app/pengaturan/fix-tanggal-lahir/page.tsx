@@ -259,12 +259,12 @@ export default function FixTanggalLahirPage() {
                     <table className="w-full text-xs">
                       <thead className="sticky top-0 bg-[#0d1424] z-10">
                         <tr className="border-b border-white/[0.06]">
-                          <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                          <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">NIK</th>
-                          <th className="px-3 py-2 text-left text-[10px] font-semibold text-rose-500 uppercase tracking-wider">Tersimpan (salah)</th>
-                          <th className="px-3 py-2 text-left text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Dari NIK (benar)</th>
-                          <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Selisih</th>
-                          <th className="px-3 py-2 text-right text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">NIK</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-rose-500 uppercase tracking-wider">Tersimpan (salah)</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-emerald-500 uppercase tracking-wider">Dari NIK (benar)</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Selisih</th>
+                          <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -275,18 +275,18 @@ export default function FixTanggalLahirPage() {
                           return (
                             <tr key={item.nik} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
                               <td className="px-3 py-2 text-slate-300 font-medium truncate max-w-[120px]">{item.nama || '—'}</td>
-                              <td className="px-3 py-2 text-slate-500 font-mono text-[10px]">{item.nik}</td>
+                              <td className="px-3 py-2 text-slate-500 font-mono text-xs">{item.nik}</td>
                               <td className="px-3 py-2 text-rose-400 font-mono">{formatTgl(item.lama) || '—'}</td>
                               <td className="px-3 py-2 text-emerald-400 font-mono">{formatTgl(item.baru)}</td>
                               <td className="px-3 py-2">
-                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${selisih > 0 ? 'bg-sky-500/10 text-sky-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${selisih > 0 ? 'bg-sky-500/10 text-sky-400' : 'bg-rose-500/10 text-rose-400'}`}>
                                   {selisih > 0 ? '+' : ''}{selisih}h
                                 </span>
                               </td>
                               <td className="px-3 py-2 text-right">
                                 {doneItems.has(item.nik)
-                                  ? <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]"><Check size={11} />Selesai</span>
-                                  : <button onClick={() => handleOneItem(item.nik, item.baru)} disabled={loadingItems.has(item.nik)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-40">
+                                  ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><Check size={11} />Selesai</span>
+                                  : <button onClick={() => handleOneItem(item.nik, item.baru)} disabled={loadingItems.has(item.nik)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-40">
                                       {loadingItems.has(item.nik) ? <Loader2 size={10} className="animate-spin" /> : null}
                                       {loadingItems.has(item.nik) ? 'Proses...' : 'Perbaiki'}
                                     </button>}
@@ -324,15 +324,15 @@ export default function FixTanggalLahirPage() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 flex flex-col gap-0.5">
                   <p className="text-lg font-bold text-emerald-400 tabular-nums">{result.diperbaiki}</p>
-                  <p className="text-[10px] text-slate-400">diperbaiki</p>
+                  <p className="text-xs text-slate-400">diperbaiki</p>
                 </div>
                 <div className="rounded-xl bg-sky-500/10 border border-sky-500/20 p-3 flex flex-col gap-0.5">
                   <p className="text-lg font-bold text-sky-400 tabular-nums">{result.sudahBenar}</p>
-                  <p className="text-[10px] text-slate-400">sudah benar</p>
+                  <p className="text-xs text-slate-400">sudah benar</p>
                 </div>
                 <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 flex flex-col gap-0.5">
                   <p className="text-lg font-bold text-slate-400 tabular-nums">{result.tidakBisaDeteksi}</p>
-                  <p className="text-[10px] text-slate-400">NIK tidak valid</p>
+                  <p className="text-xs text-slate-400">NIK tidak valid</p>
                 </div>
               </div>
 
@@ -341,9 +341,9 @@ export default function FixTanggalLahirPage() {
                   <table className="w-full text-xs">
                     <thead className="sticky top-0 bg-[#0d1424]">
                       <tr className="border-b border-white/[0.06]">
-                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-rose-500 uppercase tracking-wider">Lama</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Dikoreksi ke</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-rose-500 uppercase tracking-wider">Lama</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-emerald-500 uppercase tracking-wider">Dikoreksi ke</th>
                       </tr>
                     </thead>
                     <tbody>

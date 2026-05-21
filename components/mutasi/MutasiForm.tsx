@@ -171,7 +171,7 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
       {/* Preview anggota KK (opsi keluarga) */}
       {opsi === 'keluarga' && form.no_kk.length === 16 && (
         <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-400/70 mb-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70 mb-1">
             {anggotaKK.length} anggota KK aktif akan dicatat pindah
           </p>
           {anggotaKK.length > 0 ? (
@@ -512,7 +512,7 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
       {/* Daftar anggota yang sudah ditambahkan (opsi keluarga) */}
       {opsi === 'keluarga' && daftarAnggota.length > 0 && (
         <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-400/70 mb-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70 mb-2">
             {daftarAnggota.length} anggota siap disimpan
           </p>
           <div className="flex flex-col gap-1">
@@ -524,7 +524,7 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
                 </p>
                 <button
                   onClick={() => handleHapusAnggota(i)}
-                  className="text-rose-400/70 hover:text-rose-400 text-[10px] shrink-0 px-1"
+                  className="text-rose-400/70 hover:text-rose-400 text-xs shrink-0 px-1"
                 >
                   ✕
                 </button>
@@ -536,7 +536,7 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
 
       {/* Form anggota */}
       {opsi === 'keluarga' && (
-        <p className="text-[10px] text-slate-500">
+        <p className="text-xs text-slate-500">
           Isi data setiap anggota, klik &ldquo;Tambah Anggota&rdquo;, lalu klik &ldquo;Simpan Semua&rdquo; jika sudah selesai.
         </p>
       )}

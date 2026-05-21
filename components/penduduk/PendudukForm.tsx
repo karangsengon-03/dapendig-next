@@ -49,7 +49,7 @@ interface FieldErrors {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
       {children}
     </label>
   )
@@ -84,7 +84,7 @@ function Input({
             : 'border-white/[0.08] focus:border-sky-500/50 focus:ring-sky-500/20'
         }`}
       />
-      {error && <p className="text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="text-xs text-rose-400">{error}</p>}
     </div>
   )
 }
@@ -117,7 +117,7 @@ function Select({
           </option>
         ))}
       </select>
-      {error && <p className="text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="text-xs text-rose-400">{error}</p>}
     </div>
   )
 }

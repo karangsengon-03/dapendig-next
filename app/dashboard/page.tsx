@@ -130,7 +130,7 @@ export default function DashboardPage() {
               <thead>
                 <tr className="border-b border-white/[0.06]">
                   {['RT','L','P','Total'].map(h => (
-                    <th key={h} className="py-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-center">{h}</th>
+                    <th key={h} className="py-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -150,7 +150,7 @@ export default function DashboardPage() {
               </tbody>
               <tfoot>
                 <tr className="border-t border-white/[0.08]">
-                  <td className="py-2 px-2 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</td>
+                  <td className="py-2 px-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Total</td>
                   <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-xs">{stats?.lakiLaki ?? 0}</td>
                   <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-xs">{stats?.perempuan ?? 0}</td>
                   <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-xs">{stats?.totalPenduduk ?? 0}</td>
@@ -168,7 +168,7 @@ export default function DashboardPage() {
               <thead>
                 <tr className="border-b border-white/[0.06]">
                   {['Dusun','L','P','Total'].map(h => (
-                    <th key={h} className="py-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-center">{h}</th>
+                    <th key={h} className="py-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -186,7 +186,7 @@ export default function DashboardPage() {
               </tbody>
               <tfoot>
                 <tr className="border-t border-white/[0.08]">
-                  <td className="py-2 px-2 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500">Total</td>
+                  <td className="py-2 px-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Total</td>
                   <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-xs">{stats?.lakiLaki ?? 0}</td>
                   <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-xs">{stats?.perempuan ?? 0}</td>
                   <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-xs">{stats?.totalPenduduk ?? 0}</td>

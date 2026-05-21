@@ -76,7 +76,7 @@ export function RecentActivity({ logs, loading }: RecentActivityProps) {
           logs.map((log) => (
             <div key={log.id} className="py-3 flex items-start gap-3">
               <span
-                className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5 ${aksiColor(log.aksi)}`}
+                className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5 ${aksiColor(log.aksi)}`}
               >
                 {log.aksi}
               </span>
@@ -84,7 +84,7 @@ export function RecentActivity({ logs, loading }: RecentActivityProps) {
                 <p className="text-xs text-slate-300 leading-snug truncate">
                   {log.keterangan || `NIK ${log.nik_target}`}
                 </p>
-                <p className="text-[11px] text-slate-600 mt-0.5">
+                <p className="text-xs text-slate-600 mt-0.5">
                   {log.oleh} · {formatRelative(log.ts)}
                 </p>
               </div>

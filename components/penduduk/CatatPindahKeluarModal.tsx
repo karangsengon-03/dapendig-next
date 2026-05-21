@@ -101,7 +101,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
             >
               <User size={16} className="shrink-0" />
               <span>1 Orang</span>
-              <span className="text-[10px] font-normal text-slate-600 text-center leading-tight">
+              <span className="text-xs font-normal text-slate-600 text-center leading-tight">
                 Hanya yang bersangkutan
               </span>
             </button>
@@ -115,7 +115,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
             >
               <Users size={16} className="shrink-0" />
               <span>1 Keluarga</span>
-              <span className="text-[10px] font-normal text-slate-600 text-center leading-tight">
+              <span className="text-xs font-normal text-slate-600 text-center leading-tight">
                 Seluruh anggota KK aktif
               </span>
             </button>
@@ -124,7 +124,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
           {/* Info anggota KK jika opsi keluarga */}
           {opsi === 'keluarga' && (
             <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3 flex flex-col gap-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-400/70">
+              <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70">
                 {anggotaKK.length} anggota KK aktif akan dicatat pindah
               </p>
               <div className="flex flex-col gap-0.5 mt-0.5">

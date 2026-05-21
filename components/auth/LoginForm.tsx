@@ -134,7 +134,7 @@ export function LoginForm() {
           <div>
             <p className="text-lg font-bold text-slate-100 tracking-tight">Data Penduduk Digital</p>
             <p className="text-xs text-slate-500 mt-0.5">Desa Karang Sengon, Kec. Klabang, Kab. Bondowoso</p>
-            <p className="text-[10px] text-slate-700 mt-1">{APP_VERSION}</p>
+            <p className="text-xs text-slate-700 mt-1">{APP_VERSION}</p>
           </div>
         </div>
 
@@ -157,7 +157,7 @@ export function LoginForm() {
                 <UserCircle2 size={16} className="text-sky-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-slate-500">Masuk sebagai</p>
+                <p className="text-xs text-slate-500">Masuk sebagai</p>
                 <p className="text-sm font-medium text-slate-200 truncate">{savedEmail}</p>
               </div>
               <button
@@ -173,7 +173,7 @@ export function LoginForm() {
             {/* Email — hanya di mode ganti/baru */}
             {!isLanjut && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Email
                 </label>
                 <input
@@ -190,7 +190,7 @@ export function LoginForm() {
 
             {/* Password — selalu tampil, sudah terisi dari simpanan */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Kata Sandi
               </label>
               <div className="relative">
@@ -242,7 +242,7 @@ export function LoginForm() {
           </div>
         </div>
 
-        <p className="text-[11px] text-slate-700">
+        <p className="text-xs text-slate-700">
           © Pemerintah Desa Karang Sengon 2026
         </p>
       </div>

@@ -311,12 +311,12 @@ export default function LogPage() {
               <table className="w-full min-w-[680px] border-collapse">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-8">No</th>
-                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-28">Aksi</th>
-                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2">Keterangan</th>
-                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-28">Koleksi</th>
-                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-32">Oleh</th>
-                    <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-36">Waktu</th>
+                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-8">No</th>
+                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-28">Aksi</th>
+                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2">Keterangan</th>
+                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-28">Koleksi</th>
+                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-32">Oleh</th>
+                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-36">Waktu</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -329,7 +329,7 @@ export default function LogPage() {
                         {(page - 1) * PAGE_SIZE + idx + 1}
                       </td>
                       <td className="py-3 px-2">
-                        <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${aksiColor(log.aksi)}`}>
+                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${aksiColor(log.aksi)}`}>
                           {log.aksi}
                         </span>
                       </td>
@@ -338,12 +338,12 @@ export default function LogPage() {
                           {log.keterangan || log.nama || '—'}
                         </p>
                         {log.nik_target && (
-                          <p className="text-[11px] text-slate-600 mt-0.5 font-mono">NIK {log.nik_target}</p>
+                          <p className="text-xs text-slate-600 mt-0.5 font-mono">NIK {log.nik_target}</p>
                         )}
                       </td>
                       <td className="py-3 px-2">
                         {log.koleksi ? (
-                          <span className="text-[10px] text-slate-500 bg-white/[0.04] px-1.5 py-0.5 rounded">
+                          <span className="text-xs text-slate-500 bg-white/[0.04] px-1.5 py-0.5 rounded">
                             {koleksiBadge(log.koleksi)}
                           </span>
                         ) : (
@@ -354,8 +354,8 @@ export default function LogPage() {
                         {log.oleh}
                       </td>
                       <td className="py-3 px-2">
-                        <p className="text-[11px] text-slate-400">{formatWaktu(log.ts)}</p>
-                        <p className="text-[10px] text-slate-600 mt-0.5">{formatRelative(log.ts)}</p>
+                        <p className="text-xs text-slate-400">{formatWaktu(log.ts)}</p>
+                        <p className="text-xs text-slate-600 mt-0.5">{formatRelative(log.ts)}</p>
                       </td>
                     </tr>
                   ))}

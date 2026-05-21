@@ -132,10 +132,10 @@ export default function MigrateTanggalPage() {
                 <table className="w-full text-xs">
                   <thead className="sticky top-0 bg-[#0d1424] z-10">
                     <tr className="border-b border-white/[0.06]">
-                      <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Koleksi / Nama</th>
-                      <th className="px-3 py-2 text-left text-[10px] font-semibold text-rose-500 uppercase tracking-wider">Lama</th>
-                      <th className="px-3 py-2 text-left text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Baru</th>
-                      <th className="px-3 py-2 text-right text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Koleksi / Nama</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-rose-500 uppercase tracking-wider">Lama</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-emerald-500 uppercase tracking-wider">Baru</th>
+                      <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -144,15 +144,15 @@ export default function MigrateTanggalPage() {
                       return (
                         <tr key={key} className={`border-b border-white/[0.04] last:border-0 transition-colors ${item.done ? 'opacity-40' : 'hover:bg-white/[0.02]'}`}>
                           <td className="px-3 py-2">
-                            <p className="text-[10px] text-slate-500 font-mono">{item.koleksi}.{item.field}</p>
+                            <p className="text-xs text-slate-500 font-mono">{item.koleksi}.{item.field}</p>
                             <p className="text-slate-300 font-medium truncate max-w-[120px]">{item.nama || item.id}</p>
                           </td>
                           <td className="px-3 py-2 text-rose-400 font-mono">{item.lama}</td>
                           <td className="px-3 py-2 text-emerald-400 font-mono">{item.baru}</td>
                           <td className="px-3 py-2 text-right">
                             {item.done
-                              ? <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]"><Check size={11} />Selesai</span>
-                              : <button onClick={() => handleOne(item.koleksi, item.id, item.field, item.baru)} disabled={item.loading} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-medium hover:bg-sky-500/20 transition-colors disabled:opacity-40">
+                              ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><Check size={11} />Selesai</span>
+                              : <button onClick={() => handleOne(item.koleksi, item.id, item.field, item.baru)} disabled={item.loading} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors disabled:opacity-40">
                                   {item.loading ? <Loader2 size={10} className="animate-spin" /> : null}
                                   {item.loading ? 'Proses...' : 'Konversi'}
                                 </button>}

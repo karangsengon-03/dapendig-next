@@ -29,7 +29,7 @@ export function AppLogoFull({ className }: { className?: string }) {
       </div>
       <div className="flex flex-col leading-none">
         <span className="text-sm font-semibold text-slate-100 tracking-tight">Data Penduduk Digital</span>
-        <span className="text-[10px] text-slate-500 mt-0.5">Desa Karang Sengon · {APP_VERSION}</span>
+        <span className="text-xs text-slate-500 mt-0.5">Desa Karang Sengon · {APP_VERSION}</span>
       </div>
     </div>
   )

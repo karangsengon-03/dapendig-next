@@ -57,14 +57,14 @@ function DetailLahirModal({
         <div className="px-5 py-3 flex flex-col divide-y divide-white/[0.04]">
           {fields.map(([label, val]) => (
             <div key={label} className="py-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">{label}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</p>
               <p className="text-sm text-slate-200 mt-0.5">{val}</p>
             </div>
           ))}
         </div>
         {(canEdit || canDelete) && (
           <div className="px-5 py-4 border-t border-white/[0.06]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-3">Aksi</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-600 mb-3">Aksi</p>
             <div className="grid grid-cols-2 gap-2">
               {canEdit && (
                 <button onClick={onEdit}
@@ -111,14 +111,14 @@ function DetailMeninggalModal({
         <div className="px-5 py-3 flex flex-col divide-y divide-white/[0.04]">
           {fields.map(([label, val]) => (
             <div key={label} className="py-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">{label}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</p>
               <p className="text-sm text-slate-200 mt-0.5">{val}</p>
             </div>
           ))}
         </div>
         {(canEdit || canDelete) && (
           <div className="px-5 py-4 border-t border-white/[0.06]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-3">Aksi</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-600 mb-3">Aksi</p>
             <div className="grid grid-cols-3 gap-2">
               {canEdit && (
                 <button onClick={onEdit}
@@ -293,11 +293,11 @@ export default function VitalPage() {
   }
 
   const stickyBg = 'bg-[#0d1424]'
-  const thCls = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 z-10 ${stickyBg}`
-  const thStickyLeft = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-0 z-20 ${stickyBg}`
-  const thStickyLeft2 = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-8 z-20 ${stickyBg}`
-  const tdStickyNo = `px-3 py-3 text-slate-500 text-sm sticky left-0 z-10 ${stickyBg}`
-  const tdStickyNama = `px-3 py-3 sticky left-8 z-10 ${stickyBg}`
+  const thCls = `px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 z-20 ${stickyBg}`
+  const thStickyLeft = `px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-0 z-30 ${stickyBg} w-9`
+  const thStickyLeft2 = `px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-9 z-30 min-w-[160px] ${stickyBg}`
+  const tdStickyNo = `px-3 py-3 text-slate-500 text-xs sticky left-0 z-20 ${stickyBg} w-9`
+  const tdStickyNama = `px-3 py-3 sticky left-9 z-20 ${stickyBg} min-w-[160px]`
   const trCls = "border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer group"
 
   return (
@@ -373,17 +373,17 @@ export default function VitalPage() {
                       {dataLahir.map((row: Lahir, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailLahir(row)}>
                           <td className={tdStickyNo}>{i+1}</td>
-                          <td className={tdStickyNama}><p className="text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama_lengkap}</p></td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik||'—'}</td>
+                          <td className={tdStickyNama}><p className="text-sm text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama_lengkap}</p></td>
+                          <td className="px-3 py-3 text-sm text-slate-400 font-mono">{row.nik||'—'}</td>
                           <td className="px-3 py-3">
-                            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${row.jenis_kelamin==='Laki-laki'?'bg-sky-500/10 text-sky-400':'bg-pink-500/10 text-pink-400'}`}>
+                            <span className={`text-xs font-medium px-1.5 py-0.5 rounded-md ${row.jenis_kelamin==='Laki-laki'?'bg-sky-500/10 text-sky-400':'bg-pink-500/10 text-pink-400'}`}>
                               {row.jenis_kelamin==='Laki-laki'?'L':'P'}
                             </span>
                           </td>
-                          <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal_lahir)}</td>
-                          <td className="px-3 py-3 text-slate-400">{row.nama_ayah}</td>
-                          <td className="px-3 py-3 text-slate-400">{row.nama_ibu}</td>
-                          <td className="px-3 py-3 text-slate-400 text-sm">RT {row.rt}/RW {row.rw}</td>
+                          <td className="px-3 py-3 text-sm text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal_lahir)}</td>
+                          <td className="px-3 py-3 text-sm text-slate-400">{row.nama_ayah}</td>
+                          <td className="px-3 py-3 text-sm text-slate-400">{row.nama_ibu}</td>
+                          <td className="px-3 py-3 text-sm text-slate-400">RT {row.rt}/RW {row.rw}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -412,12 +412,12 @@ export default function VitalPage() {
                       {dataMeninggal.map((row: Meninggal, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailMeninggal(row)}>
                           <td className={tdStickyNo}>{i+1}</td>
-                          <td className={tdStickyNama}><p className="text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama}</p></td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik_target||'—'}</td>
-                          <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.no_kk||'—'}</td>
-                          <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
-                          <td className="px-3 py-3 text-slate-400 text-xs">{row.hub_asli||'—'}</td>
-                          <td className="px-3 py-3 text-slate-400">{row.sebab||'—'}</td>
+                          <td className={tdStickyNama}><p className="text-sm text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama}</p></td>
+                          <td className="px-3 py-3 text-sm text-slate-400 font-mono">{row.nik_target||'—'}</td>
+                          <td className="px-3 py-3 text-sm text-slate-400 font-mono">{row.no_kk||'—'}</td>
+                          <td className="px-3 py-3 text-sm text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
+                          <td className="px-3 py-3 text-sm text-slate-400">{row.hub_asli||'—'}</td>
+                          <td className="px-3 py-3 text-sm text-slate-400">{row.sebab||'—'}</td>
                         </tr>
                       ))}
                     </tbody>

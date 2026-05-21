@@ -284,9 +284,9 @@ function UserManagement({ currentUid }: { currentUid: string }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06]">
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Email</th>
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
               </tr>
             </thead>
             <tbody>
@@ -297,12 +297,12 @@ function UserManagement({ currentUid }: { currentUid: string }) {
                     <td className="px-3 py-3 text-slate-200 text-sm">
                       {u.email}
                       {isSelf && (
-                        <span className="ml-2 text-[10px] bg-sky-500/15 text-sky-400 px-1.5 py-0.5 rounded border border-sky-500/20">Anda</span>
+                        <span className="ml-2 text-xs bg-sky-500/15 text-sky-400 px-1.5 py-0.5 rounded border border-sky-500/20">Anda</span>
                       )}
                     </td>
                     <td className="px-3 py-3 text-slate-400 text-sm">{u.nama ?? '—'}</td>
                     <td className="px-3 py-3">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20 rounded px-2 py-0.5">
+                      <span className="text-xs font-semibold uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20 rounded px-2 py-0.5">
                         {ROLE_LABEL[u.role]}
                       </span>
                     </td>

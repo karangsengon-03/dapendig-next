@@ -110,20 +110,20 @@ export default function MigrateAlamatPage() {
                 <table className="w-full text-xs">
                   <thead className="sticky top-0 bg-[#0d1424] z-10">
                     <tr className="border-b border-white/[0.06]">
-                      <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                      <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">NIK</th>
-                      <th className="px-3 py-2 text-right text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">NIK</th>
+                      <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map(item => (
                       <tr key={item.id} className={`border-b border-white/[0.04] last:border-0 transition-colors ${item.done ? 'opacity-40' : 'hover:bg-white/[0.02]'}`}>
                         <td className="px-3 py-2 text-slate-300 font-medium truncate max-w-[140px]">{item.nama || '—'}</td>
-                        <td className="px-3 py-2 text-slate-500 font-mono text-[10px]">{item.nik}</td>
+                        <td className="px-3 py-2 text-slate-500 font-mono text-xs">{item.nik}</td>
                         <td className="px-3 py-2 text-right">
                           {item.done
-                            ? <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]"><Check size={11} />Selesai</span>
-                            : <button onClick={() => handleOne(item.id)} disabled={item.loading} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-medium hover:bg-sky-500/20 transition-colors disabled:opacity-40">
+                            ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><Check size={11} />Selesai</span>
+                            : <button onClick={() => handleOne(item.id)} disabled={item.loading} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors disabled:opacity-40">
                                 {item.loading ? <Loader2 size={10} className="animate-spin" /> : null}
                                 {item.loading ? 'Proses...' : 'Isi Alamat'}
                               </button>}

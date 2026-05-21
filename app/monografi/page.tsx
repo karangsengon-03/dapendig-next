@@ -112,7 +112,7 @@ function KlasifikasiUmur({ byKlasifikasi }: { byKlasifikasi: Record<string, numb
           <div key={k.label} className={`rounded-xl ${k.bg} border ${k.border} p-3 flex flex-col gap-1`}>
             <span className="text-[10px] text-slate-500">{k.label}</span>
             <span className={`text-2xl font-bold ${k.color}`}>{byKlasifikasi[k.label] ?? 0}</span>
-            <span className="text-[10px] text-slate-600">
+            <span className="text-xs text-slate-600">
               {k.min === 0 ? `0–${k.max} th` : k.max === 999 ? `${k.min}+ th` : `${k.min}–${k.max} th`}
             </span>
           </div>
@@ -131,7 +131,7 @@ function Card({ title, children, total, totalLabel = 'total data' }: {
       {children}
       {total !== undefined && (
         <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between">
-          <span className="text-[10px] text-slate-600 uppercase tracking-wider">Total tercatat</span>
+          <span className="text-xs text-slate-600 uppercase tracking-wider">Total tercatat</span>
           <span className="text-xs font-semibold text-slate-400 tabular-nums">{total} {totalLabel}</span>
         </div>
       )}
@@ -233,7 +233,7 @@ function PengaturanPiramidaModal({
             <p className="text-xs font-medium text-slate-400">{rows.length} Kelompok Umur</p>
             <button
               onClick={handleReset}
-              className="text-[10px] text-slate-500 hover:text-slate-300 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+              className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
             >
               Reset ke default
             </button>
@@ -262,7 +262,7 @@ function PengaturanPiramidaModal({
           <p className="text-xs font-medium text-slate-400">Tambah Kelompok Baru</p>
           <div className="flex items-center gap-2">
             <div className="flex-1 flex flex-col gap-1">
-              <label className="text-[10px] text-slate-600">Umur Min</label>
+              <label className="text-xs text-slate-600">Umur Min</label>
               <input
                 type="number"
                 min={0}
@@ -275,7 +275,7 @@ function PengaturanPiramidaModal({
             </div>
             <span className="text-slate-600 pt-5">—</span>
             <div className="flex-1 flex flex-col gap-1">
-              <label className="text-[10px] text-slate-600">Umur Maks (+ = tak terbatas)</label>
+              <label className="text-xs text-slate-600">Umur Maks (+ = tak terbatas)</label>
               <input
                 type="text"
                 value={newMax}
@@ -292,7 +292,7 @@ function PengaturanPiramidaModal({
             </button>
           </div>
           {addError && <p className="text-xs text-rose-400">{addError}</p>}
-          <p className="text-[10px] text-slate-600">
+          <p className="text-xs text-slate-600">
             Contoh: min=0 maks=4 → &ldquo;0–4&rdquo; &nbsp;|&nbsp; min=65 maks=+ → &ldquo;65+&rdquo;
           </p>
         </div>
@@ -378,7 +378,7 @@ export default function MonografiPage() {
               </div>
             </div>
             <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
-              <span className="text-[10px] text-slate-600 uppercase tracking-wider">Total tercatat dalam piramida</span>
+              <span className="text-xs text-slate-600 uppercase tracking-wider">Total tercatat dalam piramida</span>
               <span className="text-xs font-semibold text-slate-400 tabular-nums">
                 {data.piramidaUmur.reduce((s,r)=>s+r.laki+r.perempuan,0)} jiwa
               </span>
@@ -386,7 +386,7 @@ export default function MonografiPage() {
 
             <KlasifikasiUmur byKlasifikasi={data.byKlasifikasiUmur} />
             <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
-              <span className="text-[10px] text-slate-600 uppercase tracking-wider">Total tercatat dalam klasifikasi</span>
+              <span className="text-xs text-slate-600 uppercase tracking-wider">Total tercatat dalam klasifikasi</span>
               <span className="text-xs font-semibold text-slate-400 tabular-nums">
                 {Object.values(data.byKlasifikasiUmur).reduce((a,b)=>a+b,0)} jiwa
               </span>
@@ -395,7 +395,7 @@ export default function MonografiPage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <Card title="Agama" total={Object.values(data.byAgama).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-                <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
+                <p className="text-xs text-slate-600 mb-2">Klik untuk lihat penduduk</p>
                 <div className="space-y-1">
                   {(Object.entries(data.byAgama) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([agama, n]) => (
                     <BarRow key={agama} label={agama} value={n} total={data.totalAktif} color="bg-emerald-500"
@@ -404,7 +404,7 @@ export default function MonografiPage() {
                 </div>
               </Card>
               <Card title="Status Perkawinan" total={Object.values(data.byStatusPerkawinan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-                <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
+                <p className="text-xs text-slate-600 mb-2">Klik untuk lihat penduduk</p>
                 <div className="space-y-1">
                   {(Object.entries(data.byStatusPerkawinan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([status, n]) => (
                     <BarRow key={status} label={status} value={n} total={data.totalAktif} color="bg-amber-500"
@@ -415,7 +415,7 @@ export default function MonografiPage() {
             </div>
 
             <Card title="Tingkat Pendidikan" total={Object.values(data.byPendidikan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-              <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
+              <p className="text-xs text-slate-600 mb-2">Klik untuk lihat penduduk</p>
               <div className="space-y-1">
                 {(Object.entries(data.byPendidikan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pend, n]) => (
                   <BarRow key={pend} label={pend} value={n} total={data.totalAktif} color="bg-sky-500"
@@ -425,7 +425,7 @@ export default function MonografiPage() {
             </Card>
 
             <Card title="Pekerjaan" total={Object.values(data.byPekerjaan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-              <p className="text-[10px] text-slate-600 mb-2">Klik untuk lihat penduduk</p>
+              <p className="text-xs text-slate-600 mb-2">Klik untuk lihat penduduk</p>
               <div className="space-y-1">
                 {(Object.entries(data.byPekerjaan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pek, n]) => (
                   <BarRow key={pek} label={pek} value={n} total={data.totalAktif} color="bg-rose-400"

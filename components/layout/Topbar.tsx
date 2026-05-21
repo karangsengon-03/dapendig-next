@@ -63,10 +63,10 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
 
       {/* App name — 2 baris */}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-bold text-slate-100 leading-tight tracking-tight">
+        <p className="text-sm font-bold text-slate-100 leading-tight tracking-tight">
           Data Penduduk Digital
         </p>
-        <p className="text-[10px] text-slate-500 leading-tight">
+        <p className="text-xs text-slate-500 leading-tight">
           Desa Karang Sengon
         </p>
       </div>
@@ -88,11 +88,11 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
 
           {/* Dropdown */}
           {open && (
-            <div className="absolute right-0 top-10 z-50 w-48 rounded-2xl bg-[#0d1424] border border-white/[0.08] shadow-2xl overflow-hidden">
+            <div className="absolute right-0 top-10 z-[200] w-48 rounded-2xl bg-[#0d1424] border border-white/[0.08] shadow-2xl overflow-hidden">
               {/* Info user */}
               <div className="px-4 py-3 border-b border-white/[0.06]">
-                <p className="text-xs font-semibold text-slate-200 truncate">{user.nama || user.email}</p>
-                <p className="text-[10px] text-slate-500 capitalize mt-0.5">{user.role}</p>
+                <p className="text-sm font-semibold text-slate-200 truncate">{user.nama || user.email}</p>
+                <p className="text-xs text-slate-500 capitalize mt-0.5">{user.role}</p>
               </div>
               {/* Menu items */}
               <div className="py-1.5">

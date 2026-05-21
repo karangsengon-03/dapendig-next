@@ -81,14 +81,14 @@ export function KKModal({ noKk, allPenduduk, onClose, onNavigate }: Props) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-slate-200 truncate">{p.nama_lengkap}</span>
                     {p.status !== 'aktif' && (
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${STATUS_COLOR[p.status] ?? 'bg-slate-500/15 text-slate-400 border-slate-500/20'}`}>
+                      <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full border ${STATUS_COLOR[p.status] ?? 'bg-slate-500/15 text-slate-400 border-slate-500/20'}`}>
                         {p.status}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 font-mono mt-0.5">{p.nik || '—'}</p>
                 </div>
-                <span className={`text-[10px] font-medium px-2 py-1 rounded-lg border shrink-0 ${HUB_COLOR[p.hubungan_keluarga] ?? 'bg-slate-500/15 text-slate-400 border-slate-500/20'}`}>
+                <span className={`text-xs font-medium px-2 py-1 rounded-lg border shrink-0 ${HUB_COLOR[p.hubungan_keluarga] ?? 'bg-slate-500/15 text-slate-400 border-slate-500/20'}`}>
                   {p.hubungan_keluarga}
                 </span>
               </button>

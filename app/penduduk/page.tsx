@@ -179,7 +179,7 @@ function PendudukContent() {
         pekerjaanOptions={pekerjaanOptions}
       />
 
-      <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-3">
+      <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] overflow-hidden">
         <PendudukTable data={filtered} loading={isLoading} page={page} pageSize={pageSize} />
       </div>
 

@@ -248,7 +248,7 @@ export default function ProfilPage() {
           <div>
             <p className="font-semibold text-slate-100 text-base">{user?.nama || '(nama belum diisi)'}</p>
             <p className="text-xs text-slate-500 mt-0.5">{user?.email}</p>
-            <span className="inline-block mt-1.5 text-[10px] font-semibold uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/25 rounded px-2 py-0.5">
+            <span className="inline-block mt-1.5 text-xs font-semibold uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/25 rounded px-2 py-0.5">
               {user?.role}
             </span>
           </div>

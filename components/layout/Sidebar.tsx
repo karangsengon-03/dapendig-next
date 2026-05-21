@@ -122,7 +122,7 @@ export function Sidebar() {
                     active ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'
                   )} />
                   {badgeCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center px-0.5 leading-none">
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] rounded-full bg-rose-500 text-xs font-bold text-white flex items-center justify-center px-0.5 leading-none">
                       {badgeCount > 99 ? '99+' : badgeCount}
                     </span>
                   )}
@@ -130,7 +130,7 @@ export function Sidebar() {
                 {/* Label + mobile badge */}
                 <span className="truncate md:hidden flex-1">{label}</span>
                 {badgeCount > 0 && (
-                  <span className="md:hidden ml-auto min-w-[20px] h-5 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-bold flex items-center justify-center px-1.5 border border-rose-500/30">
+                  <span className="md:hidden ml-auto min-w-[20px] h-5 rounded-full bg-rose-500/20 text-rose-400 text-xs font-bold flex items-center justify-center px-1.5 border border-rose-500/30">
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
                 )}
@@ -181,7 +181,7 @@ export function Sidebar() {
           </button>
 
           {/* Versi — mobile only */}
-          <p className="md:hidden text-center text-[10px] text-slate-600 pt-1">{APP_VERSION}</p>
+          <p className="md:hidden text-center text-xs text-slate-600 pt-1">{APP_VERSION}</p>
         </div>
       </aside>
     </>

@@ -53,14 +53,14 @@ function DetailKeluarModal({
         <div className="px-5 py-3 flex flex-col divide-y divide-white/[0.04]">
           {fields.map(([label, val]) => (
             <div key={label} className="py-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">{label}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</p>
               <p className="text-sm text-slate-200 mt-0.5">{val}</p>
             </div>
           ))}
         </div>
         {(canEdit || canDelete) && (
           <div className="px-5 py-4 border-t border-white/[0.06]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-3">Aksi</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-600 mb-3">Aksi</p>
             <div className="grid grid-cols-3 gap-2">
               {canEdit && (
                 <button onClick={onEdit}
@@ -121,14 +121,14 @@ function DetailMasukModal({
         <div className="px-5 py-3 flex flex-col divide-y divide-white/[0.04]">
           {fields.map(([label, val]) => (
             <div key={label} className="py-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">{label}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</p>
               <p className="text-sm text-slate-200 mt-0.5">{val}</p>
             </div>
           ))}
         </div>
         {(canEdit || canDelete) && (
           <div className="px-5 py-4 border-t border-white/[0.06]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-3">Aksi</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-600 mb-3">Aksi</p>
             <div className="grid grid-cols-2 gap-2">
               {canEdit && (
                 <button onClick={onEdit}
@@ -296,11 +296,11 @@ export default function MutasiPage() {
   }
 
   const stickyBg = 'bg-[#0d1424]'
-  const thCls = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 z-10 ${stickyBg}`
-  const thStickyLeft = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-0 z-20 ${stickyBg}`
-  const thStickyLeft2 = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-8 z-20 ${stickyBg}`
-  const tdStickyNo = `px-3 py-3 text-slate-500 text-sm sticky left-0 z-10 ${stickyBg}`
-  const tdStickyNama = `px-3 py-3 sticky left-8 z-10 ${stickyBg}`
+  const thCls = `px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 z-20 ${stickyBg}`
+  const thStickyLeft = `px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-0 z-30 ${stickyBg} w-9`
+  const thStickyLeft2 = `px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-9 z-30 min-w-[160px] ${stickyBg}`
+  const tdStickyNo = `px-3 py-3 text-slate-500 text-xs sticky left-0 z-20 ${stickyBg} w-9`
+  const tdStickyNama = `px-3 py-3 sticky left-9 z-20 ${stickyBg} min-w-[160px]`
   const trCls = "border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer group"
 
   return (
@@ -378,12 +378,12 @@ export default function MutasiPage() {
                       {dataKeluar.map((row: MutasiKeluar, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailKeluar(row)}>
                           <td className={tdStickyNo}>{i+1}</td>
-                          <td className={tdStickyNama}><p className="text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama}</p></td>
+                          <td className={tdStickyNama}><p className="text-sm text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama}</p></td>
                           <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik_target||'—'}</td>
                           <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.no_kk||'—'}</td>
-                          <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
-                          <td className="px-3 py-3 text-slate-300">{row.tujuan}</td>
-                          <td className="px-3 py-3 text-slate-400">{row.alasan||'—'}</td>
+                          <td className="px-3 py-3 text-sm text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
+                          <td className="px-3 py-3 text-sm text-slate-300">{row.tujuan}</td>
+                          <td className="px-3 py-3 text-sm text-slate-400">{row.alasan||'—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -414,11 +414,11 @@ export default function MutasiPage() {
                       {dataMasuk.map((row: MutasiMasuk, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailMasuk(row)}>
                           <td className={tdStickyNo}>{i+1}</td>
-                          <td className={tdStickyNama}><p className="text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama_lengkap}</p></td>
+                          <td className={tdStickyNama}><p className="text-sm text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama_lengkap}</p></td>
                           <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik||'—'}</td>
                           <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.no_kk||'—'}</td>
-                          <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
-                          <td className="px-3 py-3 text-slate-300">{row.asal_daerah}</td>
+                          <td className="px-3 py-3 text-sm text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
+                          <td className="px-3 py-3 text-sm text-slate-300">{row.asal_daerah}</td>
                           <td className="px-3 py-3 text-slate-400 text-sm">RT {row.rt}/RW {row.rw}</td>
                         </tr>
                       ))}

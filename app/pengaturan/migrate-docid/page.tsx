@@ -167,22 +167,22 @@ export default function MigrateDocIdPage() {
                       <table className="w-full text-xs">
                         <thead className="sticky top-0 bg-[#0d1424] z-10">
                           <tr className="border-b border-white/[0.06]">
-                            <th className="px-3 py-2 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                            <th className="px-3 py-2 text-left text-[10px] font-semibold text-rose-500 uppercase tracking-wider">ID Lama</th>
-                            <th className="px-3 py-2 text-left text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">ID Baru (NIK)</th>
-                            <th className="px-3 py-2 text-right text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-rose-500 uppercase tracking-wider">ID Lama</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-emerald-500 uppercase tracking-wider">ID Baru (NIK)</th>
+                            <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
                           </tr>
                         </thead>
                         <tbody>
                           {previewItems.map(item => (
                             <tr key={item.id} className={`border-b border-white/[0.04] last:border-0 transition-colors ${item.done ? 'opacity-40' : 'hover:bg-white/[0.02]'}`}>
                               <td className="px-3 py-2 text-slate-300 font-medium truncate max-w-[120px]">{item.nama || '—'}</td>
-                              <td className="px-3 py-2 text-rose-400 font-mono text-[10px] truncate max-w-[90px]">{item.id}</td>
-                              <td className="px-3 py-2 text-emerald-400 font-mono text-[10px]">{item.nik}</td>
+                              <td className="px-3 py-2 text-rose-400 font-mono text-xs truncate max-w-[90px]">{item.id}</td>
+                              <td className="px-3 py-2 text-emerald-400 font-mono text-xs">{item.nik}</td>
                               <td className="px-3 py-2 text-right">
                                 {item.done
-                                  ? <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]"><Check size={11} />Selesai</span>
-                                  : <button onClick={() => handleOneItem(item.id, item.nik)} disabled={item.loading} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-40">
+                                  ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><Check size={11} />Selesai</span>
+                                  : <button onClick={() => handleOneItem(item.id, item.nik)} disabled={item.loading} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-40">
                                       {item.loading ? <Loader2 size={10} className="animate-spin" /> : null}
                                       {item.loading ? 'Proses...' : 'Migrasi'}
                                     </button>}

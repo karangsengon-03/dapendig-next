@@ -24,7 +24,6 @@ function hitungUmur(tanggalLahir: string): string {
 export function PendudukTable({ data, loading, page, pageSize }: PendudukTableProps) {
   const router = useRouter()
 
-  // Hooks harus dipanggil sebelum semua early return (Rules of Hooks)
   const tbodyRef = useRef<HTMLTableSectionElement>(null)
   const start = (page - 1) * pageSize
   const paged = data.slice(start, start + pageSize)
@@ -62,25 +61,32 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
     )
   }
 
-  // Sticky header & kolom — bg-[#0d1424] untuk header (tidak berubah)
-  // Body sticky cells pakai bg-inherit agar ikut warna row (termasuk hover)
-  const thTop = 'text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 sticky top-0 z-10 bg-[#0d1424] border-b border-white/[0.06]'
-  const thTopLeft0 = `${thTop} left-0 z-30`
-  const thTopLeft1 = `${thTop} left-8 z-30 min-w-[160px]`
+  // Sticky header: z-20 untuk kolom biasa, z-30 untuk kolom freeze (No & Nama)
+  // Sticky body: z-10 untuk kolom biasa, z-20 untuk kolom freeze
+  // bg-[#0d1424] eksplisit di semua sticky cell agar tidak tembus konten scroll
+  const thBase = 'text-left text-xs font-semibold uppercase tracking-wider text-slate-500 py-3 px-3 bg-[#0d1424] border-b border-white/[0.06] whitespace-nowrap'
+  const thSticky  = `${thBase} sticky top-0 z-20`
+  const thFreezeNo  = `${thBase} sticky top-0 left-0 z-30`
+  const thFreezeNama = `${thBase} sticky top-0 left-9 z-30 min-w-[160px]`
+
+  // Lebar kolom No = w-9 (36px), sesuai left-9
+  const tdFreezeNo   = 'py-3 px-3 text-xs text-slate-500 sticky left-0 z-20 bg-[#0d1424] group-hover:bg-[#121a2e] transition-colors w-9'
+  const tdFreezeNama = 'py-3 px-3 sticky left-9 z-20 bg-[#0d1424] group-hover:bg-[#121a2e] transition-colors min-w-[160px]'
 
   return (
-    <div className="overflow-x-auto overflow-y-auto max-h-[60dvh] -mx-4 px-4 relative">
+    /* Wrapper: overflow keduanya aktif, tidak ada -mx / px negatif agar sticky berfungsi */
+    <div className="overflow-x-auto overflow-y-auto max-h-[52dvh] rounded-xl">
       <table className="w-full min-w-[640px] border-collapse">
         <thead>
           <tr>
-            <th className={thTopLeft0}>No</th>
-            <th className={thTopLeft1}>Nama Lengkap</th>
-            <th className={thTop}>NIK</th>
-            <th className={thTop}>No. KK</th>
-            <th className={`${thTop} w-12`}>JK</th>
-            <th className={`${thTop} w-14`}>Umur</th>
-            <th className={`${thTop} w-16`}>RT/RW</th>
-            <th className={thTop}>Hub. Keluarga</th>
+            <th className={thFreezeNo}>No</th>
+            <th className={thFreezeNama}>Nama Lengkap</th>
+            <th className={thSticky}>NIK</th>
+            <th className={thSticky}>No. KK</th>
+            <th className={`${thSticky} w-12`}>JK</th>
+            <th className={`${thSticky} w-14`}>Umur</th>
+            <th className={`${thSticky} w-16`}>RT/RW</th>
+            <th className={thSticky}>Hub. Keluarga</th>
           </tr>
         </thead>
         <tbody ref={tbodyRef}>
@@ -94,17 +100,15 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
               }}
               className="bg-[#0d1424] border-b border-white/[0.04] hover:bg-[#121a2e] transition-colors cursor-pointer group"
             >
-              {/* No — sticky kiri, bg-inherit ikut warna tr */}
-              <td className="py-3 px-2 text-xs text-slate-600 sticky left-0 z-10 bg-inherit">{start + idx + 1}</td>
-              {/* Nama — sticky kiri kedua, bg-inherit ikut warna tr */}
-              <td className="py-3 px-2 sticky left-8 z-10 bg-inherit min-w-[160px]">
-                <p className="text-sm text-slate-200 group-hover:text-sky-400 transition-colors font-medium">{p.nama_lengkap}</p>
-                <p className="text-[10px] text-slate-600">{p.pekerjaan}</p>
+              <td className={tdFreezeNo}>{start + idx + 1}</td>
+              <td className={tdFreezeNama}>
+                <p className="text-sm text-slate-200 group-hover:text-sky-400 transition-colors font-medium leading-snug">{p.nama_lengkap}</p>
+                <p className="text-xs text-slate-600 mt-0.5">{p.pekerjaan}</p>
               </td>
-              <td className="py-3 px-2 text-xs text-slate-400 tabular-nums">{p.nik}</td>
-              <td className="py-3 px-2 text-xs text-slate-400 tabular-nums">{p.no_kk}</td>
-              <td className="py-3 px-2">
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
+              <td className="py-3 px-3 text-xs text-slate-400 tabular-nums">{p.nik}</td>
+              <td className="py-3 px-3 text-xs text-slate-400 tabular-nums">{p.no_kk}</td>
+              <td className="py-3 px-3">
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
                   p.jenis_kelamin === 'Laki-laki'
                     ? 'bg-sky-500/10 text-sky-400'
                     : 'bg-pink-500/10 text-pink-400'
@@ -112,9 +116,9 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
                   {p.jenis_kelamin === 'Laki-laki' ? 'L' : 'P'}
                 </span>
               </td>
-              <td className="py-3 px-2 text-xs text-slate-400">{hitungUmur(p.tanggal_lahir)}</td>
-              <td className="py-3 px-2 text-xs text-slate-400">{p.rt}/{p.rw}</td>
-              <td className="py-3 px-2 text-xs text-slate-400">{p.hubungan_keluarga}</td>
+              <td className="py-3 px-3 text-xs text-slate-400">{hitungUmur(p.tanggal_lahir)}</td>
+              <td className="py-3 px-3 text-xs text-slate-400">{p.rt}/{p.rw}</td>
+              <td className="py-3 px-3 text-xs text-slate-400">{p.hubungan_keluarga}</td>
             </tr>
           ))}
         </tbody>

@@ -97,8 +97,8 @@ export function UmurChart({ data, loading }: UmurChartProps) {
             {data.map((d) => (
               <div key={d.label} className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                <span className="text-[10px] text-slate-500">{d.label}</span>
-                <span className="text-[10px] font-semibold" style={{ color: d.color }}>{d.jumlah}</span>
+                <span className="text-xs text-slate-500">{d.label}</span>
+                <span className="text-xs font-semibold" style={{ color: d.color }}>{d.jumlah}</span>
               </div>
             ))}
           </div>
