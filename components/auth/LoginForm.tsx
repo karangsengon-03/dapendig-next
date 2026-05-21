@@ -6,6 +6,8 @@ import { signInWithEmailAndPassword } from 'firebase/auth'
 import { Eye, EyeOff, LogIn, Loader2, UserCircle2, RefreshCw } from 'lucide-react'
 import { auth } from '@/lib/firebase'
 import { APP_VERSION } from '@/lib/utils'
+import { useAuthStore } from '@/store/authStore'
+import { useAuthListener } from '@/hooks/useAuth'
 
 const KEY_EMAIL = 'dapendig_email'
 const KEY_PASS  = 'dapendig_pass'
@@ -13,7 +15,9 @@ const KEY_PASS  = 'dapendig_pass'
 type Mode = 'lanjut' | 'ganti' | 'baru'
 
 export function LoginForm() {
+  useAuthListener()
   const router = useRouter()
+  const { user, loading: authLoading } = useAuthStore()
   const [mode, setMode]         = useState<Mode>('baru')
   const [savedEmail, setSaved]  = useState('')
   const [email, setEmail]       = useState('')
@@ -32,6 +36,15 @@ export function LoginForm() {
       setMode('lanjut')
     }
   }, [])
+
+  // Redirect ke dashboard jika sudah login
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard')
+    }
+  }, [authLoading, user, router])
+
+
 
   function handleGanti() {
     // Email & password sudah terisi dari simpanan — user bisa langsung klik Masuk
@@ -82,6 +95,25 @@ export function LoginForm() {
   }
 
   const isLanjut = mode === 'lanjut'
+
+  // Saat Firebase masih memeriksa sesi — tampilkan loading screen agar tidak ada flash
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#050810] flex flex-col items-center justify-center gap-4">
+        <div
+          className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
+          style={{ background: '#16447a' }}
+        >
+          <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" style={{ display: 'block' }} />
+        </div>
+        <div className="flex flex-col items-center gap-0.5 text-center">
+          <p className="text-base font-semibold text-slate-100">Data Penduduk Digital</p>
+          <p className="text-xs text-slate-500">Desa Karang Sengon</p>
+        </div>
+        <div className="w-5 h-5 border-2 border-white/[0.06] border-t-sky-500 rounded-full animate-spin mt-1" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#050810] flex items-center justify-center px-4 py-12">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Shield, Users, MapPin, Wrench } from 'lucide-react'
+import { Shield, Users, MapPin, Wrench, ChevronDown } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -59,107 +59,120 @@ export default function PengaturanPage() {
         <EksporSection />
         <ImportSection />
 
-        {/* Migrasi data */}
+        {/* Migrasi data — collapsible */}
         {isAdmin && isAdmin() && (
-          <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Migrasi Data</p>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-200">Migrasi Alamat Penduduk</p>
-                <p className="text-xs text-slate-500 mt-0.5">Isi alamat KARANG SENGON untuk semua penduduk yang belum punya alamat</p>
-              </div>
-              <a
-                href="/pengaturan/migrate-alamat"
-                className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors"
-              >
-                Jalankan
-              </a>
-            </div>
-            <div className="border-t border-white/[0.06]" />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-200">Migrasi Pendidikan</p>
-                <p className="text-xs text-slate-500 mt-0.5">Ganti SLTP → SMP dan SLTA → SMA untuk semua data penduduk</p>
-              </div>
-              <a
-                href="/pengaturan/migrate-pendidikan"
-                className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors"
-              >
-                Jalankan
-              </a>
-            </div>
-            <div className="border-t border-white/[0.06]" />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-200">Migrasi Format Tanggal</p>
-                <p className="text-xs text-slate-500 mt-0.5">Konversi DD/MM/YYYY → YYYY-MM-DD di semua koleksi Firestore</p>
-              </div>
-              <a href="/pengaturan/migrate-tanggal"
-                className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors">
-                Jalankan
-              </a>
-            </div>
-            <div className="border-t border-white/[0.06]" />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-200">Standarisasi Pendidikan & Pekerjaan</p>
-                <p className="text-xs text-slate-500 mt-0.5">Sesuai Permendagri 6/2026 — PNS→ASN (PNS), Ibu RT→Mengurus RT, dll</p>
-              </div>
-              <a href="/pengaturan/migrate-standarisasi"
-                className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors">
-                Jalankan
-              </a>
-            </div>
-            <div className="border-t border-white/[0.06]" />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-200">Fix Duplikat Dokumen</p>
-                <p className="text-xs text-slate-500 mt-0.5">Hapus dokumen lama yang ID-nya masih random jika NIK sudah ada</p>
-              </div>
-              <a href="/pengaturan/fix-duplikat"
-                className="shrink-0 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium hover:bg-rose-500/20 transition-colors">
-                Jalankan
-              </a>
-            </div>
-            <div className="border-t border-white/[0.06]" />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-200">Standarisasi ID Dokumen</p>
-                <p className="text-xs text-slate-500 mt-0.5">Seragamkan semua ID dokumen penduduk menggunakan NIK</p>
-              </div>
-              <a href="/pengaturan/migrate-docid"
-                className="shrink-0 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors">
-                Jalankan
-              </a>
-            </div>
-            <div className="border-t border-white/[0.06]" />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-200">Fix Tanggal Lahir (Timezone Bug)</p>
-                <p className="text-xs text-slate-500 mt-0.5">Koreksi tanggal yang bergeser -1/-2/-3 hari akibat bug konversi UTC — gunakan NIK sebagai sumber kebenaran</p>
-              </div>
-              <a href="/pengaturan/fix-tanggal-lahir"
-                className="shrink-0 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors">
-                Jalankan
-              </a>
-            </div>
-            <div className="border-t border-white/[0.06]" />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-200">Sinkronisasi Tanggal Lahir dari Excel</p>
-                <p className="text-xs text-slate-500 mt-0.5">Update tanggal_lahir dari file Semua.xls Dispenduk (1.187 penduduk) — field lain tidak disentuh</p>
-              </div>
-              <a href="/pengaturan/fix-tanggal-excel"
-                className="shrink-0 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors">
-                Jalankan
-              </a>
-            </div>
-          </div>
+          <MigrasiDataSection />
         )}
       </div>
     </AppShell>
   )
 }
+
+// ── Migrasi Data Section (collapsible) ────────────────────────────────────────
+
+const MIGRASI_ITEMS = [
+  {
+    label: 'Migrasi Alamat Penduduk',
+    desc: 'Isi alamat KARANG SENGON untuk semua penduduk yang belum punya alamat',
+    href: '/pengaturan/migrate-alamat',
+    color: 'sky' as const,
+  },
+  {
+    label: 'Migrasi Pendidikan',
+    desc: 'Ganti SLTP → SMP dan SLTA → SMA untuk semua data penduduk',
+    href: '/pengaturan/migrate-pendidikan',
+    color: 'sky' as const,
+  },
+  {
+    label: 'Migrasi Format Tanggal',
+    desc: 'Konversi DD/MM/YYYY → YYYY-MM-DD di semua koleksi Firestore',
+    href: '/pengaturan/migrate-tanggal',
+    color: 'sky' as const,
+  },
+  {
+    label: 'Standarisasi Pendidikan & Pekerjaan',
+    desc: 'Sesuai Permendagri 6/2026 — PNS→ASN (PNS), Ibu RT→Mengurus RT, dll',
+    href: '/pengaturan/migrate-standarisasi',
+    color: 'sky' as const,
+  },
+  {
+    label: 'Fix Duplikat Dokumen',
+    desc: 'Hapus dokumen lama yang ID-nya masih random jika NIK sudah ada',
+    href: '/pengaturan/fix-duplikat',
+    color: 'rose' as const,
+  },
+  {
+    label: 'Standarisasi ID Dokumen',
+    desc: 'Seragamkan semua ID dokumen penduduk menggunakan NIK',
+    href: '/pengaturan/migrate-docid',
+    color: 'sky' as const,
+  },
+  {
+    label: 'Fix Tanggal Lahir (Timezone Bug)',
+    desc: 'Koreksi tanggal yang bergeser -1/-2/-3 hari akibat bug konversi UTC',
+    href: '/pengaturan/fix-tanggal-lahir',
+    color: 'amber' as const,
+  },
+  {
+    label: 'Sinkronisasi Tanggal Lahir dari Excel',
+    desc: 'Update tanggal_lahir dari file Semua.xls Dispenduk — field lain tidak disentuh',
+    href: '/pengaturan/fix-tanggal-excel',
+    color: 'emerald' as const,
+  },
+]
+
+const MIGRASI_COLOR = {
+  sky:     'bg-sky-500/10 border-sky-500/20 text-sky-400 hover:bg-sky-500/20',
+  rose:    'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20',
+  amber:   'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20',
+  emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20',
+}
+
+function MigrasiDataSection() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <Wrench className="w-4 h-4 text-amber-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-100 text-sm">Migrasi Data</p>
+          <p className="text-xs text-slate-500 mt-0.5">Utilitas migrasi & perbaikan data (admin only)</p>
+        </div>
+        <ChevronDown
+          size={15}
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+        <div className="px-5 pb-5 border-t border-white/[0.04] flex flex-col gap-0 pt-3">
+          {MIGRASI_ITEMS.map((item, i) => (
+            <div key={item.href}>
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-200">{item.label}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                </div>
+                <a
+                  href={item.href}
+                  className={`shrink-0 px-3 py-2 rounded-xl border text-xs font-medium transition-colors ${MIGRASI_COLOR[item.color]}`}
+                >
+                  Jalankan
+                </a>
+              </div>
+              {i < MIGRASI_ITEMS.length - 1 && (
+                <div className="border-t border-white/[0.06]" />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 // ── Normalisasi Data ──────────────────────────────────────────────────────────
 

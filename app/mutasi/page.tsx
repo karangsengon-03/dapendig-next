@@ -295,7 +295,12 @@ export default function MutasiPage() {
     })
   }
 
-  const thCls = "px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap"
+  const stickyBg = 'bg-[#0d1424]'
+  const thCls = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 z-10 ${stickyBg}`
+  const thStickyLeft = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-0 z-20 ${stickyBg}`
+  const thStickyLeft2 = `px-3 py-3 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap sticky top-0 left-8 z-20 ${stickyBg}`
+  const tdStickyNo = `px-3 py-3 text-slate-500 text-sm sticky left-0 z-10 ${stickyBg}`
+  const tdStickyNama = `px-3 py-3 sticky left-8 z-10 ${stickyBg}`
   const trCls = "border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer group"
 
   return (
@@ -358,11 +363,13 @@ export default function MutasiPage() {
             : !dataKeluar?.length
               ? <p className="text-slate-500 text-sm text-center py-12">Belum ada data pindah keluar</p>
               : (
-                <div className="overflow-x-auto rounded-xl border border-white/[0.06] bg-[#0d1424]">
+                <div className="overflow-x-auto overflow-y-auto max-h-[60dvh] rounded-xl border border-white/[0.06] bg-[#0d1424]">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-white/[0.06]">
-                        {['No','Nama','NIK','No. KK','Tanggal','Tujuan','Alasan'].map(h=>(
+                      <tr>
+                        <th className={thStickyLeft}>No</th>
+                        <th className={`${thStickyLeft2} min-w-[160px]`}>Nama</th>
+                        {['NIK','No. KK','Tanggal','Tujuan','Alasan'].map(h=>(
                           <th key={h} className={thCls}>{h}</th>
                         ))}
                       </tr>
@@ -370,8 +377,8 @@ export default function MutasiPage() {
                     <tbody>
                       {dataKeluar.map((row: MutasiKeluar, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailKeluar(row)}>
-                          <td className="px-3 py-3 text-slate-500 text-sm">{i+1}</td>
-                          <td className="px-3 py-3 text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama}</td>
+                          <td className={tdStickyNo}>{i+1}</td>
+                          <td className={tdStickyNama}><p className="text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama}</p></td>
                           <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik_target||'—'}</td>
                           <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.no_kk||'—'}</td>
                           <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
@@ -392,11 +399,13 @@ export default function MutasiPage() {
             : !dataMasuk?.length
               ? <p className="text-slate-500 text-sm text-center py-12">Belum ada data pindah masuk</p>
               : (
-                <div className="overflow-x-auto rounded-xl border border-white/[0.06] bg-[#0d1424]">
+                <div className="overflow-x-auto overflow-y-auto max-h-[60dvh] rounded-xl border border-white/[0.06] bg-[#0d1424]">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-white/[0.06]">
-                        {['No','Nama','NIK','No. KK','Tanggal','Asal Daerah','RT/RW'].map(h=>(
+                      <tr>
+                        <th className={thStickyLeft}>No</th>
+                        <th className={`${thStickyLeft2} min-w-[160px]`}>Nama</th>
+                        {['NIK','No. KK','Tanggal','Asal Daerah','RT/RW'].map(h=>(
                           <th key={h} className={thCls}>{h}</th>
                         ))}
                       </tr>
@@ -404,8 +413,8 @@ export default function MutasiPage() {
                     <tbody>
                       {dataMasuk.map((row: MutasiMasuk, i: number) => (
                         <tr key={row.id} className={trCls} onClick={() => setDetailMasuk(row)}>
-                          <td className="px-3 py-3 text-slate-500 text-sm">{i+1}</td>
-                          <td className="px-3 py-3 text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama_lengkap}</td>
+                          <td className={tdStickyNo}>{i+1}</td>
+                          <td className={tdStickyNama}><p className="text-slate-100 font-medium group-hover:text-sky-400 transition-colors">{row.nama_lengkap}</p></td>
                           <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.nik||'—'}</td>
                           <td className="px-3 py-3 text-slate-400 font-mono text-sm">{row.no_kk||'—'}</td>
                           <td className="px-3 py-3 text-slate-300 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Download, FileSpreadsheet, Loader2, CheckCircle2, BarChart3 } from 'lucide-react'
+import { Download, FileSpreadsheet, Loader2, CheckCircle2, BarChart3, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useEksporData, type EksporKoleksi } from '@/hooks/useEkspor'
 import { exportToExcel, exportBulanan, type ExportColumn } from '@/lib/exportExcel'
@@ -284,21 +284,34 @@ function LaporanBulananSection() {
 // ── Komponen utama ────────────────────────────────────────────────────────────
 
 export function EksporSection() {
+  const [open, setOpen] = useState(false)
+
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-1">
-        <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
-        <h2 className="font-semibold text-slate-100">Ekspor Data</h2>
-      </div>
-      <p className="text-xs text-slate-500 mb-4">
-        Unduh data ke format Excel (.xlsx). Data diambil langsung dari Firestore saat tombol ditekan.
-      </p>
-      <div>
-        {EKSPOR_LIST.map((item) => (
-          <EksporButton key={item.koleksi} item={item} />
-        ))}
-      </div>
-      <LaporanBulananSection />
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-100 text-sm">Ekspor Data</p>
+          <p className="text-xs text-slate-500 mt-0.5">Unduh data ke Excel (.xlsx)</p>
+        </div>
+        <ChevronDown
+          size={15}
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+        <div className="px-5 pb-5 border-t border-white/[0.04]">
+          <div className="pt-3">
+            {EKSPOR_LIST.map((item) => (
+              <EksporButton key={item.koleksi} item={item} />
+            ))}
+          </div>
+          <LaporanBulananSection />
+        </div>
+      )}
     </div>
   )
 }

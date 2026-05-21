@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 import { User } from 'lucide-react'
 import type { Penduduk } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -23,6 +24,23 @@ function hitungUmur(tanggalLahir: string): string {
 export function PendudukTable({ data, loading, page, pageSize }: PendudukTableProps) {
   const router = useRouter()
 
+  // Hooks harus dipanggil sebelum semua early return (Rules of Hooks)
+  const tbodyRef = useRef<HTMLTableSectionElement>(null)
+  const start = (page - 1) * pageSize
+  const paged = data.slice(start, start + pageSize)
+
+  // Scroll ke baris terakhir yang diklik (restore state setelah back dari detail)
+  useEffect(() => {
+    try {
+      const lastId = sessionStorage.getItem('penduduk_last_row')
+      if (!lastId || !tbodyRef.current) return
+      const row = tbodyRef.current.querySelector(`[data-id="${lastId}"]`) as HTMLElement | null
+      if (row) {
+        row.scrollIntoView({ block: 'center', behavior: 'instant' })
+      }
+    } catch { /* ignore */ }
+  }, [paged])
+
   if (loading) {
     return (
       <div className="flex flex-col gap-2">
@@ -44,33 +62,43 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
     )
   }
 
-  const start = (page - 1) * pageSize
-  const paged = data.slice(start, start + pageSize)
+  // Warna bg untuk sticky cells — harus sama dengan container
+  const stickyBg = 'bg-[#0d1424]'
+  const thSticky = `text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 sticky top-0 z-20 ${stickyBg} border-b border-white/[0.06]`
+  const thNormal = `text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 sticky top-0 z-10 ${stickyBg} border-b border-white/[0.06]`
 
   return (
-    <div className="overflow-x-auto -mx-4 px-4">
+    <div className="overflow-x-auto overflow-y-auto max-h-[60dvh] -mx-4 px-4 relative">
       <table className="w-full min-w-[640px] border-collapse">
         <thead>
-          <tr className="border-b border-white/[0.06]">
-            <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-8">No</th>
-            <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2">Nama Lengkap</th>
-            <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2">NIK</th>
-            <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2">No. KK</th>
-            <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-12">JK</th>
-            <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-14">Umur</th>
-            <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-16">RT/RW</th>
-            <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2">Hub. Keluarga</th>
+          <tr>
+            {/* No — sticky kiri + sticky atas */}
+            <th className={`${thSticky} w-8 left-0 z-30`}>No</th>
+            {/* Nama — sticky kiri kedua + sticky atas */}
+            <th className={`${thSticky} left-8 z-30 min-w-[160px]`}>Nama Lengkap</th>
+            <th className={thNormal}>NIK</th>
+            <th className={thNormal}>No. KK</th>
+            <th className={`${thNormal} w-12`}>JK</th>
+            <th className={`${thNormal} w-14`}>Umur</th>
+            <th className={`${thNormal} w-16`}>RT/RW</th>
+            <th className={thNormal}>Hub. Keluarga</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody ref={tbodyRef}>
           {paged.map((p, idx) => (
             <tr
               key={p.id}
-              onClick={() => router.push(`/penduduk/${p.id}`)}
+              data-id={p.id}
+              onClick={() => {
+                try { sessionStorage.setItem('penduduk_last_row', p.id) } catch { /* ignore */ }
+                router.push(`/penduduk/${p.id}`)
+              }}
               className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer group"
             >
-              <td className="py-3 px-2 text-xs text-slate-600">{start + idx + 1}</td>
-              <td className="py-3 px-2">
+              {/* No — sticky kiri */}
+              <td className={`py-3 px-2 text-xs text-slate-600 sticky left-0 z-10 ${stickyBg}`}>{start + idx + 1}</td>
+              {/* Nama — sticky kiri kedua */}
+              <td className={`py-3 px-2 sticky left-8 z-10 ${stickyBg}`}>
                 <p className="text-sm text-slate-200 group-hover:text-sky-400 transition-colors font-medium">{p.nama_lengkap}</p>
                 <p className="text-[10px] text-slate-600">{p.pekerjaan}</p>
               </td>

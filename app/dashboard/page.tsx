@@ -95,17 +95,15 @@ export default function DashboardPage() {
                   <option key={i} value={i}>{nm}</option>
                 ))}
               </select>
-              <input
-                type="number"
-                min={2000}
-                max={now.getFullYear()}
+              <select
                 value={tahun}
-                onChange={(e) => {
-                  const val = Number(e.target.value)
-                  if (val >= 2000 && val <= now.getFullYear()) setTahun(val)
-                }}
-                className="w-[72px] bg-[#111827] border border-white/[0.08] rounded-xl px-2 py-1.5 text-sm font-semibold text-slate-200 text-center focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
-              />
+                onChange={(e) => setTahun(Number(e.target.value))}
+                className="bg-[#111827] border border-white/[0.08] rounded-xl px-2 py-1.5 text-sm font-semibold text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 cursor-pointer"
+              >
+                {Array.from({ length: now.getFullYear() - 1944 }, (_, i) => now.getFullYear() - i).map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
             </div>
             <button onClick={nextBulan} disabled={isCurrentMonth}
               className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-30 shrink-0">
