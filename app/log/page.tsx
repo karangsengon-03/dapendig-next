@@ -6,7 +6,6 @@ import { Timestamp } from 'firebase/firestore'
 import { AppShell } from '@/components/layout/AppShell'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLogList, AKSI_FILTER_OPTIONS, KOLEKSI_FILTER_OPTIONS } from '@/hooks/useLog'
-import type { LogEntry } from '@/types'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

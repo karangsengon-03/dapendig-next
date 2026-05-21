@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { signInWithEmailAndPassword } from 'firebase/auth'
@@ -30,10 +31,12 @@ export function LoginForm() {
     const e = localStorage.getItem(KEY_EMAIL) ?? ''
     const p = localStorage.getItem(KEY_PASS)  ?? ''
     if (e) {
-      setSaved(e)
-      setEmail(e)
-      setPassword(p)   // isi password dari simpanan — tidak perlu ketik ulang
-      setMode('lanjut')
+      setTimeout(() => {
+        setSaved(e)
+        setEmail(e)
+        setPassword(p)   // isi password dari simpanan — tidak perlu ketik ulang
+        setMode('lanjut')
+      }, 0)
     }
   }, [])
 
@@ -104,7 +107,7 @@ export function LoginForm() {
           className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
           style={{ background: '#16447a' }}
         >
-          <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" style={{ display: 'block' }} />
+          <Image src="/icons/icon-192.png" alt="DaPenDig" width={80} height={80} className="w-full h-full object-cover" style={{ display: 'block' }} unoptimized />
         </div>
         <div className="flex flex-col items-center gap-0.5 text-center">
           <p className="text-base font-semibold text-slate-100">Data Penduduk Digital</p>
@@ -126,7 +129,7 @@ export function LoginForm() {
         {/* Logo */}
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border border-white/10">
-            <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" />
+            <Image src="/icons/icon-192.png" alt="DaPenDig" width={80} height={80} className="w-full h-full object-cover" unoptimized />
           </div>
           <div>
             <p className="text-lg font-bold text-slate-100 tracking-tight">Data Penduduk Digital</p>

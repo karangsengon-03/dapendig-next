@@ -149,7 +149,9 @@ function EksporButton({ item }: { item: EksporItem }) {
   const [triggered, setTriggered] = useState(false)
   const [done, setDone] = useState(false)
   const itemRef = useRef(item)
-  itemRef.current = item
+  useEffect(() => {
+    itemRef.current = item
+  })
 
   const { data, isFetching, isError } = useEksporData(item.koleksi, triggered)
 
@@ -159,10 +161,10 @@ function EksporButton({ item }: { item: EksporItem }) {
       const { kolom, filename, sheetName } = itemRef.current
       const today = new Date().toISOString().slice(0, 10)
       exportToExcel(data, kolom, `${filename}-${today}`, sheetName)
-      setTriggered(false)
-      setDone(true)
-      const t = setTimeout(() => setDone(false), 3000)
-      return () => clearTimeout(t)
+      // setState via setTimeout agar tidak setState synchronously dalam effect
+      const t1 = setTimeout(() => { setTriggered(false); setDone(true) }, 0)
+      const t2 = setTimeout(() => setDone(false), 3000)
+      return () => { clearTimeout(t1); clearTimeout(t2) }
     }
   }, [triggered, data, isFetching])
 

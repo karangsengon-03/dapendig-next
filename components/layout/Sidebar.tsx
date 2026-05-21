@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -78,7 +79,7 @@ export function Sidebar() {
           {/* Desktop: logo icon only */}
           <div className="hidden md:flex items-center justify-center w-full py-1">
             <div className="w-9 h-9 rounded-xl overflow-hidden border border-white/10">
-              <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" />
+              <Image src="/icons/icon-192.png" alt="DaPenDig" width={36} height={36} className="w-full h-full object-cover" unoptimized />
             </div>
           </div>
           {/* Mobile close button */}

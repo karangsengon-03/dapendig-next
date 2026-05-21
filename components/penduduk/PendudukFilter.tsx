@@ -41,6 +41,28 @@ interface PendudukFilterProps {
 
 const FILTER_VIS_KEY = 'dapendig_filter_visible'
 
+// ── Sel: Dropdown wrapper dengan chevron (harus di luar component agar tidak dibuat ulang tiap render) ──
+const SEL_CLS = [
+  'bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5',
+  'text-xs text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer',
+  'appearance-none pr-6',
+].join(' ')
+
+function Sel({ children, value, onChange: onCh, show }: {
+  children: React.ReactNode; value: string
+  onChange: (v: string) => void; show: boolean
+}) {
+  if (!show) return null
+  return (
+    <div className="relative">
+      <select value={value} onChange={e => onCh(e.target.value)} className={SEL_CLS}>
+        {children}
+      </select>
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">▾</span>
+    </div>
+  )
+}
+
 export function PendudukFilter({
   filter, onChange, total, filtered,
   agamaOptions = [], pekerjaanOptions = [],
@@ -85,28 +107,6 @@ export function PendudukFilter({
     filter.search || filter.rt || filter.jenisKelamin || filter.agama ||
     filter.statusPerkawinan || filter.pekerjaan || filter.pendidikan ||
     filter.status !== 'aktif'
-
-  const selectCls = [
-    'bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5',
-    'text-xs text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer',
-    'appearance-none pr-6',
-  ].join(' ')
-
-  // Wrapper select dengan chevron
-  function Sel({ children, value, onChange: onCh, show }: {
-    children: React.ReactNode; value: string
-    onChange: (v: string) => void; show: boolean
-  }) {
-    if (!show) return null
-    return (
-      <div className="relative">
-        <select value={value} onChange={e => onCh(e.target.value)} className={selectCls}>
-          {children}
-        </select>
-        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">▾</span>
-      </div>
-    )
-  }
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -213,7 +213,7 @@ export function PendudukFilter({
                 const [sortBy, sortDir] = e.target.value.split(':') as [FilterState['sortBy'], FilterState['sortDir']]
                 set({ sortBy, sortDir })
               }}
-              className={selectCls}
+              className={SEL_CLS}
             >
               <option value="rt_kk:asc">RT → KK → Nama</option>
               <option value="nama_lengkap:asc">Nama A–Z</option>

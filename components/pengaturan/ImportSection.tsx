@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import * as XLSX from 'xlsx'
-import { Upload, FileSpreadsheet, Download, CheckCircle2, ArrowLeft } from 'lucide-react'
+import { Upload, FileSpreadsheet, Download, CheckCircle2, ArrowLeft, ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useImportPenduduk } from '@/hooks/useImport'
@@ -69,6 +69,7 @@ type Step = 'upload' | 'mapping' | 'importing' | 'done'
 export function ImportSection() {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
+  const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>('upload')
   const [rawRows, setRawRows] = useState<Record<string, unknown>[]>([])
   const [excelCols, setExcelCols] = useState<string[]>([])
@@ -152,14 +153,23 @@ export function ImportSection() {
   }
 
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-1">
-        <Upload className="w-5 h-5 text-violet-400" />
-        <h2 className="font-semibold text-slate-100">Import Data Excel</h2>
-      </div>
-      <p className="text-xs text-slate-500 mb-4">
-        Import data penduduk dari file Excel (.xlsx, .xls) atau CSV dengan pemetaan kolom otomatis.
-      </p>
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <Upload className="w-4 h-4 text-violet-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-100 text-sm">Import Data Excel</p>
+          <p className="text-xs text-slate-500 mt-0.5">Upload .xlsx/.csv ke Firestore</p>
+        </div>
+        <ChevronDown
+          size={15}
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4">
 
       {/* Step 1 — Upload */}
       {step === 'upload' && (
@@ -288,6 +298,8 @@ export function ImportSection() {
             </Button>
           </div>
         </div>
+      )}
+      </div>
       )}
     </div>
   )

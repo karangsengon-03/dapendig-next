@@ -7,7 +7,6 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
-import { normalisasiTanggal } from '@/lib/dateUtils'
 import { AGAMA, PENDIDIKAN, PEKERJAAN, HUBUNGAN_KELUARGA } from '@/lib/penduduk-constants'
 import { toISODate } from '@/lib/utils'
 

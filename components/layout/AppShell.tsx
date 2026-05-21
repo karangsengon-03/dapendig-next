@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
@@ -31,7 +32,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
           className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
           style={{ background: '#16447a' }}
         >
-          <img src="/icons/icon-192.png" alt="DaPenDig" className="w-full h-full object-cover" style={{ display: 'block' }} />
+          <Image src="/icons/icon-192.png" alt="DaPenDig" width={80} height={80} className="w-full h-full object-cover" style={{ display: 'block' }} unoptimized />
         </div>
         <div className="flex flex-col items-center gap-0.5 text-center">
           <p className="text-base font-semibold text-slate-100">Data Penduduk Digital</p>

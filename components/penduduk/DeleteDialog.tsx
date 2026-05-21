@@ -1,6 +1,6 @@
 'use client'
 
-import { Trash2, AlertTriangle } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 
 interface DeleteDialogProps {
   open: boolean
@@ -32,18 +32,18 @@ export function DeleteDialog({
         <div className="flex flex-col gap-4">
           {/* Icon */}
           <div className="w-11 h-11 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-            <AlertTriangle size={20} className="text-rose-400" />
+            <Trash2 size={20} className="text-rose-400" />
           </div>
 
           {/* Text */}
           <div>
             <h3 className="text-sm font-semibold text-slate-100">
-              Hapus Data Penduduk
+              Pindahkan ke Tempat Sampah?
             </h3>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
               Data{' '}
-              <span className="text-slate-200 font-medium">{nama}</span> akan
-              dihapus permanen dan tidak dapat dikembalikan.
+              <span className="text-slate-200 font-medium">{nama}</span>{' '}
+              akan dipindahkan ke Tempat Sampah dan masih bisa dipulihkan dari menu Recycle Bin.
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export function DeleteDialog({
               ) : (
                 <Trash2 size={14} />
               )}
-              Hapus
+              Pindahkan
             </button>
           </div>
         </div>

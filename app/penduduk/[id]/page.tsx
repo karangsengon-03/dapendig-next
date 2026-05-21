@@ -68,8 +68,8 @@ export default function DetailPendudukPage() {
     if (!data) return
     try {
       await deleteMutation.mutateAsync({ id: data.id, nama: data.nama_lengkap })
-      toast(`Data ${data.nama_lengkap} dipindahkan ke tempat sampah`, 'success')
-      router.push('/penduduk')
+      toast(`${data.nama_lengkap} dipindahkan ke Tempat Sampah`, 'success')
+      router.push('/recycle-bin')
     } catch {
       toast('Gagal menghapus data penduduk', 'error')
     }

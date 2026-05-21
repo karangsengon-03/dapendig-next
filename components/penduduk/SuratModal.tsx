@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { X, Printer, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store/appStore'
 import { formatTanggal } from '@/lib/utils'
 import { db } from '@/lib/firebase'
-import { doc, runTransaction, getDoc } from 'firebase/firestore'
+import { doc, runTransaction } from 'firebase/firestore'
 import type { Penduduk } from '@/types'
 
 export const JENIS_SURAT = [

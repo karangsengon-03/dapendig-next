@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Lock, CheckCircle, AlertCircle } from 'lucide-react'
+import { User, Lock, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,7 +36,8 @@ function EditNamaForm() {
   const { mutate, isPending } = useUpdateNama()
 
   useEffect(() => {
-    setNama(user?.nama ?? '')
+    const nama = user?.nama ?? ''
+    setTimeout(() => setNama(nama), 0)
   }, [user?.nama])
 
   function handleSave() {
@@ -48,13 +49,26 @@ function EditNamaForm() {
     })
   }
 
-  return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 space-y-4">
-      <div className="flex items-center gap-2.5">
-        <User className="w-4 h-4 text-sky-400" />
-        <h2 className="font-semibold text-slate-100">Informasi Akun</h2>
-      </div>
+  const [open, setOpen] = useState(false)
 
+  return (
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <User className="w-4 h-4 text-sky-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-100 text-sm">Informasi Akun</p>
+          <p className="text-xs text-slate-500 mt-0.5">Email, role, dan nama lengkap</p>
+        </div>
+        <ChevronDown
+          size={15}
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4 space-y-4">
       <div className="space-y-3">
         {/* Email — read only */}
         <div>
@@ -93,6 +107,8 @@ function EditNamaForm() {
           {isPending ? 'Menyimpan...' : 'Simpan Nama'}
         </Button>
       </div>
+      </div>
+      )}
     </div>
   )
 }
@@ -144,13 +160,26 @@ function GantiPasswordForm() {
     )
   }
 
-  return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5 space-y-4">
-      <div className="flex items-center gap-2.5">
-        <Lock className="w-4 h-4 text-sky-400" />
-        <h2 className="font-semibold text-slate-100">Ganti Password</h2>
-      </div>
+  const [open, setOpen] = useState(false)
 
+  return (
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <Lock className="w-4 h-4 text-sky-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-100 text-sm">Ganti Password</p>
+          <p className="text-xs text-slate-500 mt-0.5">Ubah kata sandi akun Anda</p>
+        </div>
+        <ChevronDown
+          size={15}
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4 space-y-4">
       <div className="space-y-3">
         <div>
           <Label>Password Lama</Label>
@@ -192,6 +221,8 @@ function GantiPasswordForm() {
           {isPending ? 'Menyimpan...' : 'Ganti Password'}
         </Button>
       </div>
+      </div>
+      )}
     </div>
   )
 }

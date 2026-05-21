@@ -44,7 +44,7 @@ export default function MigrateAlamatPage() {
       await updateDoc(doc(db, 'penduduk', id), { alamat: 'KARANG SENGON' })
       setItems(prev => prev.map(x => x.id === id ? { ...x, done: true, loading: false } : x))
       setUpdated(u => u + 1)
-    } catch (e) { setItems(prev => prev.map(x => x.id === id ? { ...x, loading: false } : x)) }
+    } catch { setItems(prev => prev.map(x => x.id === id ? { ...x, loading: false } : x)) }
   }
 
   // Eksekusi semua sekaligus

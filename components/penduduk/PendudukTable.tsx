@@ -62,26 +62,25 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
     )
   }
 
-  // Warna bg untuk sticky cells — harus sama dengan container
-  const stickyBg = 'bg-[#0d1424]'
-  const thSticky = `text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 sticky top-0 z-20 ${stickyBg} border-b border-white/[0.06]`
-  const thNormal = `text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 sticky top-0 z-10 ${stickyBg} border-b border-white/[0.06]`
+  // Sticky header & kolom — bg-[#0d1424] untuk header (tidak berubah)
+  // Body sticky cells pakai bg-inherit agar ikut warna row (termasuk hover)
+  const thTop = 'text-left text-[10px] font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 sticky top-0 z-10 bg-[#0d1424] border-b border-white/[0.06]'
+  const thTopLeft0 = `${thTop} left-0 z-30`
+  const thTopLeft1 = `${thTop} left-8 z-30 min-w-[160px]`
 
   return (
     <div className="overflow-x-auto overflow-y-auto max-h-[60dvh] -mx-4 px-4 relative">
       <table className="w-full min-w-[640px] border-collapse">
         <thead>
           <tr>
-            {/* No — sticky kiri + sticky atas */}
-            <th className={`${thSticky} w-8 left-0 z-30`}>No</th>
-            {/* Nama — sticky kiri kedua + sticky atas */}
-            <th className={`${thSticky} left-8 z-30 min-w-[160px]`}>Nama Lengkap</th>
-            <th className={thNormal}>NIK</th>
-            <th className={thNormal}>No. KK</th>
-            <th className={`${thNormal} w-12`}>JK</th>
-            <th className={`${thNormal} w-14`}>Umur</th>
-            <th className={`${thNormal} w-16`}>RT/RW</th>
-            <th className={thNormal}>Hub. Keluarga</th>
+            <th className={thTopLeft0}>No</th>
+            <th className={thTopLeft1}>Nama Lengkap</th>
+            <th className={thTop}>NIK</th>
+            <th className={thTop}>No. KK</th>
+            <th className={`${thTop} w-12`}>JK</th>
+            <th className={`${thTop} w-14`}>Umur</th>
+            <th className={`${thTop} w-16`}>RT/RW</th>
+            <th className={thTop}>Hub. Keluarga</th>
           </tr>
         </thead>
         <tbody ref={tbodyRef}>
@@ -93,12 +92,12 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
                 try { sessionStorage.setItem('penduduk_last_row', p.id) } catch { /* ignore */ }
                 router.push(`/penduduk/${p.id}`)
               }}
-              className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer group"
+              className="bg-[#0d1424] border-b border-white/[0.04] hover:bg-[#121a2e] transition-colors cursor-pointer group"
             >
-              {/* No — sticky kiri */}
-              <td className={`py-3 px-2 text-xs text-slate-600 sticky left-0 z-10 ${stickyBg}`}>{start + idx + 1}</td>
-              {/* Nama — sticky kiri kedua */}
-              <td className={`py-3 px-2 sticky left-8 z-10 ${stickyBg}`}>
+              {/* No — sticky kiri, bg-inherit ikut warna tr */}
+              <td className="py-3 px-2 text-xs text-slate-600 sticky left-0 z-10 bg-inherit">{start + idx + 1}</td>
+              {/* Nama — sticky kiri kedua, bg-inherit ikut warna tr */}
+              <td className="py-3 px-2 sticky left-8 z-10 bg-inherit min-w-[160px]">
                 <p className="text-sm text-slate-200 group-hover:text-sky-400 transition-colors font-medium">{p.nama_lengkap}</p>
                 <p className="text-[10px] text-slate-600">{p.pekerjaan}</p>
               </td>

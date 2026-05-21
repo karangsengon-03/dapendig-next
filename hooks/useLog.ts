@@ -7,10 +7,6 @@ import {
   query,
   orderBy,
   limit,
-  startAfter,
-  where,
-  Timestamp,
-  type DocumentSnapshot,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { LogEntry } from '@/types'

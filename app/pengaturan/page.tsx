@@ -19,7 +19,6 @@ import { EksporSection } from '@/components/pengaturan/EksporSection'
 import { ImportSection } from '@/components/pengaturan/ImportSection'
 import type { UserRole, ConfigWilayah, AppUser } from '@/types'
 
-const ROLES: UserRole[] = ['admin', 'operator', 'viewer']
 
 const ROLE_LABEL: Record<UserRole, string> = {
   admin: 'Admin',
@@ -194,15 +193,29 @@ function NormalisasiSection() {
     }
   }
 
+  const [open, setOpen] = useState(false)
+
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
-      <div className="flex items-center gap-2.5 mb-1">
-        <Wrench className="w-4 h-4 text-amber-400" />
-        <h2 className="font-semibold text-slate-100">Pemeliharaan Data</h2>
-      </div>
-      <p className="text-xs text-slate-500 mb-4">
-        Perbaiki inkonsistensi penulisan nilai di kolom Pekerjaan dan Hubungan Keluarga agar sesuai dengan standar sistem.
-      </p>
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <Wrench className="w-4 h-4 text-amber-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-100 text-sm">Pemeliharaan Data</p>
+          <p className="text-xs text-slate-500 mt-0.5">Normalisasi Pekerjaan & Hubungan Keluarga</p>
+        </div>
+        <ChevronDown
+          size={15}
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4 space-y-3">
+        <p className="text-xs text-slate-500">
+          Perbaiki inkonsistensi penulisan nilai di kolom Pekerjaan dan Hubungan Keluarga agar sesuai dengan standar sistem.
+        </p>
       {confirm ? (
         <div className="flex items-center gap-2.5">
           <span className="text-xs text-slate-400">Yakin menjalankan normalisasi?</span>
@@ -229,6 +242,8 @@ function NormalisasiSection() {
           <span className="truncate">Normalisasi Ulang Data Pekerjaan &amp; Hub. Keluarga</span>
         </Button>
       )}
+      </div>
+      )}
     </div>
   )
 }
@@ -237,16 +252,26 @@ function NormalisasiSection() {
 
 function UserManagement({ currentUid }: { currentUid: string }) {
   const { data: users, isLoading } = useUserList()
+  const [open, setOpen] = useState(false)
 
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
-      <div className="flex items-center gap-2.5 mb-4">
-        <Users className="w-4 h-4 text-sky-400" />
-        <div>
-          <h2 className="font-semibold text-slate-100">Manajemen Pengguna</h2>
-          <p className="text-[11px] text-slate-500 mt-0.5">Tambah atau ubah pengguna melalui Firebase Console</p>
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <Users className="w-4 h-4 text-sky-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-100 text-sm">Manajemen Pengguna</p>
+          <p className="text-xs text-slate-500 mt-0.5">Tambah atau ubah via Firebase Console</p>
         </div>
-      </div>
+        <ChevronDown
+          size={15}
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4">
 
       {isLoading ? (
         <div className="space-y-2">
@@ -288,8 +313,9 @@ function UserManagement({ currentUid }: { currentUid: string }) {
           </table>
         </div>
       )}
+      </div>
+      )}
     </div>
-
   )
 }
 
@@ -309,13 +335,16 @@ function WilayahForm() {
 
   useEffect(() => {
     if (data) {
-      setForm({
-        desa: data.desa ?? '',
-        kecamatan: data.kecamatan ?? '',
-        kabupaten: data.kabupaten ?? '',
-        provinsi: data.provinsi ?? '',
-        tahun: data.tahun ?? new Date().getFullYear().toString(),
-      })
+      const d = data
+      setTimeout(() => {
+        setForm({
+          desa: d.desa ?? '',
+          kecamatan: d.kecamatan ?? '',
+          kabupaten: d.kabupaten ?? '',
+          provinsi: d.provinsi ?? '',
+          tahun: d.tahun ?? new Date().getFullYear().toString(),
+        })
+      }, 0)
     }
   }, [data])
 
@@ -330,47 +359,61 @@ function WilayahForm() {
     })
   }
 
-  return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl p-5">
-      <div className="flex items-center gap-2.5 mb-4">
-        <MapPin className="w-4 h-4 text-sky-400" />
-        <h2 className="font-semibold text-slate-100">Informasi Wilayah</h2>
-        <span className="text-xs text-slate-500 ml-auto">Disimpan ke: config/wilayah</span>
-      </div>
+  const [open, setOpen] = useState(false)
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+  return (
+    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-slate-100 text-sm">Informasi Wilayah</p>
+          <p className="text-xs text-slate-500 mt-0.5">Nama desa, kecamatan, kabupaten, provinsi</p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label>Desa</Label>
-              <Input value={form.desa} onChange={(e) => set('desa', e.target.value)} placeholder="Nama desa" />
+        <ChevronDown
+          size={15}
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {open && (
+        <div className="px-5 pb-5 border-t border-white/[0.04] pt-4">
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
-            <div>
-              <Label>Kecamatan</Label>
-              <Input value={form.kecamatan} onChange={(e) => set('kecamatan', e.target.value)} placeholder="Nama kecamatan" />
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>Desa</Label>
+                  <Input value={form.desa} onChange={(e) => set('desa', e.target.value)} placeholder="Nama desa" />
+                </div>
+                <div>
+                  <Label>Kecamatan</Label>
+                  <Input value={form.kecamatan} onChange={(e) => set('kecamatan', e.target.value)} placeholder="Nama kecamatan" />
+                </div>
+                <div>
+                  <Label>Kabupaten</Label>
+                  <Input value={form.kabupaten} onChange={(e) => set('kabupaten', e.target.value)} placeholder="Nama kabupaten" />
+                </div>
+                <div>
+                  <Label>Provinsi</Label>
+                  <Input value={form.provinsi} onChange={(e) => set('provinsi', e.target.value)} placeholder="Nama provinsi" />
+                </div>
+                <div>
+                  <Label>Tahun</Label>
+                  <Input value={form.tahun} onChange={(e) => set('tahun', e.target.value)} placeholder="2026" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 pt-1">
+                <Button onClick={handleSave} disabled={isPending} size="sm">
+                  {isPending ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </div>
             </div>
-            <div>
-              <Label>Kabupaten</Label>
-              <Input value={form.kabupaten} onChange={(e) => set('kabupaten', e.target.value)} placeholder="Nama kabupaten" />
-            </div>
-            <div>
-              <Label>Provinsi</Label>
-              <Input value={form.provinsi} onChange={(e) => set('provinsi', e.target.value)} placeholder="Nama provinsi" />
-            </div>
-            <div>
-              <Label>Tahun</Label>
-              <Input value={form.tahun} onChange={(e) => set('tahun', e.target.value)} placeholder="2026" />
-            </div>
-          </div>
-          <div className="flex items-center gap-3 pt-1">
-            <Button onClick={handleSave} disabled={isPending} size="sm">
-              {isPending ? 'Menyimpan...' : 'Simpan'}
-            </Button>
-          </div>
+          )}
         </div>
       )}
     </div>

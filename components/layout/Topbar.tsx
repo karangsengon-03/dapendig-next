@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Menu, UserCircle, LogOut } from 'lucide-react'
+import { Menu, LogIn, LogOut, UserCircle } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
@@ -33,6 +33,11 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
   }, [open])
 
   async function handleLogout() {
+    setOpen(false)
+    await logout(router)
+  }
+
+  async function handleGantiAkun() {
     setOpen(false)
     await logout(router)
   }
@@ -96,8 +101,16 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-colors text-left"
                 >
                   <UserCircle size={15} className="shrink-0" />
-                  Ganti Akun / Profil
+                  Profil Saya
                 </button>
+                <button
+                  onClick={handleGantiAkun}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-colors text-left"
+                >
+                  <LogIn size={15} className="shrink-0" />
+                  Ganti Akun
+                </button>
+                <div className="mx-3 my-1 border-t border-white/[0.06]" />
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/[0.07] transition-colors text-left"

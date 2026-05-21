@@ -3,8 +3,6 @@ import type {
   HubunganKeluarga,
   JenisKelamin,
   Agama,
-  Pendidikan,
-  Pekerjaan,
   StatusPerkawinan,
 } from '@/lib/penduduk-constants'
 

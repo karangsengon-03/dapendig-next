@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export default function Loading() {
   return (
     <div className="min-h-screen bg-[#050810] flex flex-col items-center justify-center gap-4">
@@ -6,11 +8,14 @@ export default function Loading() {
         className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: '#16447a' }}
       >
-        <img
+        <Image
           src="/icons/icon-192.png"
           alt="DaPenDig"
+          width={80}
+          height={80}
           className="w-full h-full object-cover"
           style={{ display: 'block' }}
+          unoptimized
         />
       </div>
       <div className="flex flex-col items-center gap-0.5 text-center">
