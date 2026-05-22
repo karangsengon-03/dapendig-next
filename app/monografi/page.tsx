@@ -260,35 +260,37 @@ function PengaturanPiramidaModal({
         {/* Tambah kelompok baru */}
         <div className="flex flex-col gap-2">
           <p className="text-xs font-medium text-slate-400">Tambah Kelompok Baru</p>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 flex flex-col gap-1">
-              <label className="text-xs text-slate-600">Umur Min</label>
-              <input
-                type="number"
-                min={0}
-                max={120}
-                value={newMin}
-                onChange={(e) => { setNewMin(e.target.value); setAddError('') }}
-                placeholder="0"
-                className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
-              />
-            </div>
-            <span className="text-slate-600 pt-5">—</span>
-            <div className="flex-1 flex flex-col gap-1">
-              <label className="text-xs text-slate-600">Umur Maks (+ = tak terbatas)</label>
-              <input
-                type="text"
-                value={newMax}
-                onChange={(e) => { setNewMax(e.target.value); setAddError('') }}
-                placeholder="4 atau +"
-                className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
-              />
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex flex-col gap-1">
+                <label className="text-xs text-slate-600">Umur Min</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={120}
+                  value={newMin}
+                  onChange={(e) => { setNewMin(e.target.value); setAddError('') }}
+                  placeholder="0"
+                  className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
+                />
+              </div>
+              <span className="text-slate-600 pt-5">—</span>
+              <div className="flex-1 flex flex-col gap-1">
+                <label className="text-xs text-slate-600">Umur Maks (+ = tak terbatas)</label>
+                <input
+                  type="text"
+                  value={newMax}
+                  onChange={(e) => { setNewMax(e.target.value); setAddError('') }}
+                  placeholder="4 atau +"
+                  className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
+                />
+              </div>
             </div>
             <button
               onClick={handleTambah}
-              className="px-3 py-2 mt-5 rounded-xl bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-medium hover:bg-sky-500/30 transition-colors shrink-0"
+              className="w-full py-2 rounded-xl bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-medium hover:bg-sky-500/30 transition-colors"
             >
-              + Tambah
+              + Tambah Kelompok
             </button>
           </div>
           {addError && <p className="text-xs text-rose-400">{addError}</p>}

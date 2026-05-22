@@ -350,11 +350,16 @@ export default function VitalPage() {
           </button>
         </div>
 
-        {showForm && tab === 'lahir' && <LahirForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
-        {showForm && tab === 'meninggal' && <MeninggalForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
+        {/* Form area — scrollable sendiri, tabel disembunyikan saat form terbuka */}
+        {showForm && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {tab === 'lahir' && <LahirForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
+            {tab === 'meninggal' && <MeninggalForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
+          </div>
+        )}
 
-        {/* Tabel Kelahiran */}
-        {tab === 'lahir' && (
+        {/* Tabel Kelahiran — hanya tampil saat form tertutup */}
+        {!showForm && tab === 'lahir' && (
           loadingLahir
             ? <div className="space-y-2">{[...Array(4)].map((_,i)=><Skeleton key={i} className="h-12 w-full rounded-xl"/>)}</div>
             : !dataLahir?.length
@@ -392,8 +397,8 @@ export default function VitalPage() {
               )
         )}
 
-        {/* Tabel Kematian */}
-        {tab === 'meninggal' && (
+        {/* Tabel Kematian — hanya tampil saat form tertutup */}
+        {!showForm && tab === 'meninggal' && (
           loadingMeninggal
             ? <div className="space-y-2">{[...Array(4)].map((_,i)=><Skeleton key={i} className="h-12 w-full rounded-xl"/>)}</div>
             : !dataMeninggal?.length

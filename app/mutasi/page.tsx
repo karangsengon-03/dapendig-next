@@ -353,11 +353,16 @@ export default function MutasiPage() {
           </button>
         </div>
 
-        {showForm && tab === 'keluar' && <MutasiKeluarForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
-        {showForm && tab === 'masuk' && <MutasiMasukForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
+        {/* Form area — scrollable sendiri, tabel disembunyikan saat form terbuka */}
+        {showForm && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {tab === 'keluar' && <MutasiKeluarForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
+            {tab === 'masuk' && <MutasiMasukForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
+          </div>
+        )}
 
-        {/* Tabel Keluar */}
-        {tab === 'keluar' && (
+        {/* Tabel Keluar — hanya tampil saat form tertutup */}
+        {!showForm && tab === 'keluar' && (
           isLoading
             ? <div className="space-y-2">{[...Array(4)].map((_,i)=><Skeleton key={i} className="h-12 w-full rounded-xl"/>)}</div>
             : !dataKeluar?.length
@@ -392,8 +397,8 @@ export default function MutasiPage() {
               )
         )}
 
-        {/* Tabel Masuk */}
-        {tab === 'masuk' && (
+        {/* Tabel Masuk — hanya tampil saat form tertutup */}
+        {!showForm && tab === 'masuk' && (
           isLoading
             ? <div className="space-y-2">{[...Array(4)].map((_,i)=><Skeleton key={i} className="h-12 w-full rounded-xl"/>)}</div>
             : !dataMasuk?.length

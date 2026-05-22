@@ -291,10 +291,10 @@ export default function LogPage() {
           isRefreshing={isFetching}
         />
 
-        {/* Table */}
-        <div className="flex-1 min-h-0 rounded-2xl border border-white/[0.06] bg-[#0d1424] p-3">
+        {/* Table — flex-1 min-h-0 memastikan container tidak overflow keluar */}
+        <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-white/[0.06] bg-[#0d1424] overflow-hidden">
           {isLoading ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 p-3">
               {Array.from({ length: 8 }).map((_, i) => (
                 <Skeleton key={i} className="h-14 w-full rounded-xl" />
               ))}
@@ -307,88 +307,91 @@ export default function LogPage() {
               <p className="text-sm text-slate-500">Tidak ada log ditemukan</p>
             </div>
           ) : (
-            <div className="overflow-x-auto overflow-y-auto">
-              <table className="w-full min-w-[680px] border-collapse">
-                <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-8">No</th>
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-28">Aksi</th>
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2">Keterangan</th>
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-28">Koleksi</th>
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-32">Oleh</th>
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-2 w-36">Waktu</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paged.map((log, idx) => (
-                    <tr
-                      key={log.id}
-                      className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
-                    >
-                      <td className="py-3 px-2 text-xs text-slate-600">
-                        {(page - 1) * PAGE_SIZE + idx + 1}
-                      </td>
-                      <td className="py-3 px-2">
-                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${aksiColor(log.aksi)}`}>
-                          {log.aksi}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2">
-                        <p className="text-xs text-slate-300 leading-snug">
-                          {log.keterangan || log.nama || '—'}
-                        </p>
-                        {log.nik_target && (
-                          <p className="text-xs text-slate-600 mt-0.5 font-mono">NIK {log.nik_target}</p>
-                        )}
-                      </td>
-                      <td className="py-3 px-2">
-                        {log.koleksi ? (
-                          <span className="text-xs text-slate-500 bg-white/[0.04] px-1.5 py-0.5 rounded">
-                            {koleksiBadge(log.koleksi)}
-                          </span>
-                        ) : (
-                          <span className="text-slate-700 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-2 text-xs text-slate-400 truncate max-w-[128px]" title={log.oleh}>
-                        {log.oleh}
-                      </td>
-                      <td className="py-3 px-2">
-                        <p className="text-xs text-slate-400">{formatWaktu(log.ts)}</p>
-                        <p className="text-xs text-slate-600 mt-0.5">{formatRelative(log.ts)}</p>
-                      </td>
+            <>
+              {/* Tabel — area scroll terbatas, tidak tembus ke luar */}
+              <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
+                <table className="w-full min-w-[680px] border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] sticky top-0 bg-[#0d1424] z-10">
+                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-8">No</th>
+                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-32">Aksi</th>
+                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3">Keterangan</th>
+                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-28">Koleksi</th>
+                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-32">Oleh</th>
+                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-36">Waktu</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {paged.map((log, idx) => (
+                      <tr
+                        key={log.id}
+                        className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                      >
+                        <td className="py-3 px-3 text-xs text-slate-600">
+                          {(page - 1) * PAGE_SIZE + idx + 1}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${aksiColor(log.aksi)}`}>
+                            {log.aksi}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <p className="text-xs text-slate-300 leading-snug">
+                            {log.keterangan || log.nama || '—'}
+                          </p>
+                          {log.nik_target && (
+                            <p className="text-xs text-slate-600 mt-0.5 font-mono">NIK {log.nik_target}</p>
+                          )}
+                        </td>
+                        <td className="py-3 px-3">
+                          {log.koleksi ? (
+                            <span className="text-xs text-slate-500 bg-white/[0.04] px-1.5 py-0.5 rounded">
+                              {koleksiBadge(log.koleksi)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-700 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-xs text-slate-400 truncate max-w-[128px]" title={log.oleh}>
+                          {log.oleh}
+                        </td>
+                        <td className="py-3 px-3">
+                          <p className="text-xs text-slate-400">{formatWaktu(log.ts)}</p>
+                          <p className="text-xs text-slate-600 mt-0.5">{formatRelative(log.ts)}</p>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination — di dalam container tabel, di bawah scroll area */}
+              {filtered.length > PAGE_SIZE && (
+                <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-2.5 border-t border-white/[0.06] bg-[#0d1424]">
+                  <span className="text-xs text-slate-500">
+                    Hal {page} / {totalPages} · {filtered.length} log
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
+                    >
+                      ← Sebelumnya
+                    </button>
+                    <button
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
+                    >
+                      Selanjutnya →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
-
-        {/* Pagination */}
-        {!isLoading && filtered.length > PAGE_SIZE && (
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-xs text-slate-500">
-              Hal {page} / {totalPages} · {filtered.length} log
-            </span>
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
-              >
-                ← Sebelumnya
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
-              >
-                Selanjutnya →
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </AppShell>
   )
