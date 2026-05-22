@@ -273,8 +273,8 @@ export default function LogPage() {
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <AppShell title="Log Aktivitas">
-      <div className="flex flex-col gap-4">
+    <AppShell title="Log Aktivitas" fullHeight>
+      <div className="h-full flex flex-col gap-3">
         {/* Sub-header */}
         <div className="flex items-center gap-2.5">
           <ClipboardList size={18} className="text-sky-400 shrink-0" />
@@ -292,7 +292,7 @@ export default function LogPage() {
         />
 
         {/* Table */}
-        <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-3">
+        <div className="flex-1 min-h-0 rounded-2xl border border-white/[0.06] bg-[#0d1424] p-3">
           {isLoading ? (
             <div className="flex flex-col gap-2">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -307,7 +307,7 @@ export default function LogPage() {
               <p className="text-sm text-slate-500">Tidak ada log ditemukan</p>
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-1 px-1">
+            <div className="overflow-x-auto overflow-y-auto">
               <table className="w-full min-w-[680px] border-collapse">
                 <thead>
                   <tr className="border-b border-white/[0.06]">

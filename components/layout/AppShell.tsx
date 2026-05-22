@@ -13,6 +13,8 @@ import { ToastProvider } from '@/components/ui/toast'
 interface AppShellProps {
   children: React.ReactNode
   title: string
+  /** Jika true: konten mengisi penuh tinggi area, tidak ada scroll di main (halaman dengan tabel) */
+  fullHeight?: boolean
 }
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -48,7 +50,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-export function AppShell({ children, title }: AppShellProps) {
+export function AppShell({ children, title, fullHeight }: AppShellProps) {
   useAuthListener()
   useWilayah()
 
@@ -60,7 +62,11 @@ export function AppShell({ children, title }: AppShellProps) {
           {/* Main content — offset for desktop icon sidebar */}
           <div className="flex-1 flex flex-col min-w-0 md:ml-14 overflow-hidden">
             <Topbar title={title} />
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 relative">
+            {/* fullHeight: konten mengisi penuh, tidak ada scroll di main */}
+            <main className={fullHeight
+              ? "flex-1 min-h-0 overflow-hidden p-4 md:p-6 flex flex-col"
+              : "flex-1 min-h-0 overflow-y-auto p-4 md:p-6"
+            }>
               {children}
             </main>
           </div>

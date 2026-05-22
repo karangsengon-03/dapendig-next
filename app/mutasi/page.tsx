@@ -304,8 +304,8 @@ export default function MutasiPage() {
   const trCls = "border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer group"
 
   return (
-    <AppShell title="Mutasi">
-      <div className="flex flex-col gap-4 max-w-5xl mx-auto">
+    <AppShell title="Mutasi" fullHeight>
+      <div className="h-full flex flex-col gap-3">
         {/* Sub-header */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
@@ -331,24 +331,24 @@ export default function MutasiPage() {
         <div className="flex gap-2">
           <button
             onClick={() => { setTab('keluar'); setShowForm(false) }}
-            className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-colors border ${
               tab === 'keluar'
-                ? 'bg-rose-500/20 border border-rose-500/30 text-rose-400'
-                : 'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'
+                ? 'bg-rose-500/20 border-rose-500/30 text-rose-400'
+                : 'bg-[#0d1424] border-white/[0.06] text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
             }`}
           >
-            <ArrowRightFromLine className="w-4 h-4" />
+            <ArrowRightFromLine className="w-4 h-4 shrink-0" />
             Pindah Keluar
           </button>
           <button
             onClick={() => { setTab('masuk'); setShowForm(false) }}
-            className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-colors border ${
               tab === 'masuk'
-                ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-                : 'bg-[#0d1424] border border-white/[0.06] text-slate-400 hover:text-slate-200'
+                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                : 'bg-[#0d1424] border-white/[0.06] text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
             }`}
           >
-            <ArrowLeftFromLine className="w-4 h-4" />
+            <ArrowLeftFromLine className="w-4 h-4 shrink-0" />
             Pindah Masuk
           </button>
         </div>
@@ -363,7 +363,7 @@ export default function MutasiPage() {
             : !dataKeluar?.length
               ? <p className="text-slate-500 text-sm text-center py-12">Belum ada data pindah keluar</p>
               : (
-                <div className="overflow-x-auto overflow-y-auto max-h-[60dvh] rounded-xl border border-white/[0.06] bg-[#0d1424]">
+                <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-xl border border-white/[0.06] bg-[#0d1424]">
                   <table className="w-full text-sm">
                     <thead>
                       <tr>
@@ -399,7 +399,7 @@ export default function MutasiPage() {
             : !dataMasuk?.length
               ? <p className="text-slate-500 text-sm text-center py-12">Belum ada data pindah masuk</p>
               : (
-                <div className="overflow-x-auto overflow-y-auto max-h-[60dvh] rounded-xl border border-white/[0.06] bg-[#0d1424]">
+                <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-xl border border-white/[0.06] bg-[#0d1424]">
                   <table className="w-full text-sm">
                     <thead>
                       <tr>

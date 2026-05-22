@@ -164,7 +164,7 @@ function PendudukContent() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="h-full flex flex-col gap-3">
       <div className="flex items-center gap-2.5">
         <Users size={18} className="text-sky-400 shrink-0" />
         <h1 className="text-base font-semibold text-slate-100">Data Penduduk</h1>
@@ -179,7 +179,7 @@ function PendudukContent() {
         pekerjaanOptions={pekerjaanOptions}
       />
 
-      <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] overflow-hidden">
+      <div className="flex-1 min-h-0 rounded-2xl border border-white/[0.06] bg-[#0d1424] overflow-hidden">
         <PendudukTable data={filtered} loading={isLoading} page={page} pageSize={pageSize} />
       </div>
 
@@ -216,7 +216,7 @@ function PendudukContent() {
 
 export default function PendudukPage() {
   return (
-    <AppShell title="Data Penduduk">
+    <AppShell title="Data Penduduk" fullHeight>
       <Suspense fallback={<div className="text-slate-500 text-sm">Memuat...</div>}>
         <PendudukContent />
       </Suspense>

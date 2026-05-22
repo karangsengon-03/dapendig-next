@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Menu, LogIn, LogOut, UserCircle } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { useAuthStore } from '@/store/authStore'
@@ -13,7 +14,12 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
   const { user } = useAuthStore()
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const getInisial = (nama: string) => {
     const parts = nama.trim().split(' ')
@@ -21,10 +27,24 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
   }
 
+  function openDropdown() {
+    if (!btnRef.current) return
+    const rect = btnRef.current.getBoundingClientRect()
+    setDropdownPos({
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    })
+    setOpen(true)
+  }
+
   // Tutup dropdown jika klik di luar
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(target) &&
+        btnRef.current && !btnRef.current.contains(target)
+      ) {
         setOpen(false)
       }
     }
@@ -48,36 +68,37 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
   }
 
   return (
-    <header className="h-13 flex items-center gap-3 px-4 border-b border-white/[0.06] bg-[#0a0f1e]/80 backdrop-blur-sm shrink-0">
-      {/* Hamburger — mobile only */}
-      <button
-        onClick={toggleSidebar}
-        className={cn(
-          'md:hidden flex items-center justify-center w-8 h-8 rounded-lg shrink-0',
-          'text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors'
-        )}
-        aria-label="Buka menu"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+    <>
+      <header className="h-13 flex items-center gap-3 px-4 border-b border-white/[0.06] bg-[#0a0f1e]/80 backdrop-blur-sm shrink-0">
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={toggleSidebar}
+          className={cn(
+            'md:hidden flex items-center justify-center w-8 h-8 rounded-lg shrink-0',
+            'text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors'
+          )}
+          aria-label="Buka menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
 
-      {/* App name — 2 baris */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-slate-100 leading-tight tracking-tight">
-          Data Penduduk Digital
-        </p>
-        <p className="text-xs text-slate-500 leading-tight">
-          Desa Karang Sengon
-        </p>
-      </div>
+        {/* App name — 2 baris */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-slate-100 leading-tight tracking-tight">
+            Data Penduduk Digital
+          </p>
+          <p className="text-xs text-slate-500 leading-tight">
+            Desa Karang Sengon
+          </p>
+        </div>
 
-      {/* Avatar — clickable dropdown */}
-      {user && (
-        <div className="relative shrink-0" ref={dropdownRef}>
+        {/* Avatar — clickable, dropdown via Portal */}
+        {user && (
           <button
-            onClick={() => setOpen((v) => !v)}
+            ref={btnRef}
+            onClick={() => open ? setOpen(false) : openDropdown()}
             className={cn(
-              'flex items-center justify-center w-8 h-8 rounded-full bg-sky-500 text-xs font-bold text-white',
+              'flex items-center justify-center w-9 h-9 rounded-full bg-sky-500 text-sm font-bold text-white shrink-0',
               'hover:bg-sky-400 transition-colors ring-2 ring-transparent',
               open && 'ring-sky-500/50'
             )}
@@ -85,44 +106,49 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
           >
             {getInisial(user.nama || user.email)}
           </button>
+        )}
+      </header>
 
-          {/* Dropdown */}
-          {open && (
-            <div className="absolute right-0 top-10 z-[200] w-48 rounded-2xl bg-[#0d1424] border border-white/[0.08] shadow-2xl overflow-hidden">
-              {/* Info user */}
-              <div className="px-4 py-3 border-b border-white/[0.06]">
-                <p className="text-sm font-semibold text-slate-200 truncate">{user.nama || user.email}</p>
-                <p className="text-xs text-slate-500 capitalize mt-0.5">{user.role}</p>
-              </div>
-              {/* Menu items */}
-              <div className="py-1.5">
-                <button
-                  onClick={handleProfil}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-colors text-left"
-                >
-                  <UserCircle size={15} className="shrink-0" />
-                  Profil Saya
-                </button>
-                <button
-                  onClick={handleGantiAkun}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-colors text-left"
-                >
-                  <LogIn size={15} className="shrink-0" />
-                  Ganti Akun
-                </button>
-                <div className="mx-3 my-1 border-t border-white/[0.06]" />
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/[0.07] transition-colors text-left"
-                >
-                  <LogOut size={15} className="shrink-0" />
-                  Keluar
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Dropdown via Portal — selalu di atas semua konten, tidak terpotong overflow */}
+      {mounted && open && user && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed w-52 rounded-2xl bg-[#0d1424] border border-white/[0.08] shadow-2xl overflow-hidden"
+          style={{ top: dropdownPos.top, right: dropdownPos.right, zIndex: 9999 }}
+        >
+          {/* Info user */}
+          <div className="px-4 py-3 border-b border-white/[0.06]">
+            <p className="text-sm font-semibold text-slate-200 truncate">{user.nama || user.email}</p>
+            <p className="text-xs text-slate-500 capitalize mt-0.5">{user.role}</p>
+          </div>
+          {/* Menu items */}
+          <div className="py-1.5">
+            <button
+              onClick={handleProfil}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-colors text-left"
+            >
+              <UserCircle size={16} className="shrink-0" />
+              Profil Saya
+            </button>
+            <button
+              onClick={handleGantiAkun}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-colors text-left"
+            >
+              <LogIn size={16} className="shrink-0" />
+              Ganti Akun
+            </button>
+            <div className="mx-3 my-1 border-t border-white/[0.06]" />
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/[0.07] transition-colors text-left"
+            >
+              <LogOut size={16} className="shrink-0" />
+              Keluar
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
-    </header>
+    </>
   )
 }

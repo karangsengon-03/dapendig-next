@@ -1,77 +1,57 @@
 # DaPenDig Next — v2.3.5 Changelog
 
-## Bug Fixes & Improvements
+## Perbaikan Berdasarkan Screenshot Review
 
-### 1. Splash Screen — Dihapus
-- Tidak ada splash screen "logo saja" terpisah di root.
-- `app/page.tsx` tetap redirect ke `/login`.
-- Loading screen yang sudah bagus (icon + spinner) di `AppShell` & `loading.tsx` **tidak diubah sama sekali**.
+### 1. Splash Screen
+- Loading screen di `LoginForm.tsx` (saat `authLoading`) sudah identik dengan `loading.tsx` — icon + nama app + spinner.
+- Tidak ada splash "logo saja" terpisah di kode. Tampilan native PWA launch (warna background biru dari manifest) adalah perilaku sistem Android, bukan kode.
 
-### 2. Dropdown Menu Topbar — Z-Index Diperbaiki ✅
-**Problem:** Dropdown avatar (profil/logout) di Topbar berada di belakang konten pada halaman Penduduk, Mutasi, Vital, dan Log Aktivitas.
-**Root Cause:** `<main>` di AppShell menggunakan `overflow-y-auto` yang membuat stacking context baru, sehingga `z-50` dropdown kalah dengan konten di dalam stacking context tersebut.
+### 2. Dropdown Menu Topbar — Portal Fix (Definitif) ✅
+**Root cause sebenarnya:** `overflow-hidden` pada parent column div di AppShell memotong elemen `position: absolute` apapun, termasuk dropdown dengan `z-[200]`.
+**Solusi definitif:** Dropdown sekarang di-render menggunakan **React Portal** ke `document.body` — sepenuhnya keluar dari stacking context layout, selalu di atas semua konten di semua halaman.
+- Posisi dropdown dihitung dinamis dari `getBoundingClientRect()` tombol avatar.
+- `zIndex: 9999` via inline style.
+- Klik di luar tetap menutup dropdown.
+- Bekerja konsisten di semua halaman: Dashboard, Penduduk, Mutasi, Vital, Log, dll.
+
+### 3. Kolom Freeze (No & Nama) — Sudah Benar ✅
+- Dari screenshot, Mutasi dan Vital sudah benar. Penduduk sudah diperbaiki di session sebelumnya.
+- `left-9` (36px) sesuai `w-9` untuk kolom No.
+- `z-30` untuk header freeze, `z-20` untuk body freeze.
+
+### 4. Scroll Luar Dihapus Sepenuhnya ✅
+**Solusi baru — prop `fullHeight` di AppShell:**
+- Halaman dengan tabel (`penduduk`, `mutasi`, `vital`, `log`) menggunakan `<AppShell fullHeight>`.
+- Saat `fullHeight=true`: `<main>` berubah jadi `flex-1 min-h-0 overflow-hidden flex flex-col` — tidak ada scroll di main, konten mengisi penuh.
+- Saat `fullHeight=false` (default): `<main>` tetap `overflow-y-auto` untuk halaman biasa (dashboard, profil, pengaturan, dll).
+- Tabel wrapper: `flex-1 min-h-0` → mengisi sisa tinggi setelah header + tabs + filter.
+- Tidak ada `max-h` fixed lagi — tabel fill dinamis sesuai ukuran layar.
+- Hasilnya: tidak ada space kosong di bawah tabel, tidak ada scroll luar.
+
+### 5. Tab Button Mutasi & Vital — Diperbaiki ✅
+**Problem dari screenshot:** Button tab tidak seragam ukurannya, tidak presisi.
 **Fix:**
-- `AppShell`: Struktur diubah dari `min-h-screen` menjadi `h-[100dvh] overflow-hidden` — scroll sepenuhnya dikelola di dalam `main`.
-- `<main>` tetap `overflow-y-auto` untuk scroll halaman, ditambah `relative`.
-- Dropdown Topbar: z-index dinaikkan dari `z-50` menjadi `z-[200]` untuk memastikan selalu di atas semua konten.
+- `flex-1`: kedua button sama lebar, mengisi penuh lebar layar.
+- `h-11` (44px): tinggi seragam, touch target cukup besar.
+- `justify-center`: teks + icon selalu di tengah.
+- `font-semibold`: font lebih tegas dan terbaca.
+- `shrink-0` pada icon: icon tidak collapse.
+- Konsisten untuk Mutasi (Pindah Keluar/Masuk) dan Vital (Kelahiran/Kematian).
 
-### 3. Kolom Freeze (No & Nama) — Tidak Tembus Konten Scroll ✅
-**Problem:** Konten yang discroll ke kanan menembus kolom No dan Nama di halaman Penduduk.
-**Root Cause:** Wrapper tabel menggunakan `-mx-4 px-4` (negative margin trick) yang merusak stacking context sticky dan membuat kolom tidak terisolasi dengan benar.
-**Fix — `PendudukTable.tsx`:**
-- Hapus `-mx-4 px-4` dari wrapper, ganti dengan `overflow-x-auto overflow-y-auto max-h-[52dvh] rounded-xl` yang bersih.
-- Sticky column No: `left-0 z-20` dengan `bg-[#0d1424] group-hover:bg-[#121a2e] transition-colors` **eksplisit** (bukan `bg-inherit`).
-- Sticky column Nama: `left-9 z-20` (disesuaikan dengan lebar kolom No = 36px / `w-9`).
-- Header freeze: `z-30` untuk header freeze vs `z-20` header biasa.
-- Mutasi & Vital: `left-8` → `left-9`, z-index distandarisasi (`z-20`/`z-30`), width kolom No = `w-9`.
-
-### 4. Scroll Luar Dihapus ✅
-**Problem:** Halaman Penduduk, Mutasi, Vital memiliki dua level scroll — scroll halaman (outer) dan scroll tabel (inner). Pada mobile, scroll luar tidak diperlukan.
-**Fix:** 
-- `AppShell` kini `h-[100dvh] overflow-hidden` sehingga tidak ada scroll di level layout.
-- Satu-satunya scroll adalah scroll `<main>` (atas-bawah seluruh halaman) dan scroll tabel (atas-bawah + kiri-kanan di dalam tabel).
-- Ukuran tabel: `max-h-[52dvh]` di Penduduk (turun dari 60dvh) agar konten di bawah tabel (pagination) tetap terlihat tanpa scroll luar.
-
-### 5. Konsistensi Font — Distandardisasi ✅
-**Problem:** Campuran arbitrary font size `text-[10px]`, `text-[11px]`, `text-[13px]`, `text-[9px]` di hampir semua file (168 instance).
-**Fix:** Semua arbitrary font size distandarisasi:
-- `text-[9px]`, `text-[10px]`, `text-[11px]`, `text-[12px]` → `text-xs` (12px)
-- `text-[13px]` → `text-sm` (14px)
-- Label tabel header: `text-xs font-semibold uppercase tracking-wider`
-- Body cell tabel: `text-sm` minimum
-- Sub-label / caption: `text-xs`
-- File yang diubah: semua halaman utama, semua komponen shared, login form, pengaturan, dashboard, profil, monografi.
+### 6. Font Konsistensi ✅
+- Semua `text-[10px]`/`text-[11px]`/`text-[13px]` → `text-xs`/`text-sm` di seluruh codebase.
 
 ## File yang Diubah
-- `components/layout/AppShell.tsx` — layout structure, h-[100dvh]
-- `components/layout/Topbar.tsx` — z-[200] dropdown, font standardization
-- `components/penduduk/PendudukTable.tsx` — sticky column fix, font
-- `app/penduduk/page.tsx` — wrapper `overflow-hidden`
-- `app/mutasi/page.tsx` — sticky z-index, left-9, font standardization
-- `app/vital/page.tsx` — sticky z-index, left-9, font standardization
-- `app/log/page.tsx` — font standardization
-- `app/penduduk/[id]/page.tsx` — font standardization
-- `components/penduduk/PendudukFilter.tsx` — font standardization
-- `components/penduduk/CatatPindahKeluarModal.tsx` — font standardization
-- `components/penduduk/KKModal.tsx` — font standardization
-- `components/penduduk/PendudukForm.tsx` — font standardization
-- `components/mutasi/MutasiForm.tsx` — font standardization
-- `components/vital/VitalForm.tsx` — font standardization
-- `components/layout/AppLogo.tsx` — font standardization
-- `components/layout/Sidebar.tsx` — font standardization
-- `components/dashboard/RecentActivity.tsx` — font standardization
-- `components/dashboard/UmurChart.tsx` — font standardization
-- `components/auth/LoginForm.tsx` — font standardization
-- `app/pengaturan/**` — font standardization
-- `app/monografi/page.tsx` — font standardization (label teks)
-- `app/profil/page.tsx` — font standardization
-- `app/dashboard/page.tsx` — font standardization
-- `components/pengaturan/ImportSection.tsx` — font standardization
+- `components/layout/Topbar.tsx` — React Portal dropdown (fix definitif z-index)
+- `components/layout/AppShell.tsx` — prop `fullHeight`, main overflow conditional
+- `components/penduduk/PendudukTable.tsx` — `h-full` (fill parent, tidak ada max-h fixed)
+- `app/penduduk/page.tsx` — `h-full flex flex-col`, `flex-1 min-h-0` tabel, `fullHeight`
+- `app/mutasi/page.tsx` — `h-full flex flex-col`, tabs `flex-1 h-11`, tabel `flex-1`, `fullHeight`
+- `app/vital/page.tsx` — `h-full flex flex-col`, tabs `flex-1 h-11`, tabel `flex-1`, `fullHeight`
+- `app/log/page.tsx` — `h-full flex flex-col`, tabel `flex-1`, `fullHeight`
+- Semua komponen — font standardization `text-xs`/`text-sm`
 
-## Tidak Diubah (Intentional)
-- `app/loading.tsx` — loading screen tidak diubah sama sekali sesuai permintaan
+## Tidak Diubah
+- `app/loading.tsx` — tidak diubah sama sekali
 - `app/page.tsx` — redirect ke login tetap
-- Warna palette sky/blue — tidak berubah
-- Navigasi hamburger drawer — tidak berubah
-- KK succession logic — tidak berubah
-- Firebase Auth UID allowlist — tidak berubah
+- Warna palette sky/blue, hamburger nav, KK logic, UID allowlist

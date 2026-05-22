@@ -74,8 +74,8 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
   const tdFreezeNama = 'py-3 px-3 sticky left-9 z-20 bg-[#0d1424] group-hover:bg-[#121a2e] transition-colors min-w-[160px]'
 
   return (
-    /* Wrapper: overflow keduanya aktif, tidak ada -mx / px negatif agar sticky berfungsi */
-    <div className="overflow-x-auto overflow-y-auto max-h-[52dvh] rounded-xl">
+    /* Wrapper: fill tinggi parent (flex-1 min-h-0), sticky berfungsi karena tidak ada negative margin */
+    <div className="overflow-x-auto overflow-y-auto h-full rounded-xl">
       <table className="w-full min-w-[640px] border-collapse">
         <thead>
           <tr>
