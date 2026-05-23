@@ -16,7 +16,7 @@ import { useState } from 'react'
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 py-2.5 border-b border-white/[0.04] last:border-0">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</span>
+      <span className="text-sm font-semibold uppercase tracking-wider text-slate-600">{label}</span>
       <span className="text-sm text-slate-200">{children}</span>
     </div>
   )
@@ -105,7 +105,7 @@ export default function DetailPendudukPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* Identitas */}
               <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] px-4 py-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Identitas</p>
+                <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Identitas</p>
                 <DetailRow label="NIK">{data.nik || '—'}</DetailRow>
                 <DetailRow label="No. KK">
                   {isAktif ? (
@@ -128,7 +128,7 @@ export default function DetailPendudukPage() {
 
               {/* Data Diri */}
               <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] px-4 py-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Data Diri</p>
+                <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Data Diri</p>
                 <DetailRow label="Jenis Kelamin">{data.jenis_kelamin}</DetailRow>
                 <DetailRow label="Tempat, Tanggal Lahir">
                   {`${toProper(data.tempat_lahir)}, ${formatTanggalLahir(data.tanggal_lahir)}`}
@@ -142,7 +142,7 @@ export default function DetailPendudukPage() {
 
               {/* Domisili */}
               <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] px-4 py-1 md:col-span-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Domisili</p>
+                <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Domisili</p>
                 <div className="grid grid-cols-2">
                   <DetailRow label="RT">{data.rt}</DetailRow>
                   <DetailRow label="RW">{data.rw}</DetailRow>
@@ -156,7 +156,7 @@ export default function DetailPendudukPage() {
             {/* Tombol aksi — Baris 1: Edit | Hapus, Baris 2: Catat Pindah | Catat Meninggal */}
             {(canEdit || canDelete) && (
               <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Aksi</p>
+                <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Aksi</p>
                 <div className="flex flex-col gap-2">
                   {/* Baris 1: Edit & Hapus */}
                   <div className="grid grid-cols-2 gap-2">

@@ -44,7 +44,7 @@ const FILTER_VIS_KEY = 'dapendig_filter_visible'
 // ── Sel: Dropdown wrapper dengan chevron (harus di luar component agar tidak dibuat ulang tiap render) ──
 const SEL_CLS = [
   'bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5',
-  'text-xs text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer',
+  'text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer',
   'appearance-none pr-6',
 ].join(' ')
 
@@ -162,7 +162,7 @@ export function PendudukFilter({
                     ].join(' ')}>
                       {active && <Check size={10} className="text-white" strokeWidth={3} />}
                     </div>
-                    <span className="text-xs text-slate-300">{f.label}</span>
+                    <span className="text-sm text-slate-300">{f.label}</span>
                   </button>
                 )
               })}
@@ -232,7 +232,7 @@ export function PendudukFilter({
           {hasActiveFilter && (
             <button
               onClick={() => onChange({ search: '', rt: '', jenisKelamin: '', agama: '', statusPerkawinan: '', pekerjaan: '', pendidikan: '', sortBy: 'rt_kk', sortDir: 'asc', status: 'aktif' })}
-              className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1"
+              className="text-sm text-sky-400 hover:text-sky-300 flex items-center gap-1"
             >
               <X size={11} />Reset
             </button>

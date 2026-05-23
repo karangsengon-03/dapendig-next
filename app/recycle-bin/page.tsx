@@ -117,19 +117,19 @@ export default function RecycleBinPage() {
                 <tbody>
                   {data.map((item: RecycleBinItem, idx: number) => (
                     <tr key={item.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-3 text-slate-500 text-xs">{idx + 1}</td>
-                      <td className="px-4 py-3 text-slate-200 font-medium">{item.data_asli.nama_lengkap}</td>
-                      <td className="px-4 py-3 text-slate-400 font-mono text-xs">{item.data_asli.nik || '—'}</td>
-                      <td className="px-4 py-3 text-slate-400 font-mono text-xs">{item.data_asli.no_kk || '—'}</td>
-                      <td className="px-4 py-3 text-slate-400 text-xs">{item.data_asli.rt}/{item.data_asli.rw}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{item.dihapus_oleh}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{formatTanggal(item.dihapus_at)}</td>
+                      <td className="px-4 py-3 text-slate-500 text-sm">{idx + 1}</td>
+                      <td className="px-4 py-3 text-slate-200 font-medium text-sm">{item.data_asli.nama_lengkap}</td>
+                      <td className="px-4 py-3 text-slate-400 font-mono text-sm">{item.data_asli.nik || '—'}</td>
+                      <td className="px-4 py-3 text-slate-400 font-mono text-sm">{item.data_asli.no_kk || '—'}</td>
+                      <td className="px-4 py-3 text-slate-400 text-sm">{item.data_asli.rt}/{item.data_asli.rw}</td>
+                      <td className="px-4 py-3 text-slate-500 text-sm">{item.dihapus_oleh}</td>
+                      <td className="px-4 py-3 text-slate-500 text-sm">{formatTanggal(item.dihapus_at)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <button
                             onClick={() => handleRestore(item)}
                             disabled={restoreMutation.isPending}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
                           >
                             <RotateCcw size={12} />
                             Pulihkan
@@ -137,7 +137,7 @@ export default function RecycleBinPage() {
                           {canAdmin && (
                             <button
                               onClick={() => setConfirmTarget(item)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs hover:bg-rose-500/20 transition-colors"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm hover:bg-rose-500/20 transition-colors"
                             >
                               <Trash2 size={12} />
                               Hapus

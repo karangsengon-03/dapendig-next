@@ -96,13 +96,13 @@ export default function MigrateTanggalPage() {
         <div className="flex items-center gap-2.5">
           <button onClick={() => router.back()} className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 shrink-0"><ArrowLeft size={15} /></button>
           <div><h1 className="text-base font-semibold text-slate-100">Migrasi Format Tanggal</h1>
-          <p className="text-xs text-slate-500">Konversi DD/MM/YYYY → YYYY-MM-DD di semua koleksi</p></div>
+          <p className="text-sm text-slate-500">Konversi DD/MM/YYYY → YYYY-MM-DD di semua koleksi</p></div>
         </div>
 
         <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-5 flex flex-col gap-4">
           {status === 'idle' && (
             <div className="flex flex-col gap-3">
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 flex flex-col gap-1 text-xs text-slate-400">
+              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 flex flex-col gap-1 text-sm text-slate-400">
                 {KOLEKSI_TANGGAL.map(({ koleksi, fields }) => (
                   <p key={koleksi}>· <span className="text-slate-300 font-mono">{koleksi}</span> — {fields.join(', ')}</p>
                 ))}
@@ -144,7 +144,7 @@ export default function MigrateTanggalPage() {
                       return (
                         <tr key={key} className={`border-b border-white/[0.04] last:border-0 transition-colors ${item.done ? 'opacity-40' : 'hover:bg-white/[0.02]'}`}>
                           <td className="px-3 py-2">
-                            <p className="text-xs text-slate-500 font-mono">{item.koleksi}.{item.field}</p>
+                            <p className="text-sm text-slate-500 font-mono">{item.koleksi}.{item.field}</p>
                             <p className="text-slate-300 font-medium truncate max-w-[120px]">{item.nama || item.id}</p>
                           </td>
                           <td className="px-3 py-2 text-rose-400 font-mono">{item.lama}</td>
@@ -186,7 +186,7 @@ export default function MigrateTanggalPage() {
           {status === 'error' && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2.5"><AlertCircle size={18} className="text-rose-400 shrink-0" /><p className="text-sm font-medium text-rose-400">Gagal</p></div>
-              <p className="text-xs text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
+              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
               <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">Coba lagi</button>
             </div>
           )}

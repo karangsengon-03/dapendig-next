@@ -108,7 +108,7 @@ export default function MigrateDocIdPage() {
         <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-5 flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <p className="text-sm font-medium text-slate-300">Seragamkan ID dokumen penduduk</p>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-sm text-slate-500 leading-relaxed">
               Proses ini memindahkan semua dokumen penduduk yang ID-nya masih acak ke format baru
               menggunakan <span className="font-semibold text-slate-300">NIK</span> sebagai ID dokumen.
               Data tidak akan hilang — hanya ID dokumen yang diperbarui.
@@ -118,7 +118,7 @@ export default function MigrateDocIdPage() {
           {/* Warning */}
           <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 flex gap-2.5">
             <AlertTriangle size={15} className="text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-300 leading-relaxed">
+            <p className="text-sm text-amber-400 leading-relaxed">
               Lakukan <span className="font-semibold">ekspor data</span> terlebih dahulu sebelum migrasi sebagai backup.
               Proses ini tidak dapat dibatalkan.
             </p>
@@ -202,7 +202,7 @@ export default function MigrateDocIdPage() {
                 </>
               )}
 
-              <button onClick={() => setStatus('idle')} className="text-xs text-slate-500 hover:text-slate-300 text-center">
+              <button onClick={() => setStatus('idle')} className="text-sm text-slate-500 hover:text-slate-300 text-center">
                 Kembali
               </button>
             </div>
@@ -240,7 +240,7 @@ export default function MigrateDocIdPage() {
                 <AlertCircle size={18} className="text-rose-400 shrink-0" />
                 <p className="text-sm font-medium text-rose-400">Terjadi kesalahan</p>
               </div>
-              <p className="text-xs text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
+              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
               <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">Coba lagi</button>
             </div>
           )}

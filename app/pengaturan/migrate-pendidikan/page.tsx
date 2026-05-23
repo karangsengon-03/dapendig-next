@@ -82,7 +82,7 @@ export default function MigratePendidikanPage() {
         <div className="flex items-center gap-2.5">
           <button onClick={() => router.back()} className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 shrink-0"><ArrowLeft size={15} /></button>
           <div><h1 className="text-base font-semibold text-slate-100">Migrasi Pendidikan</h1>
-          <p className="text-xs text-slate-500">SLTP → SMP dan SLTA → SMA</p></div>
+          <p className="text-sm text-slate-500">SLTP → SMP dan SLTA → SMA</p></div>
         </div>
 
         <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-5 flex flex-col gap-4">
@@ -112,7 +112,7 @@ export default function MigratePendidikanPage() {
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-slate-200"><span className="text-amber-400">{pending.length}</span> data perlu diubah</p>
-                <p className="text-xs text-slate-500">{skipped} tidak perlu diubah</p>
+                <p className="text-sm text-slate-500">{skipped} tidak perlu diubah</p>
               </div>
 
               <div className="rounded-xl border border-white/[0.06] overflow-hidden max-h-80 overflow-y-auto">
@@ -167,7 +167,7 @@ export default function MigratePendidikanPage() {
           {status === 'error' && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2.5"><AlertCircle size={18} className="text-rose-400 shrink-0" /><p className="text-sm font-medium text-rose-400">Gagal</p></div>
-              <p className="text-xs text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
+              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
               <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">Coba lagi</button>
             </div>
           )}

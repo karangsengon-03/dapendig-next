@@ -65,13 +65,13 @@ export function CatatMeninggalModal({ penduduk, allPenduduk, onClose, onSuccess 
         {penduduk.hubungan_keluarga === 'Kepala Keluarga' && (
           <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
             <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
-            <p className="text-xs text-amber-400">Penduduk ini adalah Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Suami/Anak tertua).</p>
+            <p className="text-sm text-amber-400">Penduduk ini adalah Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Suami/Anak tertua).</p>
           </div>
         )}
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Tanggal Meninggal <span className="text-rose-400">*</span></label>
+            <label className="text-sm font-medium text-slate-400">Tanggal Meninggal <span className="text-rose-400">*</span></label>
             <input
               type="date"
               value={tanggal}
@@ -81,7 +81,7 @@ export function CatatMeninggalModal({ penduduk, allPenduduk, onClose, onSuccess 
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Sebab Meninggal <span className="text-slate-600">(opsional)</span></label>
+            <label className="text-sm font-medium text-slate-400">Sebab Meninggal <span className="text-slate-600">(opsional)</span></label>
             <input
               type="text"
               value={sebab}
@@ -91,7 +91,7 @@ export function CatatMeninggalModal({ penduduk, allPenduduk, onClose, onSuccess 
             />
           </div>
 
-          {error && <p className="text-xs text-rose-400">{error}</p>}
+          {error && <p className="text-sm text-rose-400">{error}</p>}
         </div>
 
         <div className="flex gap-2">

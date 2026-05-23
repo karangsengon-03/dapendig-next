@@ -86,9 +86,9 @@ export function KKModal({ noKk, allPenduduk, onClose, onNavigate }: Props) {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5">{p.nik || '—'}</p>
+                  <p className="text-sm text-slate-500 font-mono mt-0.5">{p.nik || '—'}</p>
                 </div>
-                <span className={`text-xs font-medium px-2 py-1 rounded-lg border shrink-0 ${HUB_COLOR[p.hubungan_keluarga] ?? 'bg-slate-500/15 text-slate-400 border-slate-500/20'}`}>
+                <span className={`text-sm font-medium px-2 py-1 rounded-lg border shrink-0 ${HUB_COLOR[p.hubungan_keluarga] ?? 'bg-slate-500/15 text-slate-400 border-slate-500/20'}`}>
                   {p.hubungan_keluarga}
                 </span>
               </button>

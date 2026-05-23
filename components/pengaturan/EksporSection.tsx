@@ -187,9 +187,9 @@ function EksporButton({ item }: { item: EksporItem }) {
     <div className="flex items-center justify-between py-3 border-b border-white/[0.06] last:border-0">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-slate-200">{item.label}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{item.deskripsi}</p>
+        <p className="text-sm text-slate-500 mt-0.5">{item.deskripsi}</p>
         {isError && (
-          <p className="text-xs text-red-400 mt-0.5">Gagal mengambil data. Coba lagi.</p>
+          <p className="text-sm text-red-400 mt-0.5">Gagal mengambil data. Coba lagi.</p>
         )}
       </div>
       <Button
@@ -254,12 +254,12 @@ function LaporanBulananSection() {
         <BarChart3 className="w-4 h-4 text-sky-400" />
         <p className="text-sm font-semibold text-slate-200">Laporan Bulanan</p>
       </div>
-      <p className="text-xs text-slate-500 mb-3">Ekspor laporan multi-sheet: rekap, mutasi, kelahiran, dan kematian untuk bulan tertentu.</p>
+      <p className="text-sm text-slate-500 mb-3">Ekspor laporan multi-sheet: rekap, mutasi, kelahiran, dan kematian untuk bulan tertentu.</p>
       <div className="flex items-center gap-2 flex-wrap">
         <select
           value={bulan}
           onChange={(e) => setBulan(e.target.value)}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50"
+          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"
         >
           {BULAN_OPTS.map(([val, label]) => (
             <option key={val} value={val}>{label}</option>
@@ -268,7 +268,7 @@ function LaporanBulananSection() {
         <select
           value={tahun}
           onChange={(e) => setTahun(e.target.value)}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50"
+          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"
         >
           {tahunOptions.map((t) => (
             <option key={t} value={t}>{t}</option>
@@ -297,7 +297,7 @@ export function EksporSection() {
         <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-slate-100 text-sm">Ekspor Data</p>
-          <p className="text-xs text-slate-500 mt-0.5">Unduh data ke Excel (.xlsx)</p>
+          <p className="text-sm text-slate-500 mt-0.5">Unduh data ke Excel (.xlsx)</p>
         </div>
         <ChevronDown
           size={15}

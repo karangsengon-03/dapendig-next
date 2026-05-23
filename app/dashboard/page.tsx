@@ -136,24 +136,24 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {loadingStats ? (
-                  <tr><td colSpan={4} className="text-center py-4 text-slate-600 text-xs">Memuat...</td></tr>
+                  <tr><td colSpan={4} className="text-center py-4 text-slate-600 text-sm">Memuat...</td></tr>
                 ) : (stats?.rtData ?? []).map(row => (
                   <tr key={row.rt} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                    <td className="py-2 px-2 text-center text-slate-300 font-medium text-xs">
+                    <td className="py-2 px-2 text-center text-slate-300 font-medium text-sm">
                       {row.rt === 'Lain-lain' ? row.rt : `RT ${row.rt}`}
                     </td>
-                    <td className="py-2 px-2 text-center text-sky-400 tabular-nums text-xs">{row.laki}</td>
-                    <td className="py-2 px-2 text-center text-pink-400 tabular-nums text-xs">{row.perempuan}</td>
-                    <td className="py-2 px-2 text-center text-slate-200 font-semibold tabular-nums text-xs">{row.jumlah}</td>
+                    <td className="py-2 px-2 text-center text-sky-400 tabular-nums text-sm">{row.laki}</td>
+                    <td className="py-2 px-2 text-center text-pink-400 tabular-nums text-sm">{row.perempuan}</td>
+                    <td className="py-2 px-2 text-center text-slate-200 font-semibold tabular-nums text-sm">{row.jumlah}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className="border-t border-white/[0.08]">
                   <td className="py-2 px-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Total</td>
-                  <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-xs">{stats?.lakiLaki ?? 0}</td>
-                  <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-xs">{stats?.perempuan ?? 0}</td>
-                  <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-xs">{stats?.totalPenduduk ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-sm">{stats?.lakiLaki ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-sm">{stats?.perempuan ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-sm">{stats?.totalPenduduk ?? 0}</td>
                 </tr>
               </tfoot>
             </table>
@@ -174,22 +174,22 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {loadingStats ? (
-                  <tr><td colSpan={4} className="text-center py-4 text-slate-600 text-xs">Memuat...</td></tr>
+                  <tr><td colSpan={4} className="text-center py-4 text-slate-600 text-sm">Memuat...</td></tr>
                 ) : (stats?.dusunData ?? []).map(row => (
                   <tr key={row.dusun} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                    <td className="py-2 px-2 text-slate-300 font-medium text-xs text-center">{row.dusun}</td>
-                    <td className="py-2 px-2 text-center text-sky-400 tabular-nums text-xs">{row.laki}</td>
-                    <td className="py-2 px-2 text-center text-pink-400 tabular-nums text-xs">{row.perempuan}</td>
-                    <td className="py-2 px-2 text-center text-slate-200 font-semibold tabular-nums text-xs">{row.jumlah}</td>
+                    <td className="py-2 px-2 text-slate-300 font-medium text-sm text-center">{row.dusun}</td>
+                    <td className="py-2 px-2 text-center text-sky-400 tabular-nums text-sm">{row.laki}</td>
+                    <td className="py-2 px-2 text-center text-pink-400 tabular-nums text-sm">{row.perempuan}</td>
+                    <td className="py-2 px-2 text-center text-slate-200 font-semibold tabular-nums text-sm">{row.jumlah}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className="border-t border-white/[0.08]">
                   <td className="py-2 px-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Total</td>
-                  <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-xs">{stats?.lakiLaki ?? 0}</td>
-                  <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-xs">{stats?.perempuan ?? 0}</td>
-                  <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-xs">{stats?.totalPenduduk ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-sm">{stats?.lakiLaki ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-sm">{stats?.perempuan ?? 0}</td>
+                  <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-sm">{stats?.totalPenduduk ?? 0}</td>
                 </tr>
               </tfoot>
             </table>

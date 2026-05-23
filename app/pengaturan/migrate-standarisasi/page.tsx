@@ -99,13 +99,13 @@ export default function MigrateStandarisasiPage() {
         <div className="flex items-center gap-2.5">
           <button onClick={() => router.back()} className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 shrink-0"><ArrowLeft size={15} /></button>
           <div><h1 className="text-base font-semibold text-slate-100">Standarisasi Pendidikan & Pekerjaan</h1>
-          <p className="text-xs text-slate-500">Sesuai Permendagri 6/2026</p></div>
+          <p className="text-sm text-slate-500">Sesuai Permendagri 6/2026</p></div>
         </div>
 
         <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-5 flex flex-col gap-4">
           {status === 'idle' && (
             <div className="flex flex-col gap-3">
-              <p className="text-xs text-slate-500 leading-relaxed">Scan seluruh data penduduk untuk menemukan nilai pendidikan dan pekerjaan yang perlu distandarisasi, lalu pilih mana saja yang ingin diubah.</p>
+              <p className="text-sm text-slate-500 leading-relaxed">Scan seluruh data penduduk untuk menemukan nilai pendidikan dan pekerjaan yang perlu distandarisasi, lalu pilih mana saja yang ingin diubah.</p>
               <button onClick={handleScan} disabled={!isAdmin()} className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-sm font-semibold text-white transition-colors disabled:opacity-40">Scan Data Terlebih Dahulu</button>
             </div>
           )}
@@ -144,7 +144,7 @@ export default function MigrateStandarisasiPage() {
                       return (
                         <tr key={key} className={`border-b border-white/[0.04] last:border-0 transition-colors ${item.done ? 'opacity-40' : 'hover:bg-white/[0.02]'}`}>
                           <td className="px-3 py-2 text-slate-300 font-medium truncate max-w-[100px]">{item.nama || '—'}</td>
-                          <td className="px-3 py-2 text-xs text-slate-500 font-mono">{item.label}</td>
+                          <td className="px-3 py-2 text-sm text-slate-500 font-mono">{item.label}</td>
                           <td className="px-3 py-2 text-rose-400 font-mono truncate max-w-[100px]">{item.lama}</td>
                           <td className="px-3 py-2 text-emerald-400 font-mono truncate max-w-[100px]">{item.baru}</td>
                           <td className="px-3 py-2 text-right">
@@ -184,7 +184,7 @@ export default function MigrateStandarisasiPage() {
           {status === 'error' && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2.5"><AlertCircle size={18} className="text-rose-400 shrink-0" /><p className="text-sm font-medium text-rose-400">Gagal</p></div>
-              <p className="text-xs text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
+              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
               <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">Coba lagi</button>
             </div>
           )}

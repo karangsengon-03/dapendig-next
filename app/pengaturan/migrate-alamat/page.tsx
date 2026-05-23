@@ -77,13 +77,13 @@ export default function MigrateAlamatPage() {
         <div className="flex items-center gap-2.5">
           <button onClick={() => router.back()} className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 shrink-0"><ArrowLeft size={15} /></button>
           <div><h1 className="text-base font-semibold text-slate-100">Migrasi Alamat Penduduk</h1>
-          <p className="text-xs text-slate-500">Isi alamat KARANG SENGON untuk yang belum punya alamat</p></div>
+          <p className="text-sm text-slate-500">Isi alamat KARANG SENGON untuk yang belum punya alamat</p></div>
         </div>
 
         <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-5 flex flex-col gap-4">
           {status === 'idle' && (
             <div className="flex flex-col gap-3">
-              <p className="text-xs text-slate-500 leading-relaxed">Proses ini akan mengisi field alamat dengan <span className="font-semibold text-slate-300">KARANG SENGON</span> untuk semua penduduk yang belum memiliki alamat.</p>
+              <p className="text-sm text-slate-500 leading-relaxed">Proses ini akan mengisi field alamat dengan <span className="font-semibold text-slate-300">KARANG SENGON</span> untuk semua penduduk yang belum memiliki alamat.</p>
               <button onClick={handleScan} disabled={!isAdmin()} className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-sm font-semibold text-white transition-colors disabled:opacity-40">Scan Data Terlebih Dahulu</button>
             </div>
           )}
@@ -103,7 +103,7 @@ export default function MigrateAlamatPage() {
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-slate-200"><span className="text-amber-400">{pending.length}</span> penduduk belum punya alamat</p>
-                <p className="text-xs text-slate-500">{skipped} sudah punya</p>
+                <p className="text-sm text-slate-500">{skipped} sudah punya</p>
               </div>
 
               <div className="rounded-xl border border-white/[0.06] overflow-hidden max-h-80 overflow-y-auto">
@@ -157,7 +157,7 @@ export default function MigrateAlamatPage() {
           {status === 'error' && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2.5"><AlertCircle size={18} className="text-rose-400 shrink-0" /><p className="text-sm font-medium text-rose-400">Gagal</p></div>
-              <p className="text-xs text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
+              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
               <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">Coba lagi</button>
             </div>
           )}

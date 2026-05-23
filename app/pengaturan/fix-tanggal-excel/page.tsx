@@ -166,7 +166,7 @@ export default function FixTanggalExcelPage() {
           </button>
           <div>
             <h1 className="text-base font-semibold text-slate-100">Fix Tanggal Lahir dari Excel</h1>
-            <p className="text-xs text-slate-500">Sumber: file Semua.xls (1187 penduduk)</p>
+            <p className="text-sm text-slate-500">Sumber: file Semua.xls (1187 penduduk)</p>
           </div>
         </div>
 
@@ -175,7 +175,7 @@ export default function FixTanggalExcelPage() {
           <Info size={16} className="text-sky-400 shrink-0 mt-0.5" />
           <div className="flex flex-col gap-1.5">
             <p className="text-sm font-medium text-sky-300">Hanya field tanggal_lahir yang diubah</p>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-sm text-slate-400 leading-relaxed">
               Migrasi ini membandingkan <span className="font-mono text-slate-300">tanggal_lahir</span> di Firestore dengan
               data dari file Excel Dispenduk. Penduduk yang NIK-nya tidak ada di file Excel (misal: kelahiran baru,
               pindah masuk) akan dilewati otomatis. Field lain seperti pendidikan, pekerjaan, alamat <span className="text-emerald-400 font-semibold">tidak disentuh sama sekali</span>.
@@ -189,7 +189,7 @@ export default function FixTanggalExcelPage() {
           {/* IDLE */}
           {status === 'idle' && (
             <div className="flex flex-col gap-4">
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 flex flex-col gap-2 text-xs text-slate-400">
+              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 flex flex-col gap-2 text-sm text-slate-400">
                 <div className="flex items-center gap-2 text-slate-300 font-medium">
                   <FileSpreadsheet size={13} className="text-emerald-400" />
                   Data dimuat dari Semua.xls
@@ -219,7 +219,7 @@ export default function FixTanggalExcelPage() {
                 <div className="flex flex-col items-center gap-3 py-4">
                   <CheckCircle size={32} className="text-emerald-400" />
                   <p className="text-sm font-semibold text-emerald-400">Semua tanggal lahir sudah sesuai!</p>
-                  <p className="text-xs text-slate-500 text-center">
+                  <p className="text-sm text-slate-500 text-center">
                     Tidak ada perbedaan antara Firestore dan data Excel.
                   </p>
                   <button onClick={() => router.push('/pengaturan')}
@@ -233,7 +233,7 @@ export default function FixTanggalExcelPage() {
                     <p className="text-sm font-semibold text-slate-200">
                       <span className="text-amber-400">{previewData.length}</span> data berbeda dengan Excel
                     </p>
-                    <p className="text-xs text-slate-500">Scroll untuk cek semua</p>
+                    <p className="text-sm text-slate-500">Scroll untuk cek semua</p>
                   </div>
 
                   <div className="overflow-x-auto rounded-xl border border-white/[0.06] max-h-72 overflow-y-auto">
@@ -294,15 +294,15 @@ export default function FixTanggalExcelPage() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 flex flex-col gap-0.5">
                   <p className="text-xl font-bold text-emerald-400 tabular-nums">{result.diperbaiki}</p>
-                  <p className="text-xs text-slate-400">diperbarui</p>
+                  <p className="text-sm text-slate-400">diperbarui</p>
                 </div>
                 <div className="rounded-xl bg-sky-500/10 border border-sky-500/20 p-3 flex flex-col gap-0.5">
                   <p className="text-xl font-bold text-sky-400 tabular-nums">{result.sama}</p>
-                  <p className="text-xs text-slate-400">sudah sama</p>
+                  <p className="text-sm text-slate-400">sudah sama</p>
                 </div>
                 <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 flex flex-col gap-0.5">
                   <p className="text-xl font-bold text-slate-400 tabular-nums">{result.tidakAdaDiExcel}</p>
-                  <p className="text-xs text-slate-400">tidak di Excel</p>
+                  <p className="text-sm text-slate-400">tidak di Excel</p>
                 </div>
               </div>
 
@@ -343,7 +343,7 @@ export default function FixTanggalExcelPage() {
                 <AlertCircle size={18} className="text-rose-400 shrink-0" />
                 <p className="text-sm font-medium text-rose-400">Terjadi kesalahan</p>
               </div>
-              <p className="text-xs text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2 font-mono">{errorMsg}</p>
+              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2 font-mono">{errorMsg}</p>
               <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">Coba lagi</button>
             </div>
           )}

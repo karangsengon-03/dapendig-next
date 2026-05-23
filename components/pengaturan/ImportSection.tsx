@@ -161,7 +161,7 @@ export function ImportSection() {
         <Upload className="w-4 h-4 text-violet-400 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-slate-100 text-sm">Import Data Excel</p>
-          <p className="text-xs text-slate-500 mt-0.5">Upload .xlsx/.csv ke Firestore</p>
+          <p className="text-sm text-slate-500 mt-0.5">Upload .xlsx/.csv ke Firestore</p>
         </div>
         <ChevronDown
           size={15}
@@ -184,7 +184,7 @@ export function ImportSection() {
             <FileSpreadsheet className="w-10 h-10 text-slate-500" />
             <div className="text-center">
               <p className="text-sm text-slate-300 font-medium">Klik atau drag file ke sini</p>
-              <p className="text-xs text-slate-500 mt-1">Format: .xlsx, .xls, .csv</p>
+              <p className="text-sm text-slate-500 mt-1">Format: .xlsx, .xls, .csv</p>
             </div>
             <input
               ref={fileRef}
@@ -196,7 +196,7 @@ export function ImportSection() {
           </div>
           <button
             onClick={downloadTemplate}
-            className="flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 transition-colors self-start"
+            className="flex items-center gap-2 text-sm text-sky-400 hover:text-sky-300 transition-colors self-start"
           >
             <Download className="w-3.5 h-3.5" />
             Download Template Excel
@@ -211,7 +211,7 @@ export function ImportSection() {
             Terdeteksi <span className="font-semibold text-slate-200">{rawRows.length} baris data</span>. Petakan kolom Excel ke field DAPENDIG:
           </p>
           <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
-            <table className="w-full text-xs">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                   <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kolom di Excel</th>
@@ -227,7 +227,7 @@ export function ImportSection() {
                       <select
                         value={mapping[col] ?? ''}
                         onChange={(e) => setMapping({ ...mapping, [col]: e.target.value })}
-                        className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-sky-500/50 w-full"
+                        className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2 py-1 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 w-full"
                       >
                         <option value="">— skip —</option>
                         {KDPD.map(({ k, l }) => (
@@ -265,7 +265,7 @@ export function ImportSection() {
         <div className="flex flex-col gap-4 py-4">
           <p className="text-sm font-medium text-slate-300 text-center">Mengimport data...</p>
           <MigrasiProgress current={progressCurrent} total={progressTotal} label="data diproses" />
-          <p className="text-xs text-slate-600 text-center">Jangan tutup halaman ini</p>
+          <p className="text-sm text-slate-600 text-center">Jangan tutup halaman ini</p>
         </div>
       )}
 

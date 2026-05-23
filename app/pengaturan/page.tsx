@@ -138,7 +138,7 @@ function MigrasiDataSection() {
         <Wrench className="w-4 h-4 text-amber-400 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-slate-100 text-sm">Migrasi Data</p>
-          <p className="text-xs text-slate-500 mt-0.5">Utilitas migrasi & perbaikan data (admin only)</p>
+          <p className="text-sm text-slate-500 mt-0.5">Utilitas migrasi &amp; perbaikan data (admin only)</p>
         </div>
         <ChevronDown
           size={15}
@@ -152,11 +152,11 @@ function MigrasiDataSection() {
               <div className="flex items-center justify-between gap-3 py-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-200">{item.label}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                  <p className="text-sm text-slate-500 mt-0.5">{item.desc}</p>
                 </div>
                 <a
                   href={item.href}
-                  className={`shrink-0 px-3 py-2 rounded-xl border text-xs font-medium transition-colors ${MIGRASI_COLOR[item.color]}`}
+                  className={`shrink-0 px-3 py-2 rounded-xl border text-sm font-medium transition-colors ${MIGRASI_COLOR[item.color]}`}
                 >
                   Jalankan
                 </a>
@@ -204,7 +204,7 @@ function NormalisasiSection() {
         <Wrench className="w-4 h-4 text-amber-400 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-slate-100 text-sm">Pemeliharaan Data</p>
-          <p className="text-xs text-slate-500 mt-0.5">Normalisasi Pekerjaan & Hubungan Keluarga</p>
+          <p className="text-sm text-slate-500 mt-0.5">Normalisasi Pekerjaan &amp; Hubungan Keluarga</p>
         </div>
         <ChevronDown
           size={15}
@@ -213,12 +213,12 @@ function NormalisasiSection() {
       </button>
       {open && (
       <div className="px-5 pb-5 border-t border-white/[0.04] pt-4 space-y-3">
-        <p className="text-xs text-slate-500">
+        <p className="text-sm text-slate-500">
           Perbaiki inkonsistensi penulisan nilai di kolom Pekerjaan dan Hubungan Keluarga agar sesuai dengan standar sistem.
         </p>
       {confirm ? (
         <div className="flex items-center gap-2.5">
-          <span className="text-xs text-slate-400">Yakin menjalankan normalisasi?</span>
+          <span className="text-sm text-slate-400">Yakin menjalankan normalisasi?</span>
           <Button
             size="sm"
             className="bg-amber-600 hover:bg-amber-700"
@@ -263,7 +263,7 @@ function UserManagement({ currentUid }: { currentUid: string }) {
         <Users className="w-4 h-4 text-sky-400 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-slate-100 text-sm">Manajemen Pengguna</p>
-          <p className="text-xs text-slate-500 mt-0.5">Tambah atau ubah via Firebase Console</p>
+          <p className="text-sm text-slate-500 mt-0.5">Tambah atau ubah via Firebase Console</p>
         </div>
         <ChevronDown
           size={15}
@@ -370,7 +370,7 @@ function WilayahForm() {
         <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-slate-100 text-sm">Informasi Wilayah</p>
-          <p className="text-xs text-slate-500 mt-0.5">Nama desa, kecamatan, kabupaten, provinsi</p>
+          <p className="text-sm text-slate-500 mt-0.5">Nama desa, kecamatan, kabupaten, provinsi</p>
         </div>
         <ChevronDown
           size={15}

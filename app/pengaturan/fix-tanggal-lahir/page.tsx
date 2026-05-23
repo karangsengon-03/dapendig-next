@@ -183,7 +183,7 @@ export default function FixTanggalLahirPage() {
           </button>
           <div>
             <h1 className="text-base font-semibold text-slate-100">Fix Tanggal Lahir (Timezone Bug)</h1>
-            <p className="text-xs text-slate-500">Koreksi tanggal yang bergeser akibat konversi UTC</p>
+            <p className="text-sm text-slate-500">Koreksi tanggal yang bergeser akibat konversi UTC</p>
           </div>
         </div>
 
@@ -192,11 +192,11 @@ export default function FixTanggalLahirPage() {
           <Info size={16} className="text-amber-400 shrink-0 mt-0.5" />
           <div className="flex flex-col gap-1.5">
             <p className="text-sm font-medium text-amber-300">Apa yang dilakukan migrasi ini?</p>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-sm text-slate-400 leading-relaxed">
               Bug lama menyebabkan tanggal lahir bergeser <span className="text-rose-400 font-mono">-1 hari</span> setiap kali data disimpan
               (akibat konversi timezone WIB→UTC). Data yang disimpan berkali-kali bisa bergeser <span className="text-rose-400 font-mono">-2</span>, <span className="text-rose-400 font-mono">-3</span> hari, dst.
             </p>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-sm text-slate-400 leading-relaxed">
               Migrasi ini membaca tanggal lahir <span className="text-emerald-400 font-semibold">langsung dari NIK</span> sebagai sumber kebenaran,
               lalu membandingkan dengan yang tersimpan. Jika berbeda → diperbaiki. Jika sudah cocok (termasuk yang sudah kamu betulkan manual) → dilewati.
             </p>
@@ -211,7 +211,7 @@ export default function FixTanggalLahirPage() {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-semibold text-slate-200">Cara kerja</p>
-                <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 flex flex-col gap-2 text-xs text-slate-400">
+                <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 flex flex-col gap-2 text-sm text-slate-400">
                   <p>① Scan seluruh koleksi <span className="font-mono text-slate-300">penduduk</span></p>
                   <p>② Ekstrak tanggal lahir dari digit 7–12 NIK</p>
                   <p>③ Bandingkan dengan <span className="font-mono text-slate-300">tanggal_lahir</span> di Firestore</p>
@@ -239,7 +239,7 @@ export default function FixTanggalLahirPage() {
                 <div className="flex flex-col items-center gap-3 py-4">
                   <CheckCircle size={32} className="text-emerald-400" />
                   <p className="text-sm font-semibold text-emerald-400">Semua tanggal lahir sudah benar!</p>
-                  <p className="text-xs text-slate-500 text-center">Tidak ditemukan perbedaan antara tanggal di Firestore dengan NIK.</p>
+                  <p className="text-sm text-slate-500 text-center">Tidak ditemukan perbedaan antara tanggal di Firestore dengan NIK.</p>
                   <button onClick={() => router.push('/pengaturan')}
                     className="mt-1 px-4 py-2 rounded-xl bg-slate-700/60 border border-white/[0.08] text-sm text-slate-300 hover:bg-slate-700 transition-colors">
                     Kembali ke Pengaturan
@@ -251,7 +251,7 @@ export default function FixTanggalLahirPage() {
                     <p className="text-sm font-semibold text-slate-200">
                       Ditemukan <span className="text-rose-400">{previewData.length}</span> data bermasalah
                     </p>
-                    <p className="text-xs text-slate-500">Cek sebelum konfirmasi</p>
+                    <p className="text-sm text-slate-500">Cek sebelum konfirmasi</p>
                   </div>
 
                   {/* Tabel preview */}
@@ -324,15 +324,15 @@ export default function FixTanggalLahirPage() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 flex flex-col gap-0.5">
                   <p className="text-lg font-bold text-emerald-400 tabular-nums">{result.diperbaiki}</p>
-                  <p className="text-xs text-slate-400">diperbaiki</p>
+                  <p className="text-sm text-slate-400">diperbaiki</p>
                 </div>
                 <div className="rounded-xl bg-sky-500/10 border border-sky-500/20 p-3 flex flex-col gap-0.5">
                   <p className="text-lg font-bold text-sky-400 tabular-nums">{result.sudahBenar}</p>
-                  <p className="text-xs text-slate-400">sudah benar</p>
+                  <p className="text-sm text-slate-400">sudah benar</p>
                 </div>
                 <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 flex flex-col gap-0.5">
                   <p className="text-lg font-bold text-slate-400 tabular-nums">{result.tidakBisaDeteksi}</p>
-                  <p className="text-xs text-slate-400">NIK tidak valid</p>
+                  <p className="text-sm text-slate-400">NIK tidak valid</p>
                 </div>
               </div>
 
@@ -373,7 +373,7 @@ export default function FixTanggalLahirPage() {
                 <AlertCircle size={18} className="text-rose-400 shrink-0" />
                 <p className="text-sm font-medium text-rose-400">Terjadi kesalahan</p>
               </div>
-              <p className="text-xs text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2 font-mono">{errorMsg}</p>
+              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2 font-mono">{errorMsg}</p>
               <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">
                 Coba lagi
               </button>

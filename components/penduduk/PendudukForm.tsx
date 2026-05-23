@@ -49,7 +49,7 @@ interface FieldErrors {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+    <label className="text-sm font-semibold uppercase tracking-wider text-slate-500">
       {children}
     </label>
   )
@@ -84,7 +84,7 @@ function Input({
             : 'border-white/[0.08] focus:border-sky-500/50 focus:ring-sky-500/20'
         }`}
       />
-      {error && <p className="text-xs text-rose-400">{error}</p>}
+      {error && <p className="text-sm text-rose-400">{error}</p>}
     </div>
   )
 }
@@ -117,7 +117,7 @@ function Select({
           </option>
         ))}
       </select>
-      {error && <p className="text-xs text-rose-400">{error}</p>}
+      {error && <p className="text-sm text-rose-400">{error}</p>}
     </div>
   )
 }
@@ -184,7 +184,7 @@ export function PendudukForm({
     <div className="flex flex-col gap-6 pb-10">
       {/* Identitas */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400/80 border-b border-white/[0.06] pb-2">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-sky-400/80 border-b border-white/[0.06] pb-2">
           Identitas
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -248,7 +248,7 @@ export function PendudukForm({
 
       {/* Data Diri */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400/80 border-b border-white/[0.06] pb-2">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-sky-400/80 border-b border-white/[0.06] pb-2">
           Data Diri
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -315,7 +315,7 @@ export function PendudukForm({
 
       {/* Domisili */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400/80 border-b border-white/[0.06] pb-2">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-sky-400/80 border-b border-white/[0.06] pb-2">
           Domisili
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -349,7 +349,7 @@ export function PendudukForm({
 
       {/* Status */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400/80 border-b border-white/[0.06] pb-2">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-sky-400/80 border-b border-white/[0.06] pb-2">
           Status
         </h2>
         <div className="flex gap-3">

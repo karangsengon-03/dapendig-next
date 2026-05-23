@@ -105,8 +105,8 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
                 <p className="text-sm text-slate-200 group-hover:text-sky-400 transition-colors font-medium leading-snug">{p.nama_lengkap}</p>
                 <p className="text-xs text-slate-600 mt-0.5">{p.pekerjaan}</p>
               </td>
-              <td className="py-3 px-3 text-xs text-slate-400 tabular-nums">{p.nik}</td>
-              <td className="py-3 px-3 text-xs text-slate-400 tabular-nums">{p.no_kk}</td>
+              <td className="py-3 px-3 text-sm text-slate-400 tabular-nums">{p.nik}</td>
+              <td className="py-3 px-3 text-sm text-slate-400 tabular-nums">{p.no_kk}</td>
               <td className="py-3 px-3">
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
                   p.jenis_kelamin === 'Laki-laki'
@@ -116,9 +116,9 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
                   {p.jenis_kelamin === 'Laki-laki' ? 'L' : 'P'}
                 </span>
               </td>
-              <td className="py-3 px-3 text-xs text-slate-400">{hitungUmur(p.tanggal_lahir)}</td>
-              <td className="py-3 px-3 text-xs text-slate-400">{p.rt}/{p.rw}</td>
-              <td className="py-3 px-3 text-xs text-slate-400">{p.hubungan_keluarga}</td>
+              <td className="py-3 px-3 text-sm text-slate-400">{hitungUmur(p.tanggal_lahir)}</td>
+              <td className="py-3 px-3 text-sm text-slate-400">{p.rt}/{p.rw}</td>
+              <td className="py-3 px-3 text-sm text-slate-400">{p.hubungan_keluarga}</td>
             </tr>
           ))}
         </tbody>

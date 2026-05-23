@@ -138,7 +138,7 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
         <select
           value={filter.aksi}
           onChange={(e) => set({ aksi: e.target.value })}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
         >
           {AKSI_FILTER_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -149,7 +149,7 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
         <select
           value={filter.koleksi}
           onChange={(e) => set({ koleksi: e.target.value })}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
         >
           {KOLEKSI_FILTER_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -161,7 +161,7 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
           type="date"
           value={filter.dateFrom}
           onChange={(e) => set({ dateFrom: e.target.value })}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
         />
 
         {/* Tanggal sampai */}
@@ -169,7 +169,7 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
           type="date"
           value={filter.dateTo}
           onChange={(e) => set({ dateTo: e.target.value })}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
         />
 
         {/* Refresh */}
@@ -186,7 +186,7 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
         {hasFilter && (
           <button
             onClick={() => onChange({ search: '', aksi: '', koleksi: '', dateFrom: '', dateTo: '' })}
-            className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1"
+            className="text-sm text-sky-400 hover:text-sky-300 flex items-center gap-1"
           >
             <X size={12} /> Reset
           </button>
@@ -327,7 +327,7 @@ export default function LogPage() {
                         key={log.id}
                         className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="py-3 px-3 text-xs text-slate-600">
+                        <td className="py-3 px-3 text-sm text-slate-600">
                           {(page - 1) * PAGE_SIZE + idx + 1}
                         </td>
                         <td className="py-3 px-3">
@@ -336,7 +336,7 @@ export default function LogPage() {
                           </span>
                         </td>
                         <td className="py-3 px-3">
-                          <p className="text-xs text-slate-300 leading-snug">
+                          <p className="text-sm text-slate-300 leading-snug">
                             {log.keterangan || log.nama || '—'}
                           </p>
                           {log.nik_target && (
@@ -352,11 +352,11 @@ export default function LogPage() {
                             <span className="text-slate-700 text-xs">—</span>
                           )}
                         </td>
-                        <td className="py-3 px-3 text-xs text-slate-400 truncate max-w-[128px]" title={log.oleh}>
+                        <td className="py-3 px-3 text-sm text-slate-400 truncate max-w-[128px]" title={log.oleh}>
                           {log.oleh}
                         </td>
                         <td className="py-3 px-3">
-                          <p className="text-xs text-slate-400">{formatWaktu(log.ts)}</p>
+                          <p className="text-sm text-slate-400">{formatWaktu(log.ts)}</p>
                           <p className="text-xs text-slate-600 mt-0.5">{formatRelative(log.ts)}</p>
                         </td>
                       </tr>
@@ -375,14 +375,14 @@ export default function LogPage() {
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-sm text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
                     >
                       ← Sebelumnya
                     </button>
                     <button
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
-                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-sm text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
                     >
                       Selanjutnya →
                     </button>

@@ -119,7 +119,7 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
           {/* Info user */}
           <div className="px-4 py-3 border-b border-white/[0.06]">
             <p className="text-sm font-semibold text-slate-200 truncate">{user.nama || user.email}</p>
-            <p className="text-xs text-slate-500 capitalize mt-0.5">{user.role}</p>
+            <p className="text-sm text-slate-500 capitalize mt-0.5">{user.role}</p>
           </div>
           {/* Menu items */}
           <div className="py-1.5">

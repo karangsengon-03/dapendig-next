@@ -89,11 +89,11 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
 
         {/* Pilih Opsi */}
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-medium text-slate-400">Pilih jenis pindah</p>
+          <p className="text-sm font-medium text-slate-400">Pilih jenis pindah</p>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setOpsi('perorangan')}
-              className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-sm font-medium transition-colors ${
                 opsi === 'perorangan'
                   ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
                   : 'bg-white/[0.03] border-white/[0.08] text-slate-500 hover:text-slate-300'
@@ -101,13 +101,13 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
             >
               <User size={16} className="shrink-0" />
               <span>1 Orang</span>
-              <span className="text-xs font-normal text-slate-600 text-center leading-tight">
+              <span className="text-sm font-normal text-slate-600 text-center leading-tight">
                 Hanya yang bersangkutan
               </span>
             </button>
             <button
               onClick={() => setOpsi('keluarga')}
-              className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-sm font-medium transition-colors ${
                 opsi === 'keluarga'
                   ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
                   : 'bg-white/[0.03] border-white/[0.08] text-slate-500 hover:text-slate-300'
@@ -115,7 +115,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
             >
               <Users size={16} className="shrink-0" />
               <span>1 Keluarga</span>
-              <span className="text-xs font-normal text-slate-600 text-center leading-tight">
+              <span className="text-sm font-normal text-slate-600 text-center leading-tight">
                 Seluruh anggota KK aktif
               </span>
             </button>
@@ -124,19 +124,19 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
           {/* Info anggota KK jika opsi keluarga */}
           {opsi === 'keluarga' && (
             <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3 flex flex-col gap-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70">
+              <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70">
                 {anggotaKK.length} anggota KK aktif akan dicatat pindah
               </p>
               <div className="flex flex-col gap-0.5 mt-0.5">
                 {anggotaKK.map((p) => (
-                  <p key={p.id} className="text-xs text-slate-400">
+                  <p key={p.id} className="text-sm text-slate-400">
                     {p.nama_lengkap}
                     <span className="text-slate-600 ml-1">({p.hubungan_keluarga})</span>
                   </p>
                 ))}
               </div>
               {anggotaKK.length === 0 && (
-                <p className="text-xs text-slate-500">Tidak ada anggota aktif ditemukan dalam KK ini.</p>
+                <p className="text-sm text-slate-500">Tidak ada anggota aktif ditemukan dalam KK ini.</p>
               )}
             </div>
           )}
@@ -145,7 +145,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
         {/* Form */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Tujuan Pindah <span className="text-rose-400">*</span></label>
+            <label className="text-sm font-medium text-slate-400">Tujuan Pindah <span className="text-rose-400">*</span></label>
             <input
               type="text"
               value={tujuan}
@@ -156,7 +156,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Alasan <span className="text-slate-600">(opsional)</span></label>
+            <label className="text-sm font-medium text-slate-400">Alasan <span className="text-slate-600">(opsional)</span></label>
             <input
               type="text"
               value={alasan}
@@ -167,7 +167,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Tanggal <span className="text-rose-400">*</span></label>
+            <label className="text-sm font-medium text-slate-400">Tanggal <span className="text-rose-400">*</span></label>
             <input
               type="date"
               value={tanggal}
@@ -176,7 +176,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
             />
           </div>
 
-          {error && <p className="text-xs text-rose-400">{error}</p>}
+          {error && <p className="text-sm text-rose-400">{error}</p>}
         </div>
 
         {/* Actions */}

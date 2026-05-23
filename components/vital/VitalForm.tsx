@@ -102,17 +102,17 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
         <div>
           <Label>Nama Lengkap Bayi</Label>
           <Input value={form.nama_lengkap} onChange={(e) => set('nama_lengkap', e.target.value)} placeholder="Nama lengkap bayi" />
-          {errors.nama_lengkap && <p className="text-xs text-red-400 mt-1">{errors.nama_lengkap}</p>}
+          {errors.nama_lengkap && <p className="text-sm text-red-400 mt-1">{errors.nama_lengkap}</p>}
         </div>
         <div>
           <Label>NIK Bayi</Label>
           <Input value={form.nik} onChange={(e) => set('nik', e.target.value)} placeholder="16 digit" maxLength={16} />
-          {errors.nik && <p className="text-xs text-red-400 mt-1">{errors.nik}</p>}
+          {errors.nik && <p className="text-sm text-red-400 mt-1">{errors.nik}</p>}
         </div>
         <div>
           <Label>No. KK</Label>
           <Input value={form.no_kk} onChange={(e) => set('no_kk', e.target.value)} placeholder="16 digit" maxLength={16} />
-          {errors.no_kk && <p className="text-xs text-red-400 mt-1">{errors.no_kk}</p>}
+          {errors.no_kk && <p className="text-sm text-red-400 mt-1">{errors.no_kk}</p>}
         </div>
         <div>
           <Label>Jenis Kelamin</Label>
@@ -123,12 +123,12 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
         <div>
           <Label>Tempat Lahir</Label>
           <Input value={form.tempat_lahir} onChange={(e) => set('tempat_lahir', e.target.value)} placeholder="Kota/Kabupaten" />
-          {errors.tempat_lahir && <p className="text-xs text-red-400 mt-1">{errors.tempat_lahir}</p>}
+          {errors.tempat_lahir && <p className="text-sm text-red-400 mt-1">{errors.tempat_lahir}</p>}
         </div>
         <div>
           <Label>Tanggal Lahir</Label>
           <Input type="date" value={form.tanggal_lahir} onChange={(e) => set('tanggal_lahir', e.target.value)} />
-          {errors.tanggal_lahir && <p className="text-xs text-red-400 mt-1">{errors.tanggal_lahir}</p>}
+          {errors.tanggal_lahir && <p className="text-sm text-red-400 mt-1">{errors.tanggal_lahir}</p>}
         </div>
         <div>
           <Label>Agama</Label>
@@ -145,12 +145,12 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
         <div>
           <Label>Nama Ayah</Label>
           <Input value={form.nama_ayah} onChange={(e) => set('nama_ayah', e.target.value)} placeholder="Nama ayah kandung" />
-          {errors.nama_ayah && <p className="text-xs text-red-400 mt-1">{errors.nama_ayah}</p>}
+          {errors.nama_ayah && <p className="text-sm text-red-400 mt-1">{errors.nama_ayah}</p>}
         </div>
         <div>
           <Label>Nama Ibu</Label>
           <Input value={form.nama_ibu} onChange={(e) => set('nama_ibu', e.target.value)} placeholder="Nama ibu kandung" />
-          {errors.nama_ibu && <p className="text-xs text-red-400 mt-1">{errors.nama_ibu}</p>}
+          {errors.nama_ibu && <p className="text-sm text-red-400 mt-1">{errors.nama_ibu}</p>}
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
@@ -261,22 +261,22 @@ export function MeninggalForm({ onSuccess, onCancel }: MeninggalFormProps) {
         <div>
           <Label>Nama Lengkap</Label>
           <Input value={form.nama} onChange={(e) => set('nama', e.target.value)} placeholder="Nama penduduk" />
-          {errors.nama && <p className="text-xs text-red-400 mt-1">{errors.nama}</p>}
+          {errors.nama && <p className="text-sm text-red-400 mt-1">{errors.nama}</p>}
         </div>
         <div>
           <Label>NIK</Label>
           <Input value={form.nik_target} onChange={(e) => set('nik_target', e.target.value)} placeholder="16 digit" maxLength={16} />
-          {errors.nik_target && <p className="text-xs text-red-400 mt-1">{errors.nik_target}</p>}
+          {errors.nik_target && <p className="text-sm text-red-400 mt-1">{errors.nik_target}</p>}
         </div>
         <div>
           <Label>No. KK</Label>
           <Input value={form.no_kk} onChange={(e) => set('no_kk', e.target.value)} placeholder="16 digit" maxLength={16} />
-          {errors.no_kk && <p className="text-xs text-red-400 mt-1">{errors.no_kk}</p>}
+          {errors.no_kk && <p className="text-sm text-red-400 mt-1">{errors.no_kk}</p>}
         </div>
         <div>
           <Label>Tanggal Meninggal</Label>
           <Input type="date" value={form.tanggal} onChange={(e) => set('tanggal', e.target.value)} />
-          {errors.tanggal && <p className="text-xs text-red-400 mt-1">{errors.tanggal}</p>}
+          {errors.tanggal && <p className="text-sm text-red-400 mt-1">{errors.tanggal}</p>}
         </div>
         <div>
           <Label>Hubungan Keluarga</Label>
@@ -287,7 +287,7 @@ export function MeninggalForm({ onSuccess, onCancel }: MeninggalFormProps) {
         <div>
           <Label>Sebab Kematian</Label>
           <Input value={form.sebab} onChange={(e) => set('sebab', e.target.value)} placeholder="Sakit, Kecelakaan, dll" />
-          {errors.sebab && <p className="text-xs text-red-400 mt-1">{errors.sebab}</p>}
+          {errors.sebab && <p className="text-sm text-red-400 mt-1">{errors.sebab}</p>}
         </div>
       </div>
       <div className="flex gap-2 pt-1">

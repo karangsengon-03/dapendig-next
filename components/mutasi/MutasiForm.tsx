@@ -110,7 +110,7 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => setOpsi('perorangan')}
-          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-xs font-medium transition-colors ${
+          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
             opsi === 'perorangan'
               ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
               : 'bg-white/[0.03] border-white/[0.08] text-slate-500 hover:text-slate-300'
@@ -121,7 +121,7 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
         </button>
         <button
           onClick={() => setOpsi('keluarga')}
-          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-xs font-medium transition-colors ${
+          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
             opsi === 'keluarga'
               ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
               : 'bg-white/[0.03] border-white/[0.08] text-slate-500 hover:text-slate-300'
@@ -138,29 +138,29 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
             <div>
               <Label>Nama Lengkap</Label>
               <Input value={form.nama} onChange={(e) => set('nama', e.target.value)} placeholder="Nama penduduk" />
-              {errors.nama && <p className="text-xs text-red-400 mt-1">{errors.nama}</p>}
+              {errors.nama && <p className="text-sm text-red-400 mt-1">{errors.nama}</p>}
             </div>
             <div>
               <Label>NIK</Label>
               <Input value={form.nik_target} onChange={(e) => set('nik_target', e.target.value)} placeholder="16 digit" maxLength={16} />
-              {errors.nik_target && <p className="text-xs text-red-400 mt-1">{errors.nik_target}</p>}
+              {errors.nik_target && <p className="text-sm text-red-400 mt-1">{errors.nik_target}</p>}
             </div>
           </>
         )}
         <div>
           <Label>No. KK</Label>
           <Input value={form.no_kk} onChange={(e) => set('no_kk', e.target.value)} placeholder="16 digit" maxLength={16} />
-          {errors.no_kk && <p className="text-xs text-red-400 mt-1">{errors.no_kk}</p>}
+          {errors.no_kk && <p className="text-sm text-red-400 mt-1">{errors.no_kk}</p>}
         </div>
         <div>
           <Label>Tanggal Pindah</Label>
           <Input type="date" value={form.tanggal} onChange={(e) => set('tanggal', e.target.value)} />
-          {errors.tanggal && <p className="text-xs text-red-400 mt-1">{errors.tanggal}</p>}
+          {errors.tanggal && <p className="text-sm text-red-400 mt-1">{errors.tanggal}</p>}
         </div>
         <div>
           <Label>Tujuan Pindah</Label>
           <Input value={form.tujuan} onChange={(e) => set('tujuan', e.target.value)} placeholder="Kota/Desa tujuan" />
-          {errors.tujuan && <p className="text-xs text-red-400 mt-1">{errors.tujuan}</p>}
+          {errors.tujuan && <p className="text-sm text-red-400 mt-1">{errors.tujuan}</p>}
         </div>
         <div>
           <Label>Alasan Pindah</Label>
@@ -171,20 +171,20 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
       {/* Preview anggota KK (opsi keluarga) */}
       {opsi === 'keluarga' && form.no_kk.length === 16 && (
         <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70 mb-1">
+          <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70 mb-1">
             {anggotaKK.length} anggota KK aktif akan dicatat pindah
           </p>
           {anggotaKK.length > 0 ? (
             <div className="flex flex-col gap-0.5">
               {anggotaKK.map((p) => (
-                <p key={p.id} className="text-xs text-slate-400">
+                <p key={p.id} className="text-sm text-slate-400">
                   {p.nama_lengkap}
                   <span className="text-slate-600 ml-1">({p.hubungan_keluarga})</span>
                 </p>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-500">Tidak ada anggota aktif untuk No. KK ini.</p>
+            <p className="text-sm text-slate-500">Tidak ada anggota aktif untuk No. KK ini.</p>
           )}
         </div>
       )}
@@ -312,27 +312,27 @@ function AnggotaFields({
       <div>
         <Label>Nama Lengkap</Label>
         <Input value={form.nama_lengkap} onChange={(e) => onChange('nama_lengkap', e.target.value)} placeholder="Nama lengkap" />
-        {errors.nama_lengkap && <p className="text-xs text-red-400 mt-1">{errors.nama_lengkap}</p>}
+        {errors.nama_lengkap && <p className="text-sm text-red-400 mt-1">{errors.nama_lengkap}</p>}
       </div>
       <div>
         <Label>NIK</Label>
         <Input value={form.nik} onChange={(e) => onChange('nik', e.target.value)} placeholder="16 digit" maxLength={16} />
-        {errors.nik && <p className="text-xs text-red-400 mt-1">{errors.nik}</p>}
+        {errors.nik && <p className="text-sm text-red-400 mt-1">{errors.nik}</p>}
       </div>
       <div>
         <Label>No. KK</Label>
         <Input value={form.no_kk} onChange={(e) => onChange('no_kk', e.target.value)} placeholder="16 digit" maxLength={16} />
-        {errors.no_kk && <p className="text-xs text-red-400 mt-1">{errors.no_kk}</p>}
+        {errors.no_kk && <p className="text-sm text-red-400 mt-1">{errors.no_kk}</p>}
       </div>
       <div>
         <Label>Asal Daerah</Label>
         <Input value={form.asal_daerah} onChange={(e) => onChange('asal_daerah', e.target.value)} placeholder="Kota/Desa asal" />
-        {errors.asal_daerah && <p className="text-xs text-red-400 mt-1">{errors.asal_daerah}</p>}
+        {errors.asal_daerah && <p className="text-sm text-red-400 mt-1">{errors.asal_daerah}</p>}
       </div>
       <div>
         <Label>Tanggal Masuk</Label>
         <Input type="date" value={form.tanggal} onChange={(e) => onChange('tanggal', e.target.value)} />
-        {errors.tanggal && <p className="text-xs text-red-400 mt-1">{errors.tanggal}</p>}
+        {errors.tanggal && <p className="text-sm text-red-400 mt-1">{errors.tanggal}</p>}
       </div>
       <div>
         <Label>Jenis Kelamin</Label>
@@ -343,12 +343,12 @@ function AnggotaFields({
       <div>
         <Label>Tempat Lahir</Label>
         <Input value={form.tempat_lahir} onChange={(e) => onChange('tempat_lahir', e.target.value)} placeholder="Kota/Kabupaten" />
-        {errors.tempat_lahir && <p className="text-xs text-red-400 mt-1">{errors.tempat_lahir}</p>}
+        {errors.tempat_lahir && <p className="text-sm text-red-400 mt-1">{errors.tempat_lahir}</p>}
       </div>
       <div>
         <Label>Tanggal Lahir</Label>
         <Input type="date" value={form.tanggal_lahir} onChange={(e) => onChange('tanggal_lahir', e.target.value)} />
-        {errors.tanggal_lahir && <p className="text-xs text-red-400 mt-1">{errors.tanggal_lahir}</p>}
+        {errors.tanggal_lahir && <p className="text-sm text-red-400 mt-1">{errors.tanggal_lahir}</p>}
       </div>
       <div>
         <Label>Agama</Label>
@@ -487,7 +487,7 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => handleGantiOpsi('perorangan')}
-          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-xs font-medium transition-colors ${
+          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
             opsi === 'perorangan'
               ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
               : 'bg-white/[0.03] border-white/[0.08] text-slate-500 hover:text-slate-300'
@@ -498,7 +498,7 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
         </button>
         <button
           onClick={() => handleGantiOpsi('keluarga')}
-          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-xs font-medium transition-colors ${
+          className={`flex items-center gap-2 py-2 px-3 rounded-xl border text-sm font-medium transition-colors ${
             opsi === 'keluarga'
               ? 'bg-sky-500/15 border-sky-500/40 text-sky-400'
               : 'bg-white/[0.03] border-white/[0.08] text-slate-500 hover:text-slate-300'
@@ -512,13 +512,13 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
       {/* Daftar anggota yang sudah ditambahkan (opsi keluarga) */}
       {opsi === 'keluarga' && daftarAnggota.length > 0 && (
         <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-sky-400/70 mb-2">
+          <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70 mb-2">
             {daftarAnggota.length} anggota siap disimpan
           </p>
           <div className="flex flex-col gap-1">
             {daftarAnggota.map((a, i) => (
               <div key={i} className="flex items-center justify-between gap-2">
-                <p className="text-xs text-slate-300 flex-1 truncate">
+                <p className="text-sm text-slate-300 flex-1 truncate">
                   {a.nama_lengkap}
                   <span className="text-slate-600 ml-1">({a.hubungan_keluarga})</span>
                 </p>
@@ -536,14 +536,14 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
 
       {/* Form anggota */}
       {opsi === 'keluarga' && (
-        <p className="text-xs text-slate-500">
+        <p className="text-sm text-slate-500">
           Isi data setiap anggota, klik &ldquo;Tambah Anggota&rdquo;, lalu klik &ldquo;Simpan Semua&rdquo; jika sudah selesai.
         </p>
       )}
 
       <AnggotaFields form={form} errors={errors} onChange={handleChange} />
 
-      {errors._global && <p className="text-xs text-red-400">{errors._global}</p>}
+      {errors._global && <p className="text-sm text-red-400">{errors._global}</p>}
 
       <div className="flex gap-2 pt-1">
         {opsi === 'perorangan' ? (
