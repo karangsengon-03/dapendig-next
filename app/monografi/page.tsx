@@ -20,9 +20,9 @@ function StatCard({ label, value, sub, color = 'sky' }: {
 
   return (
     <div className={`rounded-xl border-l-4 ${colors.border} bg-[#0d1424] border border-white/[0.06] p-4`}>
-      <p className="text-xs text-slate-500 mb-1">{label}</p>
+      <p className="text-sm text-slate-500 mb-1">{label}</p>
       <p className={`text-3xl font-bold ${colors.text}`}>{value}</p>
-      {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+      {sub && <p className="text-sm text-slate-500 mt-1">{sub}</p>}
     </div>
   )
 }
@@ -34,25 +34,29 @@ function BarRow({ label, value, total, color = 'bg-sky-500', onClick }: {
   return (
     <div
       className={[
-        'flex items-center gap-2 text-sm rounded-lg px-2 py-1 -mx-2 transition-colors',
-        onClick ? 'cursor-pointer hover:bg-white/[0.04] active:bg-white/[0.07]' : '',
+        'flex items-center gap-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors group',
+        onClick ? 'cursor-pointer hover:bg-white/[0.05] active:bg-white/[0.08]' : '',
       ].join(' ')}
       onClick={onClick}
       title={onClick ? `Klik untuk lihat ${value} penduduk` : undefined}
     >
       <span className={[
-        'w-36 truncate text-xs shrink-0',
-        onClick ? 'text-slate-300 group-hover:text-sky-400' : 'text-slate-500',
+        'w-36 truncate text-sm shrink-0',
+        onClick ? 'text-slate-200 group-hover:text-sky-400 transition-colors' : 'text-slate-400',
       ].join(' ')}>{label}</span>
-      <div className="flex-1 bg-[#0d1424] rounded-full h-1.5">
-        <div className={`${color} h-1.5 rounded-full transition-all`} style={{ width: `${pct}%` }} />
+      <div className="flex-1 bg-[#0d1424] rounded-full h-2">
+        <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
       <span className={[
-        'w-20 text-right text-xs shrink-0 tabular-nums',
-        onClick ? 'text-slate-400' : 'text-slate-600',
+        'w-24 text-right text-sm shrink-0 tabular-nums flex items-center justify-end gap-1',
+        onClick ? 'text-slate-300' : 'text-slate-500',
       ].join(' ')}>
-        {value} <span className="text-slate-600">({pct}%)</span>
-        {onClick && <span className="ml-1 text-sky-500/60 text-[10px]">→</span>}
+        <span>{value} <span className="text-slate-500 text-xs">({pct}%)</span></span>
+        {onClick && (
+          <span className="text-sky-400 text-xs font-semibold bg-sky-500/10 border border-sky-500/20 rounded px-1 py-0.5 leading-none group-hover:bg-sky-500/20 transition-colors">
+            →
+          </span>
+        )}
       </span>
     </div>
   )
@@ -63,7 +67,7 @@ function PiramidaUmur({ data }: { data: { kelompok: string; laki: number; peremp
   return (
     <div className="bg-[#0d1424] rounded-xl p-4 border border-white/[0.06]">
       <h3 className="font-semibold text-slate-200 mb-4">Piramida Umur</h3>
-      <div className="flex justify-center gap-6 mb-3 text-xs text-slate-400">
+      <div className="flex justify-center gap-6 mb-3 text-sm text-slate-400">
         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-sky-500 inline-block" />Laki-laki</span>
         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-rose-400 inline-block" />Perempuan</span>
       </div>
@@ -72,7 +76,7 @@ function PiramidaUmur({ data }: { data: { kelompok: string; laki: number; peremp
           const lakiPct = (row.laki / maxVal) * 100
           const perPct = (row.perempuan / maxVal) * 100
           return (
-            <div key={row.kelompok} className="flex items-center gap-1 text-xs">
+            <div key={row.kelompok} className="flex items-center gap-1 text-sm">
               <div className="flex-1 flex justify-end">
                 <div className="bg-sky-500 h-5 rounded-l flex items-center justify-end pr-1 text-white text-[10px]"
                   style={{ width: `${lakiPct}%`, minWidth: row.laki > 0 ? '16px' : '0' }}>
@@ -110,9 +114,9 @@ function KlasifikasiUmur({ byKlasifikasi }: { byKlasifikasi: Record<string, numb
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
         {KLASIFIKASI_UMUR.map((k) => (
           <div key={k.label} className={`rounded-xl ${k.bg} border ${k.border} p-3 flex flex-col gap-1`}>
-            <span className="text-[10px] text-slate-500">{k.label}</span>
+            <span className="text-xs text-slate-400 font-medium">{k.label}</span>
             <span className={`text-2xl font-bold ${k.color}`}>{byKlasifikasi[k.label] ?? 0}</span>
-            <span className="text-xs text-slate-600">
+            <span className="text-sm text-slate-500">
               {k.min === 0 ? `0–${k.max} th` : k.max === 999 ? `${k.min}+ th` : `${k.min}–${k.max} th`}
             </span>
           </div>
@@ -131,8 +135,8 @@ function Card({ title, children, total, totalLabel = 'total data' }: {
       {children}
       {total !== undefined && (
         <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between">
-          <span className="text-xs text-slate-600 uppercase tracking-wider">Total tercatat</span>
-          <span className="text-xs font-semibold text-slate-400 tabular-nums">{total} {totalLabel}</span>
+          <span className="text-sm text-slate-500 uppercase tracking-wider">Total tercatat</span>
+          <span className="text-sm font-semibold text-slate-400 tabular-nums">{total} {totalLabel}</span>
         </div>
       )}
     </div>
@@ -219,7 +223,7 @@ function PengaturanPiramidaModal({
             </div>
             <div>
               <p className="font-semibold text-slate-100 text-sm">Rentang Umur Piramida</p>
-              <p className="text-xs text-slate-500 mt-0.5">Atur kelompok umur sesuai kebutuhan</p>
+              <p className="text-sm text-slate-500 mt-0.5">Atur kelompok umur sesuai kebutuhan</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5">
@@ -230,7 +234,7 @@ function PengaturanPiramidaModal({
         {/* Daftar kelompok yang sudah ada */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-400">{rows.length} Kelompok Umur</p>
+            <p className="text-sm font-medium text-slate-400">{rows.length} Kelompok Umur</p>
             <button
               onClick={handleReset}
               className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
@@ -239,7 +243,7 @@ function PengaturanPiramidaModal({
             </button>
           </div>
           {rows.length === 0 ? (
-            <p className="text-xs text-slate-500 text-center py-4">Belum ada kelompok. Tambah di bawah.</p>
+            <p className="text-sm text-slate-500 text-center py-4">Belum ada kelompok. Tambah di bawah.</p>
           ) : (
             <div className="flex flex-col gap-1 max-h-52 overflow-y-auto">
               {[...rows].sort((a, b) => a.min - b.min).map((row, i) => (
@@ -259,11 +263,11 @@ function PengaturanPiramidaModal({
 
         {/* Tambah kelompok baru */}
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-medium text-slate-400">Tambah Kelompok Baru</p>
+          <p className="text-sm font-medium text-slate-400">Tambah Kelompok Baru</p>
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <div className="flex-1 flex flex-col gap-1">
-                <label className="text-xs text-slate-600">Umur Min</label>
+                <label className="text-sm text-slate-500">Umur Min</label>
                 <input
                   type="number"
                   min={0}
@@ -276,7 +280,7 @@ function PengaturanPiramidaModal({
               </div>
               <span className="text-slate-600 pt-5">—</span>
               <div className="flex-1 flex flex-col gap-1">
-                <label className="text-xs text-slate-600">Umur Maks (+ = tak terbatas)</label>
+                <label className="text-sm text-slate-500">Umur Maks (+ = tak terbatas)</label>
                 <input
                   type="text"
                   value={newMax}
@@ -380,7 +384,7 @@ export default function MonografiPage() {
               </div>
             </div>
             <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
-              <span className="text-xs text-slate-600 uppercase tracking-wider">Total tercatat dalam piramida</span>
+              <span className="text-sm text-slate-500 uppercase tracking-wider">Total tercatat dalam piramida</span>
               <span className="text-xs font-semibold text-slate-400 tabular-nums">
                 {data.piramidaUmur.reduce((s,r)=>s+r.laki+r.perempuan,0)} jiwa
               </span>
@@ -388,7 +392,7 @@ export default function MonografiPage() {
 
             <KlasifikasiUmur byKlasifikasi={data.byKlasifikasiUmur} />
             <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
-              <span className="text-xs text-slate-600 uppercase tracking-wider">Total tercatat dalam klasifikasi</span>
+              <span className="text-sm text-slate-500 uppercase tracking-wider">Total tercatat dalam klasifikasi</span>
               <span className="text-xs font-semibold text-slate-400 tabular-nums">
                 {Object.values(data.byKlasifikasiUmur).reduce((a,b)=>a+b,0)} jiwa
               </span>
@@ -397,7 +401,7 @@ export default function MonografiPage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <Card title="Agama" total={Object.values(data.byAgama).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-                <p className="text-xs text-slate-600 mb-2">Klik untuk lihat penduduk</p>
+                <p className="text-sm text-slate-500 mb-2">Klik untuk lihat penduduk ↗</p>
                 <div className="space-y-1">
                   {(Object.entries(data.byAgama) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([agama, n]) => (
                     <BarRow key={agama} label={agama} value={n} total={data.totalAktif} color="bg-emerald-500"
@@ -406,7 +410,7 @@ export default function MonografiPage() {
                 </div>
               </Card>
               <Card title="Status Perkawinan" total={Object.values(data.byStatusPerkawinan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-                <p className="text-xs text-slate-600 mb-2">Klik untuk lihat penduduk</p>
+                <p className="text-sm text-slate-500 mb-2">Klik untuk lihat penduduk ↗</p>
                 <div className="space-y-1">
                   {(Object.entries(data.byStatusPerkawinan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([status, n]) => (
                     <BarRow key={status} label={status} value={n} total={data.totalAktif} color="bg-amber-500"
@@ -417,7 +421,7 @@ export default function MonografiPage() {
             </div>
 
             <Card title="Tingkat Pendidikan" total={Object.values(data.byPendidikan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-              <p className="text-xs text-slate-600 mb-2">Klik untuk lihat penduduk</p>
+              <p className="text-sm text-slate-500 mb-2">Klik untuk lihat penduduk ↗</p>
               <div className="space-y-1">
                 {(Object.entries(data.byPendidikan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pend, n]) => (
                   <BarRow key={pend} label={pend} value={n} total={data.totalAktif} color="bg-sky-500"
@@ -427,7 +431,7 @@ export default function MonografiPage() {
             </Card>
 
             <Card title="Pekerjaan" total={Object.values(data.byPekerjaan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-              <p className="text-xs text-slate-600 mb-2">Klik untuk lihat penduduk</p>
+              <p className="text-sm text-slate-500 mb-2">Klik untuk lihat penduduk ↗</p>
               <div className="space-y-1">
                 {(Object.entries(data.byPekerjaan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pek, n]) => (
                   <BarRow key={pek} label={pek} value={n} total={data.totalAktif} color="bg-rose-400"

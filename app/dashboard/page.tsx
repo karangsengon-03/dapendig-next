@@ -66,7 +66,9 @@ export default function DashboardPage() {
           <Home size={18} className="text-sky-400 shrink-0" />
           <h1 className="text-base font-semibold text-slate-100">Beranda</h1>
         </div>
-        <WilayahBadge />
+        <div className="flex justify-center">
+          <WilayahBadge />
+        </div>
 
         {/* Total stats */}
         <div className="grid grid-cols-2 gap-3">

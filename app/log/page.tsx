@@ -185,7 +185,10 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
         {/* Reset */}
         {hasFilter && (
           <button
-            onClick={() => onChange({ search: '', aksi: '', koleksi: '', dateFrom: '', dateTo: '' })}
+            onClick={() => {
+              const today = new Date().toISOString().split('T')[0]
+              onChange({ search: '', aksi: '', koleksi: '', dateFrom: today, dateTo: today })
+            }}
             className="text-sm text-sky-400 hover:text-sky-300 flex items-center gap-1"
           >
             <X size={12} /> Reset
@@ -208,12 +211,15 @@ const PAGE_SIZE = 50
 export default function LogPage() {
   const { data: allLogs = [], isLoading, refetch, isFetching } = useLogList()
 
+  // Tanggal hari ini dalam format YYYY-MM-DD untuk default filter
+  const todayStr = new Date().toISOString().split('T')[0]
+
   const [filter, setFilter] = useState<LogFilterState>({
     search: '',
     aksi: '',
     koleksi: '',
-    dateFrom: '',
-    dateTo: '',
+    dateFrom: todayStr,
+    dateTo: todayStr,
   })
   const [page, setPage] = useState(1)
 

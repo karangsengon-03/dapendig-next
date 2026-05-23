@@ -7,9 +7,9 @@ export function WilayahBadge() {
   const { wilayah } = useAppStore()
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06] w-fit">
-      <MapPin size={12} className="text-sky-400 flex-shrink-0" />
-      <p className="text-xs text-slate-400">
+    <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06] w-fit mx-auto">
+      <MapPin size={13} className="text-sky-400 flex-shrink-0" />
+      <p className="text-sm text-slate-400 text-center">
         Desa {wilayah.desa},{' '}
         Kec. {wilayah.kecamatan},{' '}
         Kab. {wilayah.kabupaten}

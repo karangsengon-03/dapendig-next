@@ -117,6 +117,26 @@ function PendudukContent() {
   const agamaOptions = useMemo(() => ([...new Set((baseData.map(r => r.agama) as string[]).filter(Boolean))]).sort(), [baseData])
   const pekerjaanOptions = useMemo(() => ([...new Set((baseData.map(r => r.pekerjaan) as string[]).filter(Boolean))]).sort(), [baseData])
 
+  // Total untuk counter — hanya data yang statusnya sesuai filter aktif (bukan semua allData)
+  const totalForCounter = useMemo(() => {
+    if (!filter.status) return allData.length
+    return allData.filter(r => r.status === filter.status).length
+  }, [allData, filter.status])
+
+  // Urutan hubungan keluarga yang benar untuk sorting dalam 1 KK
+  const HUB_ORDER: Record<string, number> = {
+    'Kepala Keluarga': 0,
+    'Istri': 1,
+    'Anak': 2,
+    'Menantu': 3,
+    'Cucu': 4,
+    'Orang Tua': 5,
+    'Mertua': 6,
+    'Famili Lain': 7,
+    'Pembantu': 8,
+    'Lainnya': 9,
+  }
+
   const filtered = useMemo(() => {
     let rows = [...allData]
     if (filter.status) rows = rows.filter((r) => r.status === filter.status)
@@ -138,11 +158,18 @@ function PendudukContent() {
     }
     if (filter.sortBy === 'rt_kk') {
       rows.sort((a, b) => {
+        // 1) RT numerik
         const rtCmp = (Number(a.rt) || 0) - (Number(b.rt) || 0)
         if (rtCmp !== 0) return rtCmp
+        // 2) No. KK
         const kkCmp = (a.no_kk ?? '').localeCompare(b.no_kk ?? '')
         if (kkCmp !== 0) return kkCmp
-        return (a.nama_lengkap ?? '').localeCompare(b.nama_lengkap ?? '')
+        // 3) Urutan hubungan keluarga: KK → Istri → Anak → dst
+        const hubA = HUB_ORDER[a.hubungan_keluarga ?? ''] ?? 99
+        const hubB = HUB_ORDER[b.hubungan_keluarga ?? ''] ?? 99
+        if (hubA !== hubB) return hubA - hubB
+        // 4) Nama alfabet sebagai tiebreaker
+        return (a.nama_lengkap ?? '').localeCompare(b.nama_lengkap ?? '', 'id')
       })
     } else {
       rows.sort((a, b) => {
@@ -173,7 +200,7 @@ function PendudukContent() {
       <PendudukFilter
         filter={filter}
         onChange={handleFilter}
-        total={allData.length}
+        total={totalForCounter}
         filtered={filtered.length}
         agamaOptions={agamaOptions}
         pekerjaanOptions={pekerjaanOptions}
