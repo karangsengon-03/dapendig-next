@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
-import { useAuthListener } from '@/hooks/useAuth'
 import { useWilayah } from '@/hooks/useWilayah'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
@@ -51,7 +50,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 export function AppShell({ children, title, fullHeight }: AppShellProps) {
-  useAuthListener()
+  // useAuthListener TIDAK dipanggil di sini — sudah dipanggil di root AuthProvider (app/layout.tsx)
+  // Memanggil dua kali menyebabkan dua subscriber onAuthStateChanged yang race condition
   useWilayah()
 
   return (

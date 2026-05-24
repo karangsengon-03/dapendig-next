@@ -8,7 +8,9 @@ import { Eye, EyeOff, LogIn, Loader2, UserCircle2, RefreshCw } from 'lucide-reac
 import { auth } from '@/lib/firebase'
 import { APP_VERSION } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { useAuthListener } from '@/hooks/useAuth'
+// TIDAK memanggil useAuthListener di sini — sudah dipanggil di AppShell.
+// Memanggil dua kali menyebabkan race condition: dua subscriber onAuthStateChanged
+// berlomba set loading/user, mengakibatkan flash form login sebelum redirect.
 
 const KEY_EMAIL = 'dapendig_email'
 const KEY_PASS  = 'dapendig_pass'
@@ -16,7 +18,6 @@ const KEY_PASS  = 'dapendig_pass'
 type Mode = 'lanjut' | 'ganti' | 'baru'
 
 export function LoginForm() {
-  useAuthListener()
   const router = useRouter()
   const { user, loading: authLoading } = useAuthStore()
   const [mode, setMode]         = useState<Mode>('baru')
@@ -34,7 +35,7 @@ export function LoginForm() {
       setTimeout(() => {
         setSaved(e)
         setEmail(e)
-        setPassword(p)   // isi password dari simpanan — tidak perlu ketik ulang
+        setPassword(p)
         setMode('lanjut')
       }, 0)
     }
@@ -99,8 +100,9 @@ export function LoginForm() {
 
   const isLanjut = mode === 'lanjut'
 
-  // Saat Firebase masih memeriksa sesi — tampilkan loading screen agar tidak ada flash
-  if (authLoading) {
+  // Saat Firebase masih memeriksa sesi ATAU user sudah terdeteksi login:
+  // jangan render form login sama sekali — cegah flash sebelum redirect ke dashboard
+  if (authLoading || user) {
     return (
       <div className="min-h-screen bg-[#050810] flex flex-col items-center justify-center gap-4">
         <div

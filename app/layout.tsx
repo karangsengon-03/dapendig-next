@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { QueryProvider } from '@/providers/QueryProvider'
 import { ToastProvider } from '@/components/ui/toast'
+import { AuthProvider } from '@/components/shared/AuthProvider'
 
 export const metadata: Metadata = {
   title: 'DaPenDig Next',
@@ -33,7 +34,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <QueryProvider>
           <ToastProvider>
-            {children}
+            {/* AuthProvider harus paling luar agar listener onAuthStateChanged
+                aktif di semua halaman sejak pertama app dibuka */}
+            <AuthProvider>
+              {children}
+            </AuthProvider>
           </ToastProvider>
         </QueryProvider>
       </body>
