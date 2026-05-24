@@ -76,17 +76,26 @@ function PiramidaUmur({ data }: { data: { kelompok: string; laki: number; peremp
           const lakiPct = (row.laki / maxVal) * 100
           const perPct = (row.perempuan / maxVal) * 100
           return (
-            <div key={row.kelompok} className="flex items-center gap-1 text-sm">
+            <div key={row.kelompok} className="flex items-center gap-1">
+              {/* Bar kiri — laki */}
               <div className="flex-1 flex justify-end">
-                <div className="bg-sky-500 h-5 rounded-l flex items-center justify-end pr-1 text-white text-[10px]"
-                  style={{ width: `${lakiPct}%`, minWidth: row.laki > 0 ? '16px' : '0' }}>
+                <div
+                  className="bg-sky-500 h-7 rounded-l flex items-center justify-end pr-1.5 text-white text-sm font-medium tabular-nums shrink-0"
+                  style={{ width: `${lakiPct}%`, minWidth: row.laki > 0 ? '24px' : '0' }}
+                >
                   {row.laki > 0 ? row.laki : ''}
                 </div>
               </div>
-              <div className="w-10 text-center text-slate-500 shrink-0">{row.kelompok}</div>
+              {/* Label kelompok umur — lebar tetap, no-wrap */}
+              <div className="w-14 text-center text-sm text-slate-400 shrink-0 whitespace-nowrap font-mono leading-none">
+                {row.kelompok}
+              </div>
+              {/* Bar kanan — perempuan */}
               <div className="flex-1 flex justify-start">
-                <div className="bg-rose-400 h-5 rounded-r flex items-center justify-start pl-1 text-white text-[10px]"
-                  style={{ width: `${perPct}%`, minWidth: row.perempuan > 0 ? '16px' : '0' }}>
+                <div
+                  className="bg-rose-400 h-7 rounded-r flex items-center justify-start pl-1.5 text-white text-sm font-medium tabular-nums shrink-0"
+                  style={{ width: `${perPct}%`, minWidth: row.perempuan > 0 ? '24px' : '0' }}
+                >
                   {row.perempuan > 0 ? row.perempuan : ''}
                 </div>
               </div>

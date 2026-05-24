@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ClipboardList, Search, X, SlidersHorizontal, RefreshCw } from 'lucide-react'
+import { ClipboardList, Search, X, RefreshCw } from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
 import { AppShell } from '@/components/layout/AppShell'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -109,11 +109,17 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
     onChange({ ...filter, ...patch })
   }
 
-  const hasFilter = filter.search || filter.aksi || filter.koleksi || filter.dateFrom || filter.dateTo
+  const hasActiveFilter = filter.search || filter.aksi || filter.koleksi
+
+  function handleReset() {
+    const today = new Date().toISOString().split('T')[0]
+    onChange({ search: '', aksi: '', koleksi: '', dateFrom: today, dateTo: today })
+    onRefresh()
+  }
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Search */}
+    <div className="flex flex-col gap-2.5">
+      {/* Baris 1: Search */}
       <div className="relative">
         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
         <input
@@ -130,73 +136,66 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
         )}
       </div>
 
-      {/* Filter row */}
-      <div className="flex items-center gap-2.5 flex-wrap">
-        <SlidersHorizontal size={13} className="text-slate-500 flex-shrink-0" />
-
-        {/* Aksi */}
+      {/* Baris 2: Aksi + Koleksi + Reset/Count */}
+      <div className="flex items-center gap-2">
         <select
           value={filter.aksi}
           onChange={(e) => set({ aksi: e.target.value })}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
         >
           {AKSI_FILTER_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
 
-        {/* Koleksi */}
         <select
           value={filter.koleksi}
           onChange={(e) => set({ koleksi: e.target.value })}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
         >
           {KOLEKSI_FILTER_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
 
-        {/* Tanggal dari */}
-        <input
-          type="date"
-          value={filter.dateFrom}
-          onChange={(e) => set({ dateFrom: e.target.value })}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
-        />
-
-        {/* Tanggal sampai */}
-        <input
-          type="date"
-          value={filter.dateTo}
-          onChange={(e) => set({ dateTo: e.target.value })}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
-        />
-
-        {/* Refresh */}
+        {/* Refresh & Reset gabung — icon saja saat tidak ada filter aktif, tambah teks Reset saat ada */}
         <button
-          onClick={onRefresh}
+          onClick={handleReset}
           disabled={isRefreshing}
-          title="Muat ulang"
-          className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-slate-300 disabled:opacity-40 transition-colors"
+          title={hasActiveFilter ? 'Reset filter & muat ulang' : 'Muat ulang'}
+          className={[
+            'flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm transition-colors disabled:opacity-40 shrink-0',
+            hasActiveFilter
+              ? 'bg-sky-500/10 border-sky-500/20 text-sky-400 hover:bg-sky-500/20'
+              : 'bg-white/[0.04] border-white/[0.06] text-slate-400 hover:text-slate-200',
+          ].join(' ')}
         >
           <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
+          {hasActiveFilter && <span>Reset</span>}
         </button>
+      </div>
 
-        {/* Reset */}
-        {hasFilter && (
-          <button
-            onClick={() => {
-              const today = new Date().toISOString().split('T')[0]
-              onChange({ search: '', aksi: '', koleksi: '', dateFrom: today, dateTo: today })
-            }}
-            className="text-sm text-sky-400 hover:text-sky-300 flex items-center gap-1"
-          >
-            <X size={12} /> Reset
-          </button>
-        )}
-
-        {/* Count */}
-        <span className="text-xs text-slate-600 ml-auto">
+      {/* Baris 3: Tanggal dari — Tanggal ke + Count */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
+          <span className="text-xs text-slate-500 shrink-0">Dari</span>
+          <input
+            type="date"
+            value={filter.dateFrom}
+            onChange={(e) => set({ dateFrom: e.target.value })}
+            className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-1">
+          <span className="text-xs text-slate-500 shrink-0">s/d</span>
+          <input
+            type="date"
+            value={filter.dateTo}
+            onChange={(e) => set({ dateTo: e.target.value })}
+            className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          />
+        </div>
+        <span className="text-xs text-slate-600 shrink-0">
           {filtered === total ? <>{total} log</> : <>{filtered}/{total} log</>}
         </span>
       </div>
