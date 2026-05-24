@@ -136,7 +136,7 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
         )}
       </div>
 
-      {/* Baris 2: Aksi + Koleksi + Reset/Count */}
+      {/* Baris 2: Aksi + Koleksi + tombol Refresh/Reset + Count */}
       <div className="flex items-center gap-2">
         <select
           value={filter.aksi}
@@ -158,7 +158,6 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
           ))}
         </select>
 
-        {/* Refresh & Reset gabung — icon saja saat tidak ada filter aktif, tambah teks Reset saat ada */}
         <button
           onClick={handleReset}
           disabled={isRefreshing}
@@ -175,27 +174,22 @@ function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing 
         </button>
       </div>
 
-      {/* Baris 3: Tanggal dari — Tanggal ke + Count */}
+      {/* Baris 3: Tanggal dari + Tanggal ke (sejajar tanpa label, lebar sama dengan baris 2) */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 flex-1">
-          <span className="text-xs text-slate-500 shrink-0">Dari</span>
-          <input
-            type="date"
-            value={filter.dateFrom}
-            onChange={(e) => set({ dateFrom: e.target.value })}
-            className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
-          />
-        </div>
-        <div className="flex items-center gap-2 flex-1">
-          <span className="text-xs text-slate-500 shrink-0">s/d</span>
-          <input
-            type="date"
-            value={filter.dateTo}
-            onChange={(e) => set({ dateTo: e.target.value })}
-            className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
-          />
-        </div>
-        <span className="text-xs text-slate-600 shrink-0">
+        <input
+          type="date"
+          value={filter.dateFrom}
+          onChange={(e) => set({ dateFrom: e.target.value })}
+          className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+        />
+        <input
+          type="date"
+          value={filter.dateTo}
+          onChange={(e) => set({ dateTo: e.target.value })}
+          className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+        />
+        {/* Count — lebar sama dengan tombol refresh agar kolom sejajar */}
+        <span className="text-xs text-slate-500 shrink-0 min-w-[52px] text-center tabular-nums">
           {filtered === total ? <>{total} log</> : <>{filtered}/{total} log</>}
         </span>
       </div>
