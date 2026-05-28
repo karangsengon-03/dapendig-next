@@ -131,6 +131,10 @@ export interface ConfigWilayah {
   kabupaten: string
   provinsi: string
   tahun?: string
+  // Data Kepala Desa — untuk cetak dokumen resmi desa
+  nama_kades?: string
+  jabatan_kades?: 'Kepala Desa' | 'Pj. Kepala Desa' | 'Plt. Kepala Desa'
+  nip_kades?: string   // hanya wajib diisi untuk Pj. dan Plt. (PNS/ASN)
   updated_at?: Timestamp | string
   updated_by?: string
 }

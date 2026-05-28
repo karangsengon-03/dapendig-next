@@ -7,6 +7,7 @@ import {
   query,
   orderBy,
   limit,
+  where,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { LogEntry } from '@/types'
@@ -49,3 +50,26 @@ export const KOLEKSI_FILTER_OPTIONS = [
   { value: 'mutasi_keluar', label: 'Mutasi Keluar' },
   { value: 'mutasi_masuk', label: 'Mutasi Masuk' },
 ] as const
+
+// ── Riwayat log per NIK (untuk halaman detail penduduk) ───────────────────────
+async function fetchLogByNik(nik: string): Promise<LogEntry[]> {
+  if (!nik) return []
+  const snap = await getDocs(
+    query(
+      collection(db, LOG_COL),
+      where('nik_target', '==', nik),
+      orderBy('ts', 'desc'),
+      limit(100)
+    )
+  )
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as LogEntry))
+}
+
+export function useLogByNik(nik: string) {
+  return useQuery({
+    queryKey: ['log', 'nik', nik],
+    queryFn: () => fetchLogByNik(nik),
+    enabled: !!nik,
+    staleTime: 30_000,
+  })
+}

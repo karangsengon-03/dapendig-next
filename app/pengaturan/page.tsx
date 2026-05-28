@@ -331,6 +331,9 @@ function WilayahForm() {
     kabupaten: '',
     provinsi: '',
     tahun: '',
+    nama_kades: '',
+    jabatan_kades: 'Kepala Desa',
+    nip_kades: '',
   })
 
   useEffect(() => {
@@ -343,6 +346,9 @@ function WilayahForm() {
           kabupaten: d.kabupaten ?? '',
           provinsi: d.provinsi ?? '',
           tahun: d.tahun ?? new Date().getFullYear().toString(),
+          nama_kades: d.nama_kades ?? '',
+          jabatan_kades: d.jabatan_kades ?? 'Kepala Desa',
+          nip_kades: d.nip_kades ?? '',
         })
       }, 0)
     }
@@ -407,6 +413,48 @@ function WilayahForm() {
                   <Input value={form.tahun} onChange={(e) => set('tahun', e.target.value)} placeholder="2026" />
                 </div>
               </div>
+
+              {/* Data Kepala Desa */}
+              <div className="border-t border-white/[0.06] pt-4 mt-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Data Kepala Desa</p>
+                <p className="text-xs text-slate-600 mb-3">Digunakan untuk dokumen cetak resmi desa (KK Sementara, surat, dll).</p>
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <Label>Jabatan</Label>
+                    <select
+                      value={form.jabatan_kades ?? 'Kepala Desa'}
+                      onChange={(e) => set('jabatan_kades', e.target.value)}
+                      className="w-full bg-[#0d1424] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+                    >
+                      <option value="Kepala Desa">Kepala Desa — Definitif (tidak perlu NIP)</option>
+                      <option value="Pj. Kepala Desa">Pj. Kepala Desa — Penjabat (PNS/ASN, wajib NIP)</option>
+                      <option value="Plt. Kepala Desa">Plt. Kepala Desa — Pelaksana Tugas (PNS/ASN, wajib NIP)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Nama Kepala Desa</Label>
+                    <Input
+                      value={form.nama_kades ?? ''}
+                      onChange={(e) => set('nama_kades', e.target.value)}
+                      placeholder="Nama lengkap kepala desa"
+                    />
+                  </div>
+                  {(form.jabatan_kades === 'Pj. Kepala Desa' || form.jabatan_kades === 'Plt. Kepala Desa') && (
+                    <div>
+                      <Label>NIP</Label>
+                      <Input
+                        value={form.nip_kades ?? ''}
+                        onChange={(e) => set('nip_kades', e.target.value)}
+                        placeholder="Nomor Induk Pegawai (18 digit)"
+                      />
+                      <p className="text-xs text-amber-400 mt-1.5">
+                        Wajib diisi — {form.jabatan_kades} adalah jabatan PNS/ASN
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex items-center gap-3 pt-1">
                 <Button onClick={handleSave} disabled={isPending} size="sm">
                   {isPending ? 'Menyimpan...' : 'Simpan'}

@@ -27,6 +27,127 @@ function StatCard({ label, value, sub, color = 'sky' }: {
   )
 }
 
+// ── Statistik Usia Produktif & Tanggungan ────────────────────────────────────
+function UsiaTanggungan({
+  data,
+  kelompokConfig,
+  total,
+}: {
+  data: { kelompok: string; laki: number; perempuan: number }[]
+  kelompokConfig: import('@/hooks/useMonografi').KelompokUmurConfig
+  total: number
+}) {
+  // Hitung 3 bucket dari konfigurasi piramida yang aktif
+  let tanggunganMuda = 0  // 0–14
+  let produktif = 0       // 15–64
+  let tanggunganTua = 0   // 65+
+
+  data.forEach((row, i) => {
+    const cfg = kelompokConfig[i]
+    if (!cfg) return
+    const jumlah = row.laki + row.perempuan
+    if (cfg.max <= 14) tanggunganMuda += jumlah
+    else if (cfg.min >= 65) tanggunganTua += jumlah
+    else produktif += jumlah
+  })
+
+  const totalTertanggungan = tanggunganMuda + tanggunganTua
+  const rasio = produktif > 0
+    ? Math.round((totalTertanggungan / produktif) * 100)
+    : 0
+
+  const pct = (n: number) =>
+    total > 0 ? Math.round((n / total) * 100) : 0
+
+  const buckets = [
+    {
+      label: 'Tanggungan Muda',
+      sublabel: 'Usia 0–14 tahun',
+      value: tanggunganMuda,
+      persen: pct(tanggunganMuda),
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10',
+      border: 'border-amber-500/20',
+      bar: 'bg-amber-500',
+    },
+    {
+      label: 'Usia Produktif',
+      sublabel: 'Usia 15–64 tahun',
+      value: produktif,
+      persen: pct(produktif),
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/20',
+      bar: 'bg-emerald-500',
+    },
+    {
+      label: 'Tanggungan Tua',
+      sublabel: 'Usia 65+ tahun',
+      value: tanggunganTua,
+      persen: pct(tanggunganTua),
+      color: 'text-rose-400',
+      bg: 'bg-rose-500/10',
+      border: 'border-rose-500/20',
+      bar: 'bg-rose-400',
+    },
+  ]
+
+  return (
+    <div className="bg-[#0d1424] rounded-xl p-4 border border-white/[0.06]">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-slate-200">Komposisi Beban Tanggungan</h3>
+        <span className="text-xs text-slate-500 bg-white/[0.04] border border-white/[0.06] rounded-lg px-2 py-1">
+          {total} jiwa aktif
+        </span>
+      </div>
+
+      {/* 3 kartu bucket */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {buckets.map((b) => (
+          <div key={b.label} className={`rounded-xl ${b.bg} border ${b.border} p-3 flex flex-col gap-1`}>
+            <span className="text-xs text-slate-400 leading-tight">{b.label}</span>
+            <span className={`text-2xl font-bold tabular-nums ${b.color}`}>{b.value}</span>
+            <span className="text-xs text-slate-500">{b.persen}%</span>
+            <span className="text-xs text-slate-600 leading-tight">{b.sublabel}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Bar perbandingan */}
+      <div className="flex h-3 rounded-full overflow-hidden gap-px mb-3">
+        {buckets.map((b) => (
+          <div
+            key={b.label}
+            className={`${b.bar} transition-all`}
+            style={{ width: `${b.persen}%` }}
+            title={`${b.label}: ${b.value} jiwa (${b.persen}%)`}
+          />
+        ))}
+      </div>
+
+      {/* Rasio Beban Tanggungan */}
+      <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
+        <div>
+          <p className="text-sm font-semibold text-slate-300">Rasio Beban Tanggungan</p>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Per 100 jiwa produktif menanggung{' '}
+            <span className="text-slate-300 font-medium">{rasio} jiwa</span>
+          </p>
+        </div>
+        <div className="text-right">
+          <span className={`text-3xl font-bold tabular-nums ${
+            rasio <= 50 ? 'text-emerald-400' :
+            rasio <= 80 ? 'text-amber-400' : 'text-rose-400'
+          }`}>{rasio}</span>
+          <p className="text-xs text-slate-600 mt-0.5">
+            {rasio <= 50 ? 'Rendah ✓' : rasio <= 80 ? 'Sedang' : 'Tinggi'}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BarRow({ label, value, total, color = 'bg-sky-500', onClick }: {
   label: string; value: number; total: number; color?: string; onClick?: () => void
 }) {
@@ -406,6 +527,9 @@ export default function MonografiPage() {
                 {Object.values(data.byKlasifikasiUmur).reduce((a,b)=>a+b,0)} jiwa
               </span>
             </div>
+
+            {/* ── Statistik Usia Produktif & Tanggungan ── */}
+            <UsiaTanggungan data={data.piramidaUmur} kelompokConfig={data.kelompokUmurConfig} total={data.totalAktif} />
 
 
             <div className="grid md:grid-cols-2 gap-4">

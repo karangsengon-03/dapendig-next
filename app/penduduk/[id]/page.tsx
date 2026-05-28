@@ -1,16 +1,18 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Pencil, Trash2, User, LogOut, HeartCrack } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, User, LogOut, HeartCrack, History } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { DeleteDialog } from '@/components/penduduk/DeleteDialog'
 import { CatatPindahKeluarModal } from '@/components/penduduk/CatatPindahKeluarModal'
 import { CatatMeninggalModal } from '@/components/penduduk/CatatMeninggalModal'
 import { KKModal } from '@/components/penduduk/KKModal'
 import { usePendudukDetail, useDeletePenduduk, usePendudukList } from '@/hooks/usePenduduk'
+import { useLogByNik } from '@/hooks/useLog'
 import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/components/ui/toast'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Timestamp } from 'firebase/firestore'
 import { useState } from 'react'
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -38,6 +40,35 @@ function toProper(s: string) {
 
 import { hitungUmur as calcUmur, formatTanggalLahir } from '@/lib/dateUtils'
 
+// ── Helper untuk tampilan riwayat ─────────────────────────────────────────────
+function tsToDate(ts: unknown): Date | null {
+  if (!ts) return null
+  if (ts instanceof Timestamp) return ts.toDate()
+  if (typeof ts === 'object' && ts !== null && 'seconds' in ts)
+    return new Date((ts as { seconds: number }).seconds * 1000)
+  return null
+}
+
+function formatWaktuRiwayat(ts: unknown): string {
+  const d = tsToDate(ts)
+  if (!d) return '—'
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) +
+    ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+}
+
+function aksiColorRiwayat(aksi: string): string {
+  const a = aksi.toLowerCase()
+  if (a.includes('tambah') || a.includes('catat') || a.includes('masuk') || a.includes('lahir'))
+    return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
+  if (a.includes('edit') || a.includes('update') || a.includes('rollback'))
+    return 'bg-sky-500/15 text-sky-400 border-sky-500/20'
+  if (a.includes('hapus') || a.includes('meninggal') || a.includes('keluar'))
+    return 'bg-rose-500/15 text-rose-400 border-rose-500/20'
+  if (a.includes('pindah') || a.includes('mutasi'))
+    return 'bg-amber-500/15 text-amber-400 border-amber-500/20'
+  return 'bg-slate-500/15 text-slate-400 border-slate-500/20'
+}
+
 function hitungUmur(tanggalLahir: string): string {
   const umur = calcUmur(tanggalLahir)
   if (umur < 0) return '—'
@@ -54,6 +85,7 @@ export default function DetailPendudukPage() {
   const deleteMutation = useDeletePenduduk()
   const { isAdmin, isOperator } = useAuthStore()
   const { toast } = useToast()
+  const { data: riwayat = [], isLoading: loadingRiwayat } = useLogByNik(data?.nik ?? '')
 
   const [showDelete, setShowDelete] = useState(false)
   const [showCatatPindah, setShowCatatPindah] = useState(false)
@@ -193,6 +225,69 @@ export default function DetailPendudukPage() {
                 </div>
               </div>
             )}
+            {/* ── Riwayat Perubahan Data ── */}
+            <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
+                  <History size={14} className="text-sky-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-200">Riwayat Perubahan Data</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Aktivitas yang tercatat sejak sistem log aktif</p>
+                </div>
+                {!loadingRiwayat && (
+                  <span className="text-xs text-slate-500 bg-white/[0.04] border border-white/[0.06] rounded-lg px-2 py-1 shrink-0">
+                    {riwayat.length} entri
+                  </span>
+                )}
+              </div>
+
+              {loadingRiwayat ? (
+                <div className="space-y-2">
+                  {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+                </div>
+              ) : riwayat.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
+                    <History size={18} className="text-slate-600" />
+                  </div>
+                  <p className="text-sm text-slate-500 text-center">Belum ada riwayat tercatat</p>
+                  <p className="text-xs text-slate-600 text-center max-w-[220px]">
+                    Riwayat hanya tersedia untuk aktivitas setelah sistem log aktif
+                  </p>
+                </div>
+              ) : (
+                <div className="relative">
+                  {/* Garis timeline vertikal */}
+                  <div className="absolute left-[15px] top-2 bottom-2 w-px bg-white/[0.06]" />
+                  <div className="space-y-3">
+                    {riwayat.map((log, idx) => (
+                      <div key={log.id} className="flex gap-3">
+                        {/* Titik timeline */}
+                        <div className="shrink-0 w-8 flex justify-center">
+                          <div className={`w-2 h-2 rounded-full mt-2 border ${
+                            idx === 0 ? 'bg-sky-400 border-sky-400' : 'bg-slate-600 border-slate-600'
+                          }`} />
+                        </div>
+                        {/* Konten */}
+                        <div className="flex-1 min-w-0 bg-white/[0.02] border border-white/[0.05] rounded-xl px-3 py-2.5">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${aksiColorRiwayat(log.aksi)}`}>
+                              {log.aksi}
+                            </span>
+                            <span className="text-xs text-slate-600 shrink-0">{formatWaktuRiwayat(log.ts)}</span>
+                          </div>
+                          {log.keterangan && (
+                            <p className="text-sm text-slate-300 mt-1.5 leading-snug">{log.keterangan}</p>
+                          )}
+                          <p className="text-xs text-slate-600 mt-1">oleh {log.oleh}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
