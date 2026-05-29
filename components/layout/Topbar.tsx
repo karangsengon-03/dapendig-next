@@ -69,7 +69,8 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
 
   return (
     <>
-      <header className="h-13 flex items-center gap-3 px-4 border-b border-white/[0.06] bg-[#0a0f1e]/80 backdrop-blur-sm shrink-0">
+      {/* shrink-0 + will-change memastikan header tidak ikut bergeser saat address bar mobile naik/turun */}
+      <header className="h-13 flex items-center gap-3 px-4 border-b border-white/[0.06] bg-[#0a0f1e] shrink-0" style={{ willChange: 'transform' }}>
         {/* Hamburger — mobile only */}
         <button
           onClick={toggleSidebar}

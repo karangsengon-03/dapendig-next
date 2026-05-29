@@ -67,6 +67,10 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
   <title>KK Sementara — ${noKk}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
     body {
       font-family: 'Times New Roman', Times, serif;
       font-size: 9pt;
@@ -74,9 +78,9 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
       color: black;
     }
     .page {
-      width: 210mm;
-      min-height: 297mm;
-      padding: 8mm 8mm 6mm 8mm;
+      width: 297mm;
+      min-height: 210mm;
+      padding: 6mm 8mm 5mm 8mm;
       margin: 0 auto;
       background: white;
     }
@@ -116,7 +120,7 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
       margin-top: 1mm;
     }
     .info-block {
-      width: 65mm;
+      width: 70mm;
       flex-shrink: 0;
     }
     .info-row {
@@ -124,7 +128,7 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
       font-size: 8pt;
       line-height: 1.5;
     }
-    .info-label { width: 26mm; }
+    .info-label { width: 28mm; }
     .info-colon { width: 5mm; }
     .info-val { flex: 1; font-weight: bold; }
     .header-data {
@@ -134,9 +138,9 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
       margin-top: 1mm;
     }
     .kk-data-kiri { flex: 1; }
-    .kk-data-kanan { width: 65mm; }
+    .kk-data-kanan { width: 70mm; }
     .data-row { display: flex; font-size: 8pt; line-height: 1.6; }
-    .data-label { width: 26mm; }
+    .data-label { width: 28mm; }
     .data-colon { width: 5mm; }
     .data-val { flex: 1; font-weight: bold; }
     /* TABEL */
@@ -161,23 +165,23 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
     td { text-align: center; }
     td.left { text-align: left; }
     .col-no     { width: 5mm; }
-    .col-nama   { width: 34mm; text-align: left; }
-    .col-nik    { width: 26mm; font-family: 'Courier New', monospace; font-size: 7pt; }
+    .col-nama   { width: 40mm; text-align: left; }
+    .col-nik    { width: 28mm; font-family: 'Courier New', monospace; font-size: 7pt; }
     .col-jk     { width: 8mm; }
-    .col-tl     { width: 22mm; }
-    .col-ttl    { width: 18mm; }
-    .col-agama  { width: 16mm; }
-    .col-pend   { width: 24mm; }
-    .col-pek    { width: 28mm; text-align: left; }
+    .col-tl     { width: 24mm; }
+    .col-ttl    { width: 20mm; }
+    .col-agama  { width: 18mm; }
+    .col-pend   { width: 26mm; }
+    .col-pek    { width: 32mm; text-align: left; }
     .col-gol    { width: 10mm; }
-    .col-statkawin { width: 18mm; }
-    .col-tglkawin  { width: 16mm; }
-    .col-hub    { width: 22mm; }
+    .col-statkawin { width: 20mm; }
+    .col-tglkawin  { width: 18mm; }
+    .col-hub    { width: 26mm; }
     .col-wn     { width: 14mm; }
-    .col-paspor { width: 16mm; }
-    .col-kitap  { width: 16mm; }
-    .col-ayah   { width: 30mm; text-align: left; }
-    .col-ibu    { width: 30mm; text-align: left; }
+    .col-paspor { width: 18mm; }
+    .col-kitap  { width: 18mm; }
+    .col-ayah   { width: 36mm; text-align: left; }
+    .col-ibu    { width: 36mm; text-align: left; }
     tr.data-row td { height: 7.5mm; }
     /* Footer */
     .footer-section {
@@ -198,7 +202,7 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
     .disclaimer {
       text-align: center;
       font-size: 7.5pt;
-      margin-top: 3mm;
+      margin-top: 2mm;
       padding-top: 2mm;
       border-top: 0.5pt solid #666;
       color: #333;
@@ -206,7 +210,7 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
     }
     @media print {
       body { margin: 0; }
-      .page { padding: 6mm 7mm 5mm 7mm; }
+      .page { padding: 5mm 7mm 4mm 7mm; }
     }
   </style>
 </head>
@@ -283,7 +287,7 @@ ${printContent.innerHTML}
 
           <p className="text-xs text-slate-500 mb-4">
             Dokumen akan dibuka di tab baru untuk dicetak atau disimpan sebagai PDF.
-            Pastikan ukuran kertas diatur ke <span className="text-slate-300 font-medium">A4 Portrait</span> di dialog cetak browser.
+            Pastikan ukuran kertas diatur ke <span className="text-slate-300 font-medium">A4 Landscape</span> di dialog cetak browser.
           </p>
         </div>
 

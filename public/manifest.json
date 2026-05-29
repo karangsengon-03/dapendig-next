@@ -3,10 +3,12 @@
   "short_name": "DaPenDig Next",
   "description": "Data Penduduk Digital - Desa Karang Sengon, Klabang, Bondowoso",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#16447a",
+  "background_color": "#0d1a2e",
   "theme_color": "#0a0f1e",
   "orientation": "portrait-primary",
+  "lang": "id",
   "icons": [
     { "src": "/icons/icon-72.png",           "sizes": "72x72",   "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-96.png",           "sizes": "96x96",   "type": "image/png", "purpose": "any" },

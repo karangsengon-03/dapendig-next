@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { PendudukTable } from '@/components/penduduk/PendudukTable'
@@ -25,15 +25,23 @@ const DEFAULT_FILTER: FilterState = {
 
 function PendudukContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const { data: allData = [], isLoading } = usePendudukList()
 
-  // Restore filter dari sessionStorage jika kembali dari detail penduduk
-  // Jika ada URL params (dari monografi), prioritaskan URL params
+  // Tandai apakah filter berasal dari URL params (navigasi dari monografi)
+  // Jika iya, JANGAN simpan ke sessionStorage agar tidak ter-restore saat kembali ke
+  // halaman ini tanpa URL params (pindah menu lain lalu kembali)
   const hasUrlParams = ['agama','pekerjaan','pendidikan','statusPerkawinan','status'].some(
     (k) => searchParams.get(k) !== null
   )
+
+  // Ref untuk track apakah filter ini berasal dari monografi (URL params)
+  // sehingga kita tidak menyimpannya ke sessionStorage
+  const isFromMonografiRef = useRef(hasUrlParams)
+
   const [filter, setFilter] = useState<FilterState>(() => {
     if (hasUrlParams) {
+      // Filter dari monografi — terapkan langsung, tidak dari sessionStorage
       return {
         ...DEFAULT_FILTER,
         agama: searchParams.get('agama') ?? '',
@@ -43,7 +51,7 @@ function PendudukContent() {
         status: searchParams.get('status') ?? 'aktif',
       }
     }
-    // Coba restore dari sessionStorage
+    // Restore dari sessionStorage hanya jika tidak ada URL params
     if (typeof window !== 'undefined') {
       try {
         const saved = sessionStorage.getItem('penduduk_filter')
@@ -74,9 +82,11 @@ function PendudukContent() {
     return 1
   })
 
-  // Sync filter bila URL params berubah (navigasi dari monografi)
+  // Setelah filter dari monografi diterapkan, bersihkan URL params dengan replace history
+  // sehingga: (1) refresh tidak re-apply filter monografi, (2) navigasi kembali tidak membawa filter lama
   useEffect(() => {
     if (!hasUrlParams) return
+    isFromMonografiRef.current = true
     setFilter({ // eslint-disable-line react-hooks/set-state-in-effect
       ...DEFAULT_FILTER,
       agama: searchParams.get('agama') ?? '',
@@ -86,11 +96,19 @@ function PendudukContent() {
       status: searchParams.get('status') ?? 'aktif',
     })
     setPage(1)
+    // Hapus URL params tanpa reload — agar filter tidak sticky di URL
+    router.replace('/penduduk', { scroll: false })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  // Simpan filter + page ke sessionStorage setiap kali berubah
+  // Simpan filter ke sessionStorage HANYA jika filter bukan dari monografi
+  // (setelah user mengubah filter secara manual, isFromMonografiRef di-reset)
   useEffect(() => {
+    if (isFromMonografiRef.current) {
+      // Filter baru saja di-set dari monografi — jangan simpan ke sessionStorage
+      // agar saat kembali ke halaman ini (tanpa URL params) filter sudah reset
+      return
+    }
     try {
       sessionStorage.setItem('penduduk_filter', JSON.stringify(filter))
     } catch { /* ignore */ }
@@ -186,6 +204,9 @@ function PendudukContent() {
   const totalPages = Math.ceil(filtered.length / pageSize) || 1
 
   function handleFilter(f: FilterState) {
+    // User mengubah filter secara manual — ini bukan lagi filter dari monografi
+    // Reset ref agar perubahan filter selanjutnya disimpan ke sessionStorage
+    isFromMonografiRef.current = false
     setFilter(f)
     setPage(1)
   }
