@@ -88,6 +88,7 @@ async function fetchWilayahConfig(): Promise<ConfigWilayah> {
       kecamatan: 'Klabang',
       kabupaten: 'Bondowoso',
       provinsi: 'Jawa Timur',
+      kode_pos: '68284',
       tahun: new Date().getFullYear().toString(),
     }
   }

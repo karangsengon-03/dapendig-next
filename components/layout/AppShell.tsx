@@ -28,25 +28,18 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] bg-[#0d1a2e] flex flex-col items-center justify-center gap-5">
-        {/* Icon menggunakan maskable agar terlihat rapi — warna bg sama dengan manifest background_color */}
-        <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10">
-          <Image
-            src="/icons/icon-maskable-192.png"
-            alt="DaPenDig"
-            width={96}
-            height={96}
-            className="w-full h-full object-cover"
-            style={{ display: 'block' }}
-            priority
-            unoptimized
-          />
+      <div className="min-h-[100dvh] bg-[#050810] flex flex-col items-center justify-center gap-4">
+        <div
+          className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
+          style={{ background: '#164472' }}
+        >
+          <Image src="/icons/icon-192.png" alt="DaPenDig" width={80} height={80} className="w-full h-full object-cover" style={{ display: 'block' }} priority unoptimized />
         </div>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <p className="text-base font-bold text-slate-100 tracking-tight">Data Penduduk Digital</p>
-          <p className="text-sm text-slate-500">Desa Karang Sengon</p>
+        <div className="flex flex-col items-center gap-0.5 text-center">
+          <p className="text-base font-semibold text-slate-100">Data Penduduk Digital</p>
+          <p className="text-xs text-slate-500">Desa Karang Sengon</p>
         </div>
-        <div className="w-5 h-5 border-2 border-white/[0.08] border-t-sky-500 rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-white/[0.06] border-t-sky-500 rounded-full animate-spin mt-1" />
       </div>
     )
   }

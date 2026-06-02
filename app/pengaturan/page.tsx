@@ -330,6 +330,7 @@ function WilayahForm() {
     kecamatan: '',
     kabupaten: '',
     provinsi: '',
+    kode_pos: '68284',
     tahun: '',
     nama_kades: '',
     jabatan_kades: 'Kepala Desa',
@@ -345,6 +346,7 @@ function WilayahForm() {
           kecamatan: d.kecamatan ?? '',
           kabupaten: d.kabupaten ?? '',
           provinsi: d.provinsi ?? '',
+          kode_pos: d.kode_pos ?? '68284',
           tahun: d.tahun ?? new Date().getFullYear().toString(),
           nama_kades: d.nama_kades ?? '',
           jabatan_kades: d.jabatan_kades ?? 'Kepala Desa',
@@ -407,6 +409,16 @@ function WilayahForm() {
                 <div>
                   <Label>Provinsi</Label>
                   <Input value={form.provinsi} onChange={(e) => set('provinsi', e.target.value)} placeholder="Nama provinsi" />
+                </div>
+                <div>
+                  <Label>Kode Pos</Label>
+                  <Input
+                    value={form.kode_pos ?? ''}
+                    onChange={(e) => set('kode_pos', e.target.value)}
+                    placeholder="68284"
+                    maxLength={5}
+                    inputMode="numeric"
+                  />
                 </div>
                 <div>
                   <Label>Tahun</Label>

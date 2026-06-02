@@ -130,6 +130,7 @@ export interface ConfigWilayah {
   kecamatan: string
   kabupaten: string
   provinsi: string
+  kode_pos?: string
   tahun?: string
   // Data Kepala Desa — untuk cetak dokumen resmi desa
   nama_kades?: string
