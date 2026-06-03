@@ -132,7 +132,9 @@ html,body{
 }
 .il{width:32mm;flex-shrink:0}
 .ic{width:5mm;text-align:center;flex-shrink:0}
-.iv{flex:1;font-weight:bold}
+/* nilai info kiri: normal weight (hanya nama KK yang bold via .iv-bold) */
+.iv{flex:1}
+.iv-bold{flex:1;font-weight:bold}
 
 /* Kolom C: Desa/Kec/Kab/Prov */
 .col-c{
@@ -147,7 +149,8 @@ html,body{
 .crow{display:flex;font-size:7.5pt;line-height:1.7}
 .cl{width:29mm;flex-shrink:0}
 .cc{width:5mm;text-align:center;flex-shrink:0}
-.cv{flex:1}
+/* nilai info kanan: uppercase */
+.cv{flex:1;text-transform:uppercase}
 
 /* ━━ TABEL ━━ */
 table{width:100%;border-collapse:collapse;flex-shrink:0}
@@ -165,6 +168,8 @@ th{
   text-align:center;font-size:7pt;
 }
 td.ctr{text-align:center}
+/* uppercase untuk konten: jenis kelamin, agama, pendidikan, pekerjaan, status kawin, hub keluarga */
+td.uc{text-transform:uppercase}
 /* Kolom 1 (No) selalu center */
 td:first-child,th:first-child{text-align:center}
 
@@ -241,21 +246,27 @@ tr.dr td{
   font-weight:bold;font-size:8pt;
   line-height:1.5;
 }
-.ftr-space{height:14mm;flex-shrink:0}
+.ftr-space{height:8mm;flex-shrink:0}
 .ftr-row3{
   display:flex;align-items:flex-start;
 }
 .f3-left{width:75mm;flex-shrink:0}
 .f3-mid{flex:1;text-align:center}
 .f3-right{width:85mm;flex-shrink:0;text-align:center}
-.f-nama{font-size:8pt;font-weight:bold}
+/* nama TTD: bold + garis bawah */
+.f-nama{
+  font-size:8pt;font-weight:bold;
+  border-bottom:0.6pt solid #000;
+  display:inline-block;
+  min-width:50mm;
+  padding-bottom:0.3mm;
+}
 .f-sub{font-size:7pt;margin-top:0.3mm}
 .f-nip{font-size:7pt}
 
-/* Disclaimer */
+/* Disclaimer — tanpa garis atas */
 .disc{
-  margin-top:1.5mm;padding-top:1mm;
-  border-top:0.5pt solid #999;
+  margin-top:1.5mm;
   text-align:center;
   font-size:7pt;color:#333;
   font-style:italic;line-height:1.4;
@@ -358,18 +369,27 @@ ${ref.current.innerHTML}
                 <div className="nokk">No. {noKk}</div>
               </div>
               <div className="col-b-info">
-                {([
-                  ['Nama Kepala Keluarga', kepKK?.nama_lengkap ?? '—'],
-                  ['Alamat',               kepKK?.alamat ?? '—'],
-                  ['RT/RW',                kepKK ? `${kepKK.rt ?? '—'}/${kepKK.rw ?? '—'}` : '—'],
-                  ['Kode Pos',             kodePos],
-                ] as const).map(([l, v]) => (
-                  <div key={l} className="irow">
-                    <span className="il">{l}</span>
-                    <span className="ic">:</span>
-                    <span className="iv">{v}</span>
-                  </div>
-                ))}
+                {/* Nama KK: bold. Alamat, RT/RW, Kode Pos: normal weight */}
+                <div className="irow">
+                  <span className="il">Nama Kepala Keluarga</span>
+                  <span className="ic">:</span>
+                  <span className="iv-bold">{kepKK?.nama_lengkap ?? '—'}</span>
+                </div>
+                <div className="irow">
+                  <span className="il">Alamat</span>
+                  <span className="ic">:</span>
+                  <span className="iv">{kepKK?.alamat ?? '—'}</span>
+                </div>
+                <div className="irow">
+                  <span className="il">RT/RW</span>
+                  <span className="ic">:</span>
+                  <span className="iv">{kepKK ? `${kepKK.rt ?? '—'}/${kepKK.rw ?? '—'}` : '—'}</span>
+                </div>
+                <div className="irow">
+                  <span className="il">Kode Pos</span>
+                  <span className="ic">:</span>
+                  <span className="iv">{kodePos}</span>
+                </div>
               </div>
             </div>
 
@@ -426,12 +446,12 @@ ${ref.current.innerHTML}
                   <td>{i + 1}</td>
                   <td>{p.nama_lengkap}</td>
                   <td className="ctr">{p.nik || '-'}</td>
-                  <td>{p.jenis_kelamin === 'Laki-laki' ? 'Laki-laki' : p.jenis_kelamin === 'Perempuan' ? 'Perempuan' : p.jenis_kelamin || '-'}</td>
+                  <td className="uc">{p.jenis_kelamin === 'Laki-laki' ? 'Laki-laki' : p.jenis_kelamin === 'Perempuan' ? 'Perempuan' : p.jenis_kelamin || '-'}</td>
                   <td>{p.tempat_lahir || '-'}</td>
                   <td>{fmtTgl(p.tanggal_lahir)}</td>
-                  <td>{p.agama || '-'}</td>
-                  <td>{p.pendidikan || '-'}</td>
-                  <td>{p.pekerjaan || '-'}</td>
+                  <td className="uc">{p.agama || '-'}</td>
+                  <td className="uc">{p.pendidikan || '-'}</td>
+                  <td className="uc">{p.pekerjaan || '-'}</td>
                   <td>{p.golongan_darah || '-'}</td>
                 </tr>
               ))}
@@ -475,9 +495,9 @@ ${ref.current.innerHTML}
               {rows.map((p, i) => (
                 <tr key={p.id} className="dr">
                   <td>{i + 1}</td>
-                  <td>{p.status_perkawinan || '-'}</td>
+                  <td className="uc">{p.status_perkawinan || '-'}</td>
                   <td>-</td>
-                  <td>{p.hubungan_keluarga || '-'}</td>
+                  <td className="uc">{p.hubungan_keluarga || '-'}</td>
                   <td>WNI</td>
                   <td className="ctr">-</td>
                   <td className="ctr">-</td>
