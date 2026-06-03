@@ -142,7 +142,11 @@ html,body{
   justify-content:flex-end;
   padding-bottom:1mm;
 }
-/* Info rows kanan */
+/* Info rows kanan — padding-top agar sejajar dengan info kiri (Nama KK, Alamat, dst)
+   yang muncul setelah judul dan No. KK (~13mm dari atas col-b) */
+.col-c-inner{
+  margin-top:auto;
+}
 .crow{display:flex;font-size:7.5pt;line-height:1.7}
 .cl{width:29mm;flex-shrink:0}
 .cc{width:5mm;text-align:center;flex-shrink:0}
@@ -238,7 +242,6 @@ tr.dr td{
   width:85mm;flex-shrink:0;
   text-align:center;
   font-weight:bold;font-size:8pt;
-  text-transform:uppercase;
   line-height:1.5;
 }
 .ftr-space{height:14mm;flex-shrink:0}
@@ -373,20 +376,22 @@ ${ref.current.innerHTML}
               </div>
             </div>
 
-            {/* Kolom C: Info kanan */}
+            {/* Kolom C: Info kanan — sejajar bawah dengan info kiri */}
             <div className="col-c">
-              {([
-                ['Desa/Kelurahan',  wilayah.desa],
-                ['Kecamatan',       wilayah.kecamatan],
-                ['Kabupaten/Kota',  wilayah.kabupaten],
-                ['Provinsi',        wilayah.provinsi],
-              ] as const).map(([l, v]) => (
-                <div key={l} className="crow">
-                  <span className="cl">{l}</span>
-                  <span className="cc">:</span>
-                  <span className="cv">{v}</span>
-                </div>
-              ))}
+              <div className="col-c-inner">
+                {([
+                  ['Desa/Kelurahan',  wilayah.desa],
+                  ['Kecamatan',       wilayah.kecamatan],
+                  ['Kabupaten/Kota',  wilayah.kabupaten],
+                  ['Provinsi',        wilayah.provinsi],
+                ] as const).map(([l, v]) => (
+                  <div key={l} className="crow">
+                    <span className="cl">{l}</span>
+                    <span className="cc">:</span>
+                    <span className="cv">{v}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -505,9 +510,8 @@ ${ref.current.innerHTML}
               </div>
               <div className="f-kk">KEPALA KELUARGA</div>
               <div className="f-kades">
-                {jabatan.toUpperCase()}<br/>
-                DESA {(wilayah.desa ?? '').toUpperCase()}, KEC. {(wilayah.kecamatan ?? '').toUpperCase()}<br/>
-                KAB. {(wilayah.kabupaten ?? '').toUpperCase()}
+                {jabatan.charAt(0).toUpperCase() + jabatan.slice(1)} {wilayah.desa}<br/>
+                Kecamatan {wilayah.kecamatan} Kabupaten {wilayah.kabupaten}
               </div>
             </div>
 
