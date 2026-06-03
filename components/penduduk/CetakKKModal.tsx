@@ -137,16 +137,13 @@ html,body{
 /* Kolom C: Desa/Kec/Kab/Prov */
 .col-c{
   width:72mm;flex-shrink:0;
-  padding-top:0;
   display:flex;flex-direction:column;
-  justify-content:flex-end;
-  padding-bottom:1mm;
+  /* padding-top = tinggi title block col-b:
+     0.5mm padding + 18pt*1.1 judul (6.98mm) + 1mm margin + 12pt*1.1 nokk (4.66mm) + 2mm margin-info
+     = ~15.1mm — agar sejajar dengan baris Nama KK di col-b */
+  padding-top:15.1mm;
 }
-/* Info rows kanan — padding-top agar sejajar dengan info kiri (Nama KK, Alamat, dst)
-   yang muncul setelah judul dan No. KK (~13mm dari atas col-b) */
-.col-c-inner{
-  margin-top:auto;
-}
+.col-c-inner{/* wrapper, tidak perlu margin */ }
 .crow{display:flex;font-size:7.5pt;line-height:1.7}
 .cl{width:29mm;flex-shrink:0}
 .cc{width:5mm;text-align:center;flex-shrink:0}
@@ -510,8 +507,8 @@ ${ref.current.innerHTML}
               </div>
               <div className="f-kk">KEPALA KELUARGA</div>
               <div className="f-kades">
-                {jabatan.charAt(0).toUpperCase() + jabatan.slice(1)} {wilayah.desa}<br/>
-                Kecamatan {wilayah.kecamatan} Kabupaten {wilayah.kabupaten}
+                {jabatan.toUpperCase()} {(wilayah.desa ?? '').toUpperCase()}<br/>
+                KECAMATAN {(wilayah.kecamatan ?? '').toUpperCase()} KABUPATEN {(wilayah.kabupaten ?? '').toUpperCase()}
               </div>
             </div>
 
