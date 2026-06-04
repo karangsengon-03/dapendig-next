@@ -37,18 +37,194 @@ function getKK(anggota: Penduduk[]) {
 }
 
 export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLDivElement>(null) // retained untuk compatibility
   const kepKK = getKK(anggota)
   const tglCetak = fmtTglCetak()
-  const rows = anggota.slice(0, 10)
-  const blanks = Array.from({ length: Math.max(0, 10 - rows.length) })
   const kodePos = wilayah.kode_pos ?? '68284'
   const jabatan = wilayah.jabatan_kades ?? 'Kepala Desa'
   const showNip = !!wilayah.nip_kades &&
     (jabatan === 'Pj. Kepala Desa' || jabatan === 'Plt. Kepala Desa')
 
+  // Bangun HTML isi halaman cetak — mendukung multi halaman (>10 anggota)
+  function buildHalamanHTML(): string {
+    const garuda = `data:image/png;base64,${GARUDA_B64}`
+
+    const infoKanan = [
+      ['Desa/Kelurahan', (wilayah.desa ?? '').toUpperCase()],
+      ['Kecamatan',      (wilayah.kecamatan ?? '').toUpperCase()],
+      ['Kabupaten/Kota', (wilayah.kabupaten ?? '').toUpperCase()],
+      ['Provinsi',       (wilayah.provinsi ?? '').toUpperCase()],
+    ].map(([l,v]) => `<div class="crow"><span class="cl">${l}</span><span class="cc">:</span><span class="cv">${v}</span></div>`).join('')
+
+    // Baris tabel 1 (header tetap sama di tiap halaman)
+    function tabel1Rows(pageRows: Penduduk[], startIdx: number): string {
+      return pageRows.map((p, i) => `
+        <tr class="dr">
+          <td>${startIdx + i + 1}</td>
+          <td>${p.nama_lengkap ?? ''}</td>
+          <td class="ctr">${p.nik ?? '-'}</td>
+          <td class="uc">${p.jenis_kelamin ?? '-'}</td>
+          <td>${p.tempat_lahir ?? '-'}</td>
+          <td>${fmtTgl(p.tanggal_lahir)}</td>
+          <td class="uc">${p.agama ?? '-'}</td>
+          <td class="uc">${p.pendidikan ?? '-'}</td>
+          <td class="uc">${p.pekerjaan ?? '-'}</td>
+          <td>${p.golongan_darah ?? '-'}</td>
+        </tr>`).join('') +
+      Array.from({ length: Math.max(0, 10 - pageRows.length) }).map((_, i) => `
+        <tr class="dr">
+          <td>${startIdx + pageRows.length + i + 1}</td>
+          <td class="L">-</td><td class="ctr">-</td>
+          <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>`).join('')
+    }
+
+    // Baris tabel 2
+    function tabel2Rows(pageRows: Penduduk[], startIdx: number): string {
+      return pageRows.map((p, i) => `
+        <tr class="dr">
+          <td>${startIdx + i + 1}</td>
+          <td class="uc">${p.status_perkawinan ?? '-'}</td>
+          <td>-</td>
+          <td class="uc">${p.hubungan_keluarga ?? '-'}</td>
+          <td>WNI</td>
+          <td class="ctr">-</td><td class="ctr">-</td>
+          <td>${p.nama_ayah ?? '-'}</td>
+          <td>${p.nama_ibu ?? '-'}</td>
+        </tr>`).join('') +
+      Array.from({ length: Math.max(0, 10 - pageRows.length) }).map((_, i) => `
+        <tr class="dr">
+          <td>${startIdx + pageRows.length + i + 1}</td>
+          <td>-</td><td></td><td></td><td></td>
+          <td class="ctr"></td><td class="ctr"></td><td></td><td></td>
+        </tr>`).join('')
+    }
+
+    // Bangun 1 halaman
+    function buildHalaman(pageRows: Penduduk[], startIdx: number, isLast: boolean): string {
+      const kkName = kepKK?.nama_lengkap ?? '……………………'
+      const kadesName = wilayah.nama_kades ?? '……………………'
+      const nipLine = showNip ? `<span class="f-nip">NIP. ${wilayah.nip_kades}</span>` : ''
+      const footer = isLast ? `
+        <div class="ftr">
+          <div class="ftr-row1">
+            <div class="f-tgl">
+              <span>Dikeluarkan Tanggal:</span>
+              <span class="f-tgl-box">${tglCetak}</span>
+            </div>
+            <div class="f-kk">KEPALA KELUARGA</div>
+            <div class="f-kades">
+              ${jabatan.toUpperCase()} ${(wilayah.desa ?? '').toUpperCase()}<br/>
+              KECAMATAN ${(wilayah.kecamatan ?? '').toUpperCase()} KABUPATEN ${(wilayah.kabupaten ?? '').toUpperCase()}
+            </div>
+          </div>
+          <div class="ftr-space"></div>
+          <div class="ftr-row3">
+            <div class="f3-left"></div>
+            <div class="f3-mid">
+              <span class="f-nama">${kkName}</span>
+              <span class="f-sub">Tanda Tangan/Cap Jempol</span>
+            </div>
+            <div class="f3-right">
+              <span class="f-nama">${kadesName}</span>
+              ${nipLine}
+            </div>
+          </div>
+          <div class="disc">
+            Dokumen ini merupakan Kartu Keluarga Sementara yang diterbitkan oleh Pemerintah Desa ${wilayah.desa},
+            Kecamatan ${wilayah.kecamatan}, Kabupaten ${wilayah.kabupaten},
+            berlaku sebagai pengganti sementara selama Kartu Keluarga definitif masih dalam proses penerbitan
+            di Dinas Kependudukan dan Pencatatan Sipil.
+          </div>
+        </div>` : `<div class="ftr" style="padding-top:2mm;font-size:7pt;text-align:center;color:#666;font-style:italic;">
+          Halaman lanjutan — No. KK: ${noKk}
+        </div>`
+
+      return `
+      <div class="halaman">
+        <div class="watermark">SEMENTARA</div>
+        <div class="konten">
+          <!-- HEADER -->
+          <div class="hdr">
+            <div class="col-a">
+              <img src="${garuda}" alt="Garuda"/>
+              <div class="ri">REPUBLIK INDONESIA</div>
+            </div>
+            <div class="col-b">
+              <div class="col-b-title">
+                <div class="judul">KARTU KELUARGA SEMENTARA</div>
+                <div class="nokk">No. ${noKk}</div>
+              </div>
+              <div class="col-b-info">
+                <div class="irow"><span class="il">Nama Kepala Keluarga</span><span class="ic">:</span><span class="iv-bold">${kepKK?.nama_lengkap ?? '—'}</span></div>
+                <div class="irow"><span class="il">Alamat</span><span class="ic">:</span><span class="iv">${kepKK?.alamat ?? '—'}</span></div>
+                <div class="irow"><span class="il">RT/RW</span><span class="ic">:</span><span class="iv">${kepKK ? `${kepKK.rt ?? '—'}/${kepKK.rw ?? '—'}` : '—'}</span></div>
+                <div class="irow"><span class="il">Kode Pos</span><span class="ic">:</span><span class="iv">${kodePos}</span></div>
+              </div>
+            </div>
+            <div class="col-c"><div class="col-c-inner">${infoKanan}</div></div>
+          </div>
+          <!-- TABEL 1 -->
+          <table class="t1">
+            <thead>
+              <tr class="hr1">
+                <th class="c0">No</th><th class="c1">Nama Lengkap</th><th class="c2">NIK</th>
+                <th class="c3">Jenis Kelamin</th><th class="c4">Tempat Lahir</th>
+                <th class="c5">Tanggal Lahir</th><th class="c6">Agama</th>
+                <th class="c7">Pendidikan</th><th class="c8">Jenis Pekerjaan</th>
+                <th class="c9">Golongan Darah</th>
+              </tr>
+              <tr class="hr2">
+                <th></th><th>(1)</th><th>(2)</th><th>(3)</th><th>(4)</th>
+                <th>(5)</th><th>(6)</th><th>(7)</th><th>(8)</th><th>(9)</th>
+              </tr>
+            </thead>
+            <tbody>${tabel1Rows(pageRows, startIdx)}</tbody>
+          </table>
+          <div class="gap"></div>
+          <!-- TABEL 2 -->
+          <table class="t2">
+            <thead>
+              <tr class="hr1">
+                <th class="d0">No</th><th class="d1">Status Perkawinan</th>
+                <th class="d2">Tanggal Perkawinan / Perceraian</th>
+                <th class="d3">Status Hubungan Dalam Keluarga</th>
+                <th class="d4">Kewarganegaraan</th>
+                <th colspan="2" style="text-align:center">Dokumen Imigrasi</th>
+                <th colspan="2" style="text-align:center">Nama Orang Tua</th>
+              </tr>
+              <tr class="hr2">
+                <th></th><th>(10)</th><th>(11)</th><th>(12)</th><th>(13)</th>
+                <th class="d5">No. Paspor<br/>(14)</th>
+                <th class="d6">No. KITAP<br/>(15)</th>
+                <th class="d7">Ayah<br/>(16)</th>
+                <th class="d8">Ibu<br/>(17)</th>
+              </tr>
+            </thead>
+            <tbody>${tabel2Rows(pageRows, startIdx)}</tbody>
+          </table>
+          ${footer}
+        </div>
+      </div>`
+    }
+
+    // Split ke halaman: setiap halaman maks 10 anggota
+    const pages: string[] = []
+    const total = anggota.length
+    if (total === 0) {
+      pages.push(buildHalaman([], 0, true))
+    } else {
+      for (let i = 0; i < total; i += 10) {
+        const pageRows = anggota.slice(i, i + 10)
+        const isLast = i + 10 >= total
+        pages.push(buildHalaman(pageRows, i, isLast))
+      }
+    }
+
+    return pages.join('\n')
+  }
+
   function cetak() {
-    if (!ref.current) return
     const pw = window.open('', '_blank', 'width=1200,height=850')
     if (!pw) { alert('Izinkan pop-up untuk halaman ini.'); return }
 
@@ -64,82 +240,76 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
    ════════════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box}
 @page{size:A4 landscape;margin:0}
-html,body{
-  width:297mm;height:210mm;overflow:hidden;
+html{width:297mm;background:#fff}
+body{
   font-family:Arial,Helvetica,sans-serif;
   font-size:8pt;color:#000;background:#fff;
 }
-.pg{
+/* Setiap halaman: flex center agar konten otomatis tengah vertikal */
+.halaman{
   width:297mm;height:210mm;
-  padding:5mm 4.6mm 3mm 3.7mm;
-  display:flex;flex-direction:column;
-  gap:0;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  page-break-after:always;
+}
+.halaman:last-child{page-break-after:auto}
+/* Konten cetak di atas watermark */
+.konten{
+  position:relative;
+  z-index:2;
+  padding:0 4.6mm 0 3.7mm;
+}
+
+/* ━━ WATERMARK ━━ */
+.watermark{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52pt;
+  font-weight:bold;
+  font-family:Arial,Helvetica,sans-serif;
+  color:rgba(0,0,0,0.07);
+  letter-spacing:8px;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:1;
+  user-select:none;
 }
 
 /* ━━ HEADER ━━ */
 .hdr{
-  display:flex;
-  align-items:flex-start;
-  flex-shrink:0;
-  min-height:32mm;
+  display:flex;align-items:flex-start;
+  flex-shrink:0;margin-bottom:0.5mm;
 }
-
-/* Kolom A: Garuda + REPUBLIK INDONESIA */
 .col-a{
   width:38mm;flex-shrink:0;
   display:flex;flex-direction:column;
-  align-items:center;
-  padding-top:1mm;
+  align-items:center;padding-top:1mm;
 }
 .col-a img{width:27mm;display:block}
 .col-a .ri{
   font-size:6.5pt;font-weight:bold;
-  text-align:center;
-  margin-top:0.5mm;
-  white-space:nowrap;
+  text-align:center;margin-top:0.5mm;white-space:nowrap;
 }
-
-/* Kolom B: Judul (atas) + Info kiri (bawah) */
-.col-b{
-  flex:1;
-  display:flex;flex-direction:column;
-}
-.col-b-title{
-  text-align:center;
-  padding-top:0.5mm;
-  flex-shrink:0;
-}
-.judul{
-  font-size:18pt;font-weight:bold;
-  letter-spacing:1px;
-  line-height:1.1;
-}
-.nokk{
-  font-size:12pt;font-weight:bold;
-  margin-top:1mm;
-  line-height:1.1;
-}
-.col-b-info{
-  margin-top:2mm;
-  flex:1;
-}
-.irow{
-  display:flex;
-  font-size:7.5pt;
-  line-height:1.7;
-}
+.col-b{flex:1;display:flex;flex-direction:column;}
+.col-b-title{text-align:center;padding-top:0.5mm;flex-shrink:0;}
+.judul{font-size:18pt;font-weight:bold;letter-spacing:1px;line-height:1.1}
+.nokk{font-size:12pt;font-weight:bold;margin-top:1mm;line-height:1.1}
+.col-b-info{margin-top:2mm;flex:1;}
+.irow{display:flex;font-size:7.5pt;line-height:1.7}
 .il{width:32mm;flex-shrink:0}
 .ic{width:5mm;text-align:center;flex-shrink:0}
 .iv{flex:1}
 .iv-bold{flex:1;font-weight:bold}
-
-/* Kolom C: Desa/Kec/Kab/Prov — padding-top sejajar baris Nama KK */
 .col-c{
   width:72mm;flex-shrink:0;
   display:flex;flex-direction:column;
   padding-top:15.1mm;
 }
-.col-c-inner{}
 .crow{display:flex;font-size:7.5pt;line-height:1.7}
 .cl{width:29mm;flex-shrink:0}
 .cc{width:5mm;text-align:center;flex-shrink:0}
@@ -153,117 +323,44 @@ th,td{
   vertical-align:middle;
   text-align:left;
   font-family:Arial,Helvetica,sans-serif;
-  font-size:7.5pt;
-  line-height:1.2;
+  font-size:7.5pt;line-height:1.2;
 }
-th{
-  background:#d4d4d4;font-weight:bold;
-  text-align:center;font-size:7pt;
-}
+th{background:#d4d4d4;font-weight:bold;text-align:center;font-size:7pt}
 td.ctr{text-align:center}
 td.uc{text-transform:uppercase}
 td:first-child,th:first-child{text-align:center}
-
-/* Tabel 1 kolom (mm): 5.6|49.8|29|14.7|35.7|17.3|20.5|44.7|56.2|15.2 */
-.t1 .c0{width:5.6mm}
-.t1 .c1{width:49.8mm}
-.t1 .c2{width:29mm;text-align:center}
-.t1 .c3{width:14.7mm}
-.t1 .c4{width:35.7mm}
-.t1 .c5{width:17.3mm}
-.t1 .c6{width:20.5mm}
-.t1 .c7{width:44.7mm}
-.t1 .c8{width:56.2mm}
-.t1 .c9{width:15.2mm}
-
-/* Tabel 2 kolom (mm): 5.6|29|17.9|34.7|27.3|23|23.2|64|64
-   Ayah & Ibu dibuat SAMA LEBAR: total Ayah+Ibu = 73+55 = 128mm, bagi 2 = 64mm */
-.t2 .d0{width:5.6mm}
-.t2 .d1{width:29mm}
-.t2 .d2{width:17.9mm}
-.t2 .d3{width:34.7mm}
-.t2 .d4{width:27.3mm}
-.t2 .d5{width:23mm;text-align:center}
-.t2 .d6{width:23.2mm;text-align:center}
-.t2 .d7{width:64mm}
-.t2 .d8{width:64mm}
-
-/* Header rows */
+.t1 .c0{width:5.6mm}  .t1 .c1{width:49.8mm} .t1 .c2{width:29mm;text-align:center}
+.t1 .c3{width:14.7mm} .t1 .c4{width:35.7mm} .t1 .c5{width:17.3mm}
+.t1 .c6{width:20.5mm} .t1 .c7{width:44.7mm} .t1 .c8{width:56.2mm} .t1 .c9{width:15.2mm}
+.t2 .d0{width:5.6mm}  .t2 .d1{width:29mm}   .t2 .d2{width:17.9mm}
+.t2 .d3{width:34.7mm} .t2 .d4{width:27.3mm} .t2 .d5{width:23mm;text-align:center}
+.t2 .d6{width:23.2mm;text-align:center}      .t2 .d7{width:64mm} .t2 .d8{width:64mm}
 tr.hr1 th{height:8.8mm;vertical-align:middle}
 tr.hr2 th{height:5.1mm;vertical-align:middle}
-/* Data rows */
-tr.dr td{
-  height:3.92mm;max-height:3.92mm;
-  overflow:hidden;
-  font-size:7.5pt;
-}
-
-/* Gap antar tabel */
+tr.dr td{height:3.92mm;max-height:3.92mm;overflow:hidden;font-size:7.5pt}
 .gap{height:1mm;flex-shrink:0}
 
 /* ━━ FOOTER ━━ */
-.ftr{
-  flex-shrink:0;
-  padding-top:3mm;
-  display:flex;
-  flex-direction:column;
-}
-.ftr-row1{
-  display:flex;
-  align-items:flex-start;
-  font-size:8pt;
-}
-.f-tgl{
-  width:75mm;flex-shrink:0;
-  display:flex;align-items:center;gap:1.5mm;
-}
-.f-tgl-box{
-  border:0.7pt solid #000;
-  padding:0.3mm 2mm;
-  font-weight:bold;
-  white-space:nowrap;
-}
-.f-kk{
-  flex:1;text-align:center;
-  font-weight:bold;font-size:8pt;
-  text-transform:uppercase;
-}
-.f-kades{
-  width:85mm;flex-shrink:0;
-  text-align:center;
-  font-weight:bold;font-size:8pt;
-  line-height:1.5;
-}
-/* Ruang TTD — lebih luas */
+.ftr{flex-shrink:0;padding-top:3mm;display:flex;flex-direction:column;}
+.ftr-row1{display:flex;align-items:flex-start;font-size:8pt;}
+.f-tgl{width:75mm;flex-shrink:0;display:flex;align-items:center;gap:1.5mm;}
+.f-tgl-box{border:0.7pt solid #000;padding:0.3mm 2mm;font-weight:bold;white-space:nowrap;}
+.f-kk{flex:1;text-align:center;font-weight:bold;font-size:8pt;text-transform:uppercase;}
+.f-kades{width:85mm;flex-shrink:0;text-align:center;font-weight:bold;font-size:8pt;line-height:1.5;}
 .ftr-space{height:14mm;flex-shrink:0}
-.ftr-row3{
-  display:flex;align-items:flex-start;
-}
+.ftr-row3{display:flex;align-items:flex-start;}
 .f3-left{width:75mm;flex-shrink:0}
 .f3-mid{flex:1;text-align:center}
 .f3-right{width:85mm;flex-shrink:0;text-align:center}
-/* Garis bawah nama TTD: fleksibel mengikuti lebar teks (inline, bukan block dengan min-width) */
-.f-nama{
-  font-size:8pt;font-weight:bold;
-  border-bottom:0.6pt solid #000;
-  display:inline;
-  padding-bottom:0.5mm;
-}
+.f-nama{font-size:8pt;font-weight:bold;border-bottom:0.6pt solid #000;display:inline;padding-bottom:0.5mm;}
 .f-sub{font-size:7pt;margin-top:1mm;display:block}
 .f-nip{font-size:7pt;margin-top:0.5mm;display:block}
-
-/* Disclaimer */
-.disc{
-  margin-top:2mm;
-  text-align:center;
-  font-size:7pt;color:#333;
-  font-style:italic;line-height:1.4;
-}
+.disc{margin-top:2mm;text-align:center;font-size:7pt;color:#333;font-style:italic;line-height:1.4;}
 @media print{html,body{margin:0}}
 </style></head>
-<body><div class="pg">
-${ref.current.innerHTML}
-</div></body></html>`
+<body>
+${buildHalamanHTML()}
+</body></html>`
 
     pw.document.write(html)
     pw.document.close()
@@ -335,219 +432,8 @@ ${ref.current.innerHTML}
         </div>
       </div>
 
-      {/* ═══════════════════════════
-          KONTEN CETAK (hidden)
-          ═══════════════════════════ */}
-      <div className="hidden">
-        <div ref={ref}>
-
-          {/* ━━ HEADER ━━ */}
-          <div className="hdr">
-
-            {/* Kolom A: Garuda */}
-            <div className="col-a">
-              <img src={`data:image/png;base64,${GARUDA_B64}`} alt="Garuda Pancasila" />
-              <div className="ri">REPUBLIK INDONESIA</div>
-            </div>
-
-            {/* Kolom B: Judul + Info kiri */}
-            <div className="col-b">
-              <div className="col-b-title">
-                <div className="judul">KARTU KELUARGA SEMENTARA</div>
-                <div className="nokk">No. {noKk}</div>
-              </div>
-              <div className="col-b-info">
-                {/* Nama KK: bold. Alamat, RT/RW, Kode Pos: normal weight */}
-                <div className="irow">
-                  <span className="il">Nama Kepala Keluarga</span>
-                  <span className="ic">:</span>
-                  <span className="iv-bold">{kepKK?.nama_lengkap ?? '—'}</span>
-                </div>
-                <div className="irow">
-                  <span className="il">Alamat</span>
-                  <span className="ic">:</span>
-                  <span className="iv">{kepKK?.alamat ?? '—'}</span>
-                </div>
-                <div className="irow">
-                  <span className="il">RT/RW</span>
-                  <span className="ic">:</span>
-                  <span className="iv">{kepKK ? `${kepKK.rt ?? '—'}/${kepKK.rw ?? '—'}` : '—'}</span>
-                </div>
-                <div className="irow">
-                  <span className="il">Kode Pos</span>
-                  <span className="ic">:</span>
-                  <span className="iv">{kodePos}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Kolom C: Info kanan — sejajar bawah dengan info kiri */}
-            <div className="col-c">
-              <div className="col-c-inner">
-                {([
-                  ['Desa/Kelurahan',  wilayah.desa],
-                  ['Kecamatan',       wilayah.kecamatan],
-                  ['Kabupaten/Kota',  wilayah.kabupaten],
-                  ['Provinsi',        wilayah.provinsi],
-                ] as const).map(([l, v]) => (
-                  <div key={l} className="crow">
-                    <span className="cl">{l}</span>
-                    <span className="cc">:</span>
-                    <span className="cv">{v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ━━ TABEL 1 ━━ */}
-          <table className="t1">
-            <thead>
-              <tr className="hr1">
-                <th className="c0">No</th>
-                <th className="c1">Nama Lengkap</th>
-                <th className="c2">NIK</th>
-                <th className="c3">Jenis Kelamin</th>
-                <th className="c4">Tempat Lahir</th>
-                <th className="c5">Tanggal Lahir</th>
-                <th className="c6">Agama</th>
-                <th className="c7">Pendidikan</th>
-                <th className="c8">Jenis Pekerjaan</th>
-                <th className="c9">Golongan Darah</th>
-              </tr>
-              <tr className="hr2">
-                <th></th>
-                <th>(1)</th>
-                <th>(2)</th>
-                <th>(3)</th>
-                <th>(4)</th>
-                <th>(5)</th>
-                <th>(6)</th>
-                <th>(7)</th>
-                <th>(8)</th>
-                <th>(9)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((p, i) => (
-                <tr key={p.id} className="dr">
-                  <td>{i + 1}</td>
-                  <td>{p.nama_lengkap}</td>
-                  <td className="ctr">{p.nik || '-'}</td>
-                  <td className="uc">{p.jenis_kelamin === 'Laki-laki' ? 'Laki-laki' : p.jenis_kelamin === 'Perempuan' ? 'Perempuan' : p.jenis_kelamin || '-'}</td>
-                  <td>{p.tempat_lahir || '-'}</td>
-                  <td>{fmtTgl(p.tanggal_lahir)}</td>
-                  <td className="uc">{p.agama || '-'}</td>
-                  <td className="uc">{p.pendidikan || '-'}</td>
-                  <td className="uc">{p.pekerjaan || '-'}</td>
-                  <td>{p.golongan_darah || '-'}</td>
-                </tr>
-              ))}
-              {blanks.map((_, i) => (
-                <tr key={`b1-${i}`} className="dr">
-                  <td>{rows.length + i + 1}</td>
-                  <td>-</td><td className="ctr">-</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="gap" />
-
-          {/* ━━ TABEL 2 ━━ */}
-          <table className="t2">
-            <thead>
-              <tr className="hr1">
-                <th className="d0">No</th>
-                <th className="d1">Status Perkawinan</th>
-                <th className="d2">Tanggal Perkawinan / Perceraian</th>
-                <th className="d3">Status Hubungan Dalam Keluarga</th>
-                <th className="d4">Kewarganegaraan</th>
-                <th colSpan={2} style={{textAlign:'center'}}>Dokumen Imigrasi</th>
-                <th colSpan={2} style={{textAlign:'center'}}>Nama Orang Tua</th>
-              </tr>
-              <tr className="hr2">
-                <th></th>
-                <th>(10)</th>
-                <th>(11)</th>
-                <th>(12)</th>
-                <th>(13)</th>
-                <th className="d5">No. Paspor<br/>(14)</th>
-                <th className="d6">No. KITAP<br/>(15)</th>
-                <th className="d7">Ayah<br/>(16)</th>
-                <th className="d8">Ibu<br/>(17)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((p, i) => (
-                <tr key={p.id} className="dr">
-                  <td>{i + 1}</td>
-                  <td className="uc">{p.status_perkawinan || '-'}</td>
-                  <td>-</td>
-                  <td className="uc">{p.hubungan_keluarga || '-'}</td>
-                  <td>WNI</td>
-                  <td className="ctr">-</td>
-                  <td className="ctr">-</td>
-                  <td>{p.nama_ayah || '-'}</td>
-                  <td>{p.nama_ibu || '-'}</td>
-                </tr>
-              ))}
-              {blanks.map((_, i) => (
-                <tr key={`b2-${i}`} className="dr">
-                  <td>{rows.length + i + 1}</td>
-                  <td>-</td><td></td><td></td><td></td>
-                  <td className="ctr"></td><td className="ctr"></td>
-                  <td></td><td></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* ━━ FOOTER ━━ */}
-          <div className="ftr">
-
-            {/* Baris 1: jabatan */}
-            <div className="ftr-row1">
-              <div className="f-tgl">
-                <span>Dikeluarkan Tanggal:</span>
-                <span className="f-tgl-box">{tglCetak}</span>
-              </div>
-              <div className="f-kk">KEPALA KELUARGA</div>
-              <div className="f-kades">
-                {jabatan.toUpperCase()} {(wilayah.desa ?? '').toUpperCase()}<br/>
-                KECAMATAN {(wilayah.kecamatan ?? '').toUpperCase()} KABUPATEN {(wilayah.kabupaten ?? '').toUpperCase()}
-              </div>
-            </div>
-
-            {/* Baris 2: ruang TTD */}
-            <div className="ftr-space" />
-
-            {/* Baris 3: nama */}
-            <div className="ftr-row3">
-              <div className="f3-left" />
-              <div className="f3-mid">
-                <div className="f-nama">{kepKK?.nama_lengkap ?? '……………………'}</div>
-                <div className="f-sub">Tanda Tangan/Cap Jempol</div>
-              </div>
-              <div className="f3-right">
-                <div className="f-nama">{wilayah.nama_kades ?? '……………………'}</div>
-                {showNip && <div className="f-nip">NIP. {wilayah.nip_kades}</div>}
-              </div>
-            </div>
-
-            {/* Disclaimer */}
-            <div className="disc">
-              Dokumen ini merupakan Kartu Keluarga Sementara yang diterbitkan oleh Pemerintah Desa {wilayah.desa},
-              Kecamatan {wilayah.kecamatan}, Kabupaten {wilayah.kabupaten},
-              berlaku sebagai pengganti sementara selama Kartu Keluarga definitif masih dalam proses penerbitan
-              di Dinas Kependudukan dan Pencatatan Sipil.
-            </div>
-
-          </div>
-
-        </div>
-      </div>
+      {/* ref div tidak lagi digunakan untuk render, hanya retained */}
+      <div ref={ref} className="hidden" />
     </div>
   )
 }
