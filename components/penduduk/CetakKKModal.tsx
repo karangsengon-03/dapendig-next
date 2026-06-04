@@ -142,7 +142,11 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
 
       return `
       <div class="halaman">
-        <div class="watermark">SEMENTARA</div>
+        <!-- Clip layer: watermark berada di sini, di-clip dalam bounds halaman -->
+        <div class="halaman-clip">
+          <div class="watermark">SEMENTARA</div>
+        </div>
+        <!-- Konten di atas watermark -->
         <div class="konten">
           <!-- HEADER -->
           <div class="hdr">
@@ -236,16 +240,20 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
 /* ════════════════════════════════════════════════
    KK SEMENTARA — layout pixel-accurate dari referensi
    Font: Arial (SIAK Dukcapil standard)
-   Page: A4 Landscape 297x210mm
+   Page: A4 Landscape tepat = 297mm x 210mm = 11.6929 x 8.2677 in
    ════════════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box}
-@page{size:A4 landscape;margin:0}
-html{width:297mm;background:#fff}
-body{
+/* @page: pakai ukuran eksak mm bukan keyword agar semua printer/browser output A4 tepat */
+@page{
+  size:297mm 210mm;
+  margin:0;
+}
+html,body{
+  width:297mm;
   font-family:Arial,Helvetica,sans-serif;
   font-size:8pt;color:#000;background:#fff;
 }
-/* Setiap halaman: flex center agar konten otomatis tengah vertikal */
+/* Setiap halaman: 297x210mm eksak, flex center vertikal */
 .halaman{
   width:297mm;height:210mm;
   display:flex;
@@ -253,30 +261,45 @@ body{
   align-items:stretch;
   justify-content:center;
   position:relative;
+  /* overflow visible agar watermark tidak terpotong,
+     clip dilakukan oleh .halaman-clip */
   overflow:hidden;
   page-break-after:always;
 }
 .halaman:last-child{page-break-after:auto}
-/* Konten cetak di atas watermark */
+/* Clip frame agar konten & watermark tidak keluar batas halaman */
+.halaman-clip{
+  position:absolute;
+  top:0;left:0;
+  width:297mm;height:210mm;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:1;
+}
+/* Konten cetak */
 .konten{
   position:relative;
   z-index:2;
   padding:0 4.6mm 0 3.7mm;
 }
 
-/* ━━ WATERMARK ━━ */
+/* ━━ WATERMARK ━━
+   Teks diagonal samar di tengah halaman.
+   Menggunakan .halaman-clip sebagai container agar tidak terpotong aneh.
+   Font 40pt tanpa letter-spacing besar = muat di A4 landscape.
+   color opacity 0.07 = sangat samar, terbaca tipis tapi tidak mengganggu.
+*/
 .watermark{
   position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%) rotate(-35deg);
-  font-size:52pt;
+  font-size:40pt;
   font-weight:bold;
   font-family:Arial,Helvetica,sans-serif;
-  color:rgba(0,0,0,0.07);
-  letter-spacing:8px;
+  color:rgba(0,0,0,0.08);
+  letter-spacing:4px;
   white-space:nowrap;
   pointer-events:none;
-  z-index:1;
   user-select:none;
 }
 
