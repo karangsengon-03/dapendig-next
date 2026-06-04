@@ -71,13 +71,12 @@ html,body{
 }
 .pg{
   width:297mm;height:210mm;
-  padding:3mm 4.6mm 2mm 3.7mm;
+  padding:5mm 4.6mm 3mm 3.7mm;
   display:flex;flex-direction:column;
   gap:0;
 }
 
 /* ━━ HEADER ━━ */
-/* 3 kolom: [Garuda 38mm] [Judul+Info kiri flex] [Info kanan 72mm] */
 .hdr{
   display:flex;
   align-items:flex-start;
@@ -120,7 +119,6 @@ html,body{
   margin-top:1mm;
   line-height:1.1;
 }
-/* Info kiri: Nama KK, Alamat, RT/RW, Kode Pos */
 .col-b-info{
   margin-top:2mm;
   flex:1;
@@ -132,24 +130,19 @@ html,body{
 }
 .il{width:32mm;flex-shrink:0}
 .ic{width:5mm;text-align:center;flex-shrink:0}
-/* nilai info kiri: normal weight (hanya nama KK yang bold via .iv-bold) */
 .iv{flex:1}
 .iv-bold{flex:1;font-weight:bold}
 
-/* Kolom C: Desa/Kec/Kab/Prov */
+/* Kolom C: Desa/Kec/Kab/Prov — padding-top sejajar baris Nama KK */
 .col-c{
   width:72mm;flex-shrink:0;
   display:flex;flex-direction:column;
-  /* padding-top = tinggi title block col-b:
-     0.5mm padding + 18pt*1.1 judul (6.98mm) + 1mm margin + 12pt*1.1 nokk (4.66mm) + 2mm margin-info
-     = ~15.1mm — agar sejajar dengan baris Nama KK di col-b */
   padding-top:15.1mm;
 }
-.col-c-inner{/* wrapper, tidak perlu margin */ }
+.col-c-inner{}
 .crow{display:flex;font-size:7.5pt;line-height:1.7}
 .cl{width:29mm;flex-shrink:0}
 .cc{width:5mm;text-align:center;flex-shrink:0}
-/* nilai info kanan: uppercase */
 .cv{flex:1;text-transform:uppercase}
 
 /* ━━ TABEL ━━ */
@@ -168,14 +161,10 @@ th{
   text-align:center;font-size:7pt;
 }
 td.ctr{text-align:center}
-/* uppercase untuk konten: jenis kelamin, agama, pendidikan, pekerjaan, status kawin, hub keluarga */
 td.uc{text-transform:uppercase}
-/* Kolom 1 (No) selalu center */
 td:first-child,th:first-child{text-align:center}
 
-/* Tabel 1 — lebar kolom dari pengukuran referensi (mm) */
-/* No|Nama|NIK|JK|TmptLahir|TglLahir|Agama|Pendidikan|Pekerjaan|GolDarah */
-/* 5.6|49.8|29|14.7|35.7|17.3|20.5|44.7|56.2|15.2 = 289.7mm (page inner ~288mm) */
+/* Tabel 1 kolom (mm): 5.6|49.8|29|14.7|35.7|17.3|20.5|44.7|56.2|15.2 */
 .t1 .c0{width:5.6mm}
 .t1 .c1{width:49.8mm}
 .t1 .c2{width:29mm;text-align:center}
@@ -187,9 +176,8 @@ td:first-child,th:first-child{text-align:center}
 .t1 .c8{width:56.2mm}
 .t1 .c9{width:15.2mm}
 
-/* Tabel 2 — lebar kolom (mm) */
-/* No|StatKawin|TglKawin|HubKel|Warganeg|NoPaspor|NoKITAP|Ayah|Ibu */
-/* 5.6|29|17.9|34.7|27.3|23|23.2|73|55 = 289.7mm */
+/* Tabel 2 kolom (mm): 5.6|29|17.9|34.7|27.3|23|23.2|64|64
+   Ayah & Ibu dibuat SAMA LEBAR: total Ayah+Ibu = 73+55 = 128mm, bagi 2 = 64mm */
 .t2 .d0{width:5.6mm}
 .t2 .d1{width:29mm}
 .t2 .d2{width:17.9mm}
@@ -197,8 +185,8 @@ td:first-child,th:first-child{text-align:center}
 .t2 .d4{width:27.3mm}
 .t2 .d5{width:23mm;text-align:center}
 .t2 .d6{width:23.2mm;text-align:center}
-.t2 .d7{width:73mm}
-.t2 .d8{width:55mm}
+.t2 .d7{width:64mm}
+.t2 .d8{width:64mm}
 
 /* Header rows */
 tr.hr1 th{height:8.8mm;vertical-align:middle}
@@ -216,7 +204,7 @@ tr.dr td{
 /* ━━ FOOTER ━━ */
 .ftr{
   flex-shrink:0;
-  padding-top:1.5mm;
+  padding-top:3mm;
   display:flex;
   flex-direction:column;
 }
@@ -246,27 +234,27 @@ tr.dr td{
   font-weight:bold;font-size:8pt;
   line-height:1.5;
 }
-.ftr-space{height:8mm;flex-shrink:0}
+/* Ruang TTD — lebih luas */
+.ftr-space{height:14mm;flex-shrink:0}
 .ftr-row3{
   display:flex;align-items:flex-start;
 }
 .f3-left{width:75mm;flex-shrink:0}
 .f3-mid{flex:1;text-align:center}
 .f3-right{width:85mm;flex-shrink:0;text-align:center}
-/* nama TTD: bold + garis bawah */
+/* Garis bawah nama TTD: fleksibel mengikuti lebar teks (inline, bukan block dengan min-width) */
 .f-nama{
   font-size:8pt;font-weight:bold;
   border-bottom:0.6pt solid #000;
-  display:inline-block;
-  min-width:50mm;
-  padding-bottom:0.3mm;
+  display:inline;
+  padding-bottom:0.5mm;
 }
-.f-sub{font-size:7pt;margin-top:0.3mm}
-.f-nip{font-size:7pt}
+.f-sub{font-size:7pt;margin-top:1mm;display:block}
+.f-nip{font-size:7pt;margin-top:0.5mm;display:block}
 
-/* Disclaimer — tanpa garis atas */
+/* Disclaimer */
 .disc{
-  margin-top:1.5mm;
+  margin-top:2mm;
   text-align:center;
   font-size:7pt;color:#333;
   font-style:italic;line-height:1.4;
