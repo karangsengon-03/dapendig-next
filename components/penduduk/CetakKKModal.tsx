@@ -227,9 +227,6 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
   }
 
   function cetak() {
-    const pw = window.open('', '_blank', 'width=1200,height=850')
-    if (!pw) { alert('Izinkan pop-up untuk halaman ini.'); return }
-
     const html = `<!DOCTYPE html>
 <html lang="id"><head>
 <meta charset="UTF-8"/>
@@ -241,12 +238,16 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
    Page: A4 Landscape tepat = 297mm x 210mm = 11.6929 x 8.2677 in
    ════════════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box}
-/* @page: pakai ukuran eksak mm bukan keyword agar semua printer/browser output A4 tepat */
+/* Semua format @page size untuk kompatibilitas maksimal */
 @page{
-  size:297mm 210mm;
+  size: 297mm 210mm landscape;
   margin:0;
 }
-html,body{
+html{
+  width:297mm;
+  /* Tinggi body tidak di-fix agar flex center bisa bekerja */
+}
+body{
   width:297mm;
   font-family:Arial,Helvetica,sans-serif;
   font-size:8pt;color:#000;background:#fff;
@@ -383,10 +384,18 @@ tr.dr td{height:3.92mm;max-height:3.92mm;overflow:hidden;font-size:7.5pt}
 ${buildHalamanHTML()}
 </body></html>`
 
-    pw.document.write(html)
-    pw.document.close()
-    pw.focus()
-    setTimeout(() => pw.print(), 400)
+    // Blob URL approach: jauh lebih reliable untuk ukuran kertas
+    // document.write di window.open kadang diabaikan browser untuk @page size
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const pw = window.open(url, '_blank')
+    if (!pw) {
+      URL.revokeObjectURL(url)
+      alert('Izinkan pop-up untuk halaman ini.')
+      return
+    }
+    // Bersihkan blob URL setelah window terbuka
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
   }
 
   return (
