@@ -140,20 +140,21 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
 
       return `
       <div class="halaman">
-        <!-- SVG Watermark: diagonal, samar, tidak terpotong -->
+        <!-- SVG Watermark: z-index tinggi + mix-blend-mode:multiply = tembus semua bg -->
         <div class="halaman-wm">
-          <svg width="100%" height="100%" viewBox="0 0 1123 794"
+          <svg width="297mm" height="210mm" viewBox="0 0 1123 794"
                xmlns="http://www.w3.org/2000/svg"
-               style="position:absolute;top:0;left:0;width:100%;height:100%">
+               style="width:100%;height:100%;display:block">
             <text
-              x="50%" y="50%"
-              text-anchor="middle" dominant-baseline="middle"
-              transform="rotate(-35, 561.5, 397)"
-              font-family="Arial, Helvetica, sans-serif"
-              font-size="96"
+              x="561.5" y="397"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              transform="rotate(-35 561.5 397)"
+              font-family="Arial,Helvetica,sans-serif"
+              font-size="100"
               font-weight="bold"
-              fill="rgba(0,0,0,0.07)"
-              letter-spacing="6">SEMENTARA</text>
+              fill="#bbbbbb"
+              letter-spacing="8">SEMENTARA</text>
           </svg>
         </div>
         <!-- Konten di atas watermark -->
@@ -251,7 +252,6 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
    ════════════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box}
 @page{
-  size: A4 landscape;
   size: 297mm 210mm;
   margin: 0;
 }
@@ -260,7 +260,6 @@ html,body{
   font-family:Arial,Helvetica,sans-serif;
   font-size:8pt;color:#000;background:#fff;
 }
-/* Setiap halaman: 297x210mm, flex center vertikal */
 .halaman{
   width:297mm;height:210mm;
   display:flex;flex-direction:column;
@@ -269,20 +268,21 @@ html,body{
   page-break-after:always;
 }
 .halaman:last-child{page-break-after:auto}
-/* Konten di atas watermark */
-.konten{position:relative;z-index:2;padding:0 4.6mm 0 3.7mm}
+/* konten tidak pakai z-index agar watermark bisa overlay */
+.konten{position:relative;padding:0 4.6mm 0 3.7mm}
 
 /* ━━ WATERMARK ━━
-   Menggunakan SVG inline agar posisi diagonal 100% terkontrol.
-   SVG di-overlay di tengah halaman, tidak terpotong, opacity konsisten.
+   z-index tinggi + mix-blend-mode:multiply = tembus semua background
+   termasuk th {background:#d4d4d4}
+   opacity rendah (0.12) agar terbaca samar tapi jelas diagonal
 */
 .halaman-wm{
   position:absolute;
   top:0;left:0;
-  width:297mm;height:210mm;
-  z-index:1;
+  width:100%;height:100%;
+  z-index:9999;
   pointer-events:none;
-  overflow:hidden;
+  mix-blend-mode:multiply;
 }
 
 /* ━━ HEADER ━━ */
@@ -362,34 +362,33 @@ tr.dr td{height:3.92mm;max-height:3.92mm;overflow:hidden;font-size:7.5pt}
 .f-nip{font-size:7pt;margin-top:0.5mm;display:block}
 .disc{margin-top:2mm;text-align:center;font-size:7pt;color:#333;font-style:italic;line-height:1.4;}
 @media print{html,body{margin:0}}
-</style></head>
+</style>
+<script>
+// Force A4 landscape setelah dokumen load
+window.addEventListener('load', function() {
+  // Inject @page rule via JS untuk override printer default
+  try {
+    const style = document.createElement('style');
+    style.textContent = '@page { size: 297mm 210mm; margin: 0; }';
+    document.head.appendChild(style);
+  } catch(e) {}
+  setTimeout(function() {
+    window.focus();
+    window.print();
+  }, 400);
+});
+</script>
+</head>
 <body>
 ${buildHalamanHTML()}
 </body></html>`
 
-    // Kembali ke window.open + document.write — Blob URL tidak trigger print dialog
-    // Solusi ukuran A4: set html/body ke pixel eksak 96dpi A4 landscape + @page
     const pw = window.open('', '_blank', 'width=1123,height=795')
     if (!pw) { alert('Izinkan pop-up untuk halaman ini.'); return }
 
     pw.document.open()
     pw.document.write(html)
     pw.document.close()
-
-    // Tunggu semua resource (garuda image base64) selesai render, baru print
-    pw.onload = () => {
-      setTimeout(() => {
-        pw.focus()
-        pw.print()
-      }, 300)
-    }
-    // Fallback jika onload tidak fire (beberapa browser)
-    setTimeout(() => {
-      if (pw && !pw.closed) {
-        pw.focus()
-        pw.print()
-      }
-    }, 800)
   }
 
   return (
