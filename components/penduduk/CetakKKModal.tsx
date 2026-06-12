@@ -363,19 +363,46 @@ tr.dr td{height:3.92mm;max-height:3.92mm;overflow:hidden;font-size:7.5pt}
 .disc{margin-top:2mm;text-align:center;font-size:7pt;color:#333;font-style:italic;line-height:1.4;}
 @media print{html,body{margin:0}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-// Force A4 landscape setelah dokumen load
-window.addEventListener('load', function() {
-  // Inject @page rule via JS untuk override printer default
-  try {
-    const style = document.createElement('style');
-    style.textContent = '@page { size: 297mm 210mm; margin: 0; }';
-    document.head.appendChild(style);
-  } catch(e) {}
-  setTimeout(function() {
-    window.focus();
-    window.print();
-  }, 400);
+window.addEventListener('load', async function() {
+  // Tunggu sebentar agar font/gambar render sempurna
+  await new Promise(r => setTimeout(r, 600));
+
+  const { jsPDF } = window.jspdf;
+  const pages = document.querySelectorAll('.halaman');
+  
+  // A4 landscape: 297 x 210 mm
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
+    
+    // Render halaman ke canvas dengan scale 2x untuk kualitas tinggi
+    const canvas = await html2canvas(page, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      width: page.offsetWidth,
+      height: page.offsetHeight,
+      windowWidth: page.offsetWidth,
+      windowHeight: page.offsetHeight,
+    });
+    
+    const imgData = canvas.toDataURL('image/jpeg', 0.97);
+    
+    if (i > 0) pdf.addPage('a4', 'landscape');
+    
+    // Masukkan gambar tepat 297x210mm
+    pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+  }
+  
+  // Download PDF dengan nama file yang informatif
+  pdf.save('KK_Sementara_${noKk}.pdf');
+  
+  // Tutup tab setelah download
+  setTimeout(() => window.close(), 1000);
 });
 </script>
 </head>
@@ -435,9 +462,9 @@ ${buildHalamanHTML()}
             ))}
           </div>
           <p className="text-xs text-slate-500">
-            Atur kertas ke{" "}
-            <span className="text-slate-300 font-medium">A4 Landscape</span>{" "}
-            di dialog cetak browser.
+            PDF akan terunduh otomatis dalam ukuran{" "}
+            <span className="text-slate-300 font-medium">A4 Landscape (297×210mm)</span>{" "}
+            yang tepat. Buka file PDF lalu cetak dari sana.
           </p>
         </div>
 
@@ -449,7 +476,7 @@ ${buildHalamanHTML()}
           <button onClick={cetak} disabled={!wilayah.nama_kades}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:bg-sky-500/30 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors">
             <Printer size={15} />
-            Cetak / Simpan PDF
+            Unduh PDF A4
           </button>
         </div>
       </div>
