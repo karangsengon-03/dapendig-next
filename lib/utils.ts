@@ -63,7 +63,7 @@ export function getUmur(tanggalLahir: string | undefined | null): number | null 
   return age
 }
 
-export const APP_VERSION = 'v2.6.4'
+export const APP_VERSION = 'v2.6.5'
 export const APP_NAME = 'DaPenDig Next'
 export const APP_TAGLINE = 'Data Penduduk Digital'
 export const DESA_DEFAULT = 'Karang Sengon'
