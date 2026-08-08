@@ -1,6 +1,10 @@
 {
   "name": "dapendig-next",
+<<<<<<< HEAD
   "version": "2.7.1",
+=======
+  "version": "2.6.5",
+>>>>>>> 162232cfa692194738c14b655570be8041b590cd
   "private": true,
   "scripts": {
     "dev": "next dev",
