@@ -11,13 +11,13 @@ import {
   doc,
   orderBy,
   query,
-  where,
   updateDoc,
   serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
-import type { Lahir, Meninggal } from '@/types'
+import { jalankanSuksesiKK, kembalikanSuksesiKK } from '@/lib/kk-succession'
+import type { Lahir, Meninggal, Penduduk } from '@/types'
 
 const LOG_COL = 'log'
 
@@ -95,6 +95,7 @@ async function fetchMeninggal(): Promise<Meninggal[]> {
 
 async function addMeninggal(
   data: Omit<Meninggal, 'id' | 'created_at' | 'created_by'>,
+  allPenduduk: Penduduk[],
   email: string
 ): Promise<string> {
   const ref = await addDoc(collection(db, 'meninggal'), {
@@ -108,6 +109,15 @@ async function addMeninggal(
     const pendudukSnap = await getDoc(pendudukRef)
     if (pendudukSnap.exists()) {
       await updateDoc(pendudukRef, { status: 'meninggal', updated_at: serverTimestamp() })
+      // FIX: dulu jalur ini (menu Vital) tidak pernah menjalankan suksesi KK
+      // sama sekali — beda dengan jalur CatatMeninggalModal. Sekarang
+      // keduanya memakai algoritma yang sama persis dari lib/kk-succession.
+      await jalankanSuksesiKK(db, {
+        pendudukId: pendudukSnap.id,
+        hubunganKeluarga: data.hub_asli,
+        noKk: data.no_kk,
+        allPenduduk,
+      })
     }
   }
   await writeLog('tambah', `Kematian: ${data.nama}`, email, data.nik_target)
@@ -135,23 +145,12 @@ async function rollbackMeninggal(
     if (hub_asli) updateData.hubungan_keluarga = hub_asli
     await updateDoc(pendudukRef, updateData)
   }
-  // KK Restoration: jika hub_asli adalah Kepala Keluarga, cari pengganti sementara
+  // KK Restoration: jika hub_asli adalah Kepala Keluarga, kembalikan siapa pun
+  // yang sempat naik jadi Kepala Keluarga sementara — sekarang bekerja untuk
+  // kematian dari jalur manapun (CatatMeninggalModal maupun menu Vital),
+  // karena keduanya menulis hub_asli_backup lewat modul terpusat yang sama.
   if (hub_asli === 'Kepala Keluarga' && no_kk) {
-    const kkSnap = await getDocs(
-      query(collection(db, 'penduduk'), where('no_kk', '==', no_kk), where('hubungan_keluarga', '==', 'Kepala Keluarga'))
-    )
-    for (const d of kkSnap.docs) {
-      const pData = d.data()
-      // Skip dokumen yang baru dikembalikan (NIK = nik_target = document ID)
-      if (pData.hub_asli_backup && d.id !== nik_target) {
-        await updateDoc(doc(db, 'penduduk', d.id), {
-          hubungan_keluarga: pData.hub_asli_backup,
-          hub_asli_backup: null,
-          updated_at: serverTimestamp(),
-        })
-        break
-      }
-    }
+    await kembalikanSuksesiKK(db, { noKk: no_kk, nikYangDikembalikan: nik_target })
   }
   await deleteDoc(doc(db, 'meninggal', meninggalId))
   await writeLog('rollback', `Batalkan kematian: ${nama}`, email, nik_target)
@@ -194,8 +193,10 @@ export function useAddMeninggal() {
   const qc = useQueryClient()
   const user = useAuthStore((s) => s.user)
   return useMutation({
-    mutationFn: (data: Omit<Meninggal, 'id' | 'created_at' | 'created_by'>) =>
-      addMeninggal(data, user?.email ?? 'unknown'),
+    mutationFn: ({ data, allPenduduk }: {
+      data: Omit<Meninggal, 'id' | 'created_at' | 'created_by'>
+      allPenduduk: Penduduk[]
+    }) => addMeninggal(data, allPenduduk, user?.email ?? 'unknown'),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['vital'], exact: false })
       qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })

@@ -6,7 +6,6 @@ import {
   getDocs,
   getDoc,
   addDoc,
-  setDoc,
   updateDoc,
   deleteDoc,
   doc,
@@ -14,9 +13,11 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
+import { jalankanSuksesiKK } from '@/lib/kk-succession'
 import type { Penduduk, PendudukFormData } from '@/types'
 
 const COL = 'penduduk'
@@ -70,11 +71,26 @@ async function addPenduduk(
 ): Promise<string> {
   const nik = data.nik?.trim()
   if (!nik) throw new Error('NIK wajib diisi untuk menyimpan data penduduk')
-  await setDoc(doc(db, COL, nik), {
-    ...data,
-    created_at: serverTimestamp(),
-    updated_at: serverTimestamp(),
+
+  // FIX race condition: checkNikExists() di form dan setDoc() di sini punya
+  // celah waktu — dua operator bisa lolos pengecekan bersamaan lalu operator
+  // kedua menimpa data operator pertama tanpa peringatan (setDoc bersifat
+  // overwrite). runTransaction membaca+menulis dokumen yang sama secara ATOMIK
+  // di level Firestore: siapa pun yang transaksinya sampai lebih dulu menang,
+  // yang kedua mendapat error jelas alih-alih menimpa diam-diam.
+  const docRef = doc(db, COL, nik)
+  await runTransaction(db, async (tx) => {
+    const existing = await tx.get(docRef)
+    if (existing.exists()) {
+      throw new Error(`NIK ${nik} sudah terdaftar atas nama ${existing.data()?.nama_lengkap ?? 'penduduk lain'}. Data tidak disimpan untuk mencegah menimpa data yang sudah ada.`)
+    }
+    tx.set(docRef, {
+      ...data,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    })
   })
+
   await writeLog('tambah', `Tambah penduduk: ${data.nama_lengkap}`, email, nik)
   return nik
 }
@@ -202,29 +218,12 @@ async function catatMeninggal(params: {
     status: 'meninggal',
     updated_at: serverTimestamp(),
   })
-  // KK Succession
-  if (hubungan_keluarga === 'Kepala Keluarga' && no_kk) {
-    const anggota = allPenduduk.filter((p) => p.no_kk === no_kk && p.id !== pendudukId && p.status === 'aktif')
-    const urutan = ['Istri', 'Suami', 'Anak']
-    let pengganti: Penduduk | null = null
-    for (const hub of urutan) {
-      if (hub === 'Anak') {
-        const anakList = anggota.filter((p) => p.hubungan_keluarga === 'Anak')
-        anakList.sort((a, b) => (a.tanggal_lahir ?? '').localeCompare(b.tanggal_lahir ?? ''))
-        if (anakList.length > 0) { pengganti = anakList[0]; break }
-      } else {
-        const found = anggota.find((p) => p.hubungan_keluarga === hub)
-        if (found) { pengganti = found; break }
-      }
-    }
-    if (pengganti) {
-      await updateDoc(doc(db, COL, pengganti.id), {
-        hubungan_keluarga: 'Kepala Keluarga',
-        hub_asli_backup: pengganti.hubungan_keluarga,
-        updated_at: serverTimestamp(),
-      })
-    }
-  }
+  await jalankanSuksesiKK(db, {
+    pendudukId,
+    hubunganKeluarga: hubungan_keluarga,
+    noKk: no_kk,
+    allPenduduk,
+  })
   await writeLog('meninggal', `${nama} meninggal${sebab ? ` (${sebab})` : ''}`, email, nik)
 }
 

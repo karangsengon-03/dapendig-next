@@ -13,6 +13,7 @@ import {
   useRollbackMeninggal,
   useEditLahir, useEditMeninggal,
 } from '@/hooks/useVital'
+import { usePendudukList } from '@/hooks/usePenduduk'
 import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/components/ui/toast'
 import type { Lahir, Meninggal } from '@/types'
@@ -267,6 +268,7 @@ export default function VitalPage() {
 
   const { data: dataLahir, isLoading: loadingLahir } = useLahir()
   const { data: dataMeninggal, isLoading: loadingMeninggal } = useMeninggal()
+  const { data: dataPenduduk } = usePendudukList()
   const { mutate: hapusLahir, isPending: pendingHapusLahir } = useDeleteLahir()
   const { mutate: hapusMeninggal, isPending: pendingHapusMeninggal } = useDeleteMeninggal()
   const { mutate: rollback, isPending: pendingRollback } = useRollbackMeninggal()
@@ -354,7 +356,7 @@ export default function VitalPage() {
         {showForm && (
           <div className="flex-1 min-h-0 overflow-y-auto">
             {tab === 'lahir' && <LahirForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
-            {tab === 'meninggal' && <MeninggalForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />}
+            {tab === 'meninggal' && <MeninggalForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} allPenduduk={dataPenduduk ?? []} />}
           </div>
         )}
 

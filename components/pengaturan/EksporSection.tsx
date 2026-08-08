@@ -160,7 +160,9 @@ function EksporButton({ item }: { item: EksporItem }) {
     if (triggered && data && !isFetching) {
       const { kolom, filename, sheetName } = itemRef.current
       const today = new Date().toISOString().slice(0, 10)
-      exportToExcel(data, kolom, `${filename}-${today}`, sheetName)
+      exportToExcel(data, kolom, `${filename}-${today}`, sheetName).catch((err) => {
+        console.error('Ekspor Excel gagal:', err)
+      })
       // setState via setTimeout agar tidak setState synchronously dalam effect
       const t1 = setTimeout(() => { setTriggered(false); setDone(true) }, 0)
       const t2 = setTimeout(() => setDone(false), 3000)
@@ -173,7 +175,9 @@ function EksporButton({ item }: { item: EksporItem }) {
     if (data && !isFetching) {
       // Data sudah di-cache — ekspor langsung tanpa fetch ulang
       const today = new Date().toISOString().slice(0, 10)
-      exportToExcel(data, item.kolom, `${item.filename}-${today}`, item.sheetName)
+      exportToExcel(data, item.kolom, `${item.filename}-${today}`, item.sheetName).catch((err) => {
+        console.error('Ekspor Excel gagal:', err)
+      })
       setDone(true)
       setTimeout(() => setDone(false), 3000)
     } else {
@@ -245,7 +249,9 @@ function LaporanBulananSection() {
   ]
 
   function handleEkspor() {
-    exportBulanan({ mk, mm, lh, mn, totalAktif }, bulan, tahun)
+    exportBulanan({ mk, mm, lh, mn, totalAktif }, bulan, tahun).catch((err) => {
+      console.error('Ekspor laporan bulanan gagal:', err)
+    })
   }
 
   return (

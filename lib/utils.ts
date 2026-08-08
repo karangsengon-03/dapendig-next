@@ -34,11 +34,6 @@ export function formatTanggal(tanggal: string | undefined | null): string {
   return `${d.getDate()} ${bulan[d.getMonth() + 1]} ${d.getFullYear()}`
 }
 
-export function formatNIK(nik: string | undefined | null): string {
-  if (!nik) return '-'
-  return String(nik)
-}
-
 export function getInisial(nama: string | undefined | null): string {
   if (!nama) return '?'
   const parts = nama.trim().split(' ')
@@ -63,7 +58,7 @@ export function getUmur(tanggalLahir: string | undefined | null): number | null 
   return age
 }
 
-export const APP_VERSION = 'v2.6.4'
+export const APP_VERSION = 'v2.7.1'
 export const APP_NAME = 'DaPenDig Next'
 export const APP_TAGLINE = 'Data Penduduk Digital'
 export const DESA_DEFAULT = 'Karang Sengon'

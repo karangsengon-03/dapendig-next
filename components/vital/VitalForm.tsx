@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAddLahir, useAddMeninggal } from '@/hooks/useVital'
-import type { Lahir, Meninggal } from '@/types'
+import type { Lahir, Meninggal, Penduduk } from '@/types'
 import {
   AGAMA,
   HUBUNGAN_KELUARGA,
@@ -209,9 +209,10 @@ export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
 interface MeninggalFormProps {
   onSuccess: () => void
   onCancel: () => void
+  allPenduduk: Penduduk[]
 }
 
-export function MeninggalForm({ onSuccess, onCancel }: MeninggalFormProps) {
+export function MeninggalForm({ onSuccess, onCancel, allPenduduk }: MeninggalFormProps) {
   const { mutate, isPending } = useAddMeninggal()
   const [form, setForm] = useState({
     nama: '',
@@ -249,7 +250,7 @@ export function MeninggalForm({ onSuccess, onCancel }: MeninggalFormProps) {
       sebab: form.sebab.trim(),
       tanggal: form.tanggal,
     }
-    mutate(data, { onSuccess })
+    mutate({ data, allPenduduk }, { onSuccess })
   }
 
   const selectClass = "w-full bg-slate-900 border border-white/[0.06] text-slate-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -257,6 +258,11 @@ export function MeninggalForm({ onSuccess, onCancel }: MeninggalFormProps) {
   return (
     <div className="bg-[#0d1424] border border-white/[0.06] rounded-lg p-4 mb-4 space-y-3">
       <h3 className="text-sm font-semibold text-sky-400">Catat Kematian</h3>
+      {form.hub_asli === 'Kepala Keluarga' && (
+        <div className="px-3 py-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-sm text-amber-400">
+          Penduduk ini akan dicatat sebagai Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Suami/Anak tertua).
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label>Nama Lengkap</Label>

@@ -1,14 +1,92 @@
 /**
  * exportExcel.ts
- * Utility ekspor data ke file .xlsx menggunakan SheetJS (xlsx)
+ * Utility ekspor data ke file .xlsx menggunakan ExcelJS
  * Dipanggil dari halaman /pengaturan — seksi Ekspor Data
+ *
+ * MIGRASI dari SheetJS (xlsx) ke ExcelJS di v2.7.1: paket 'xlsx' terkunci
+ * permanen di versi 0.18.5 di npm registry sejak 2022 (kebijakan SheetJS
+ * sendiri, bukan bug sementara) dan tidak bisa menerima fix untuk 2
+ * kerentanan severity HIGH (prototype pollution, ReDoS) yang relevan
+ * langsung dengan fitur impor Excel kita. ExcelJS aktif dipelihara dan
+ * mendukung semua fitur yang dipakai di sini: multi-sheet, auto-width
+ * kolom, read+write penuh.
  */
 
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 export interface ExportColumn {
   key: string
   header: string
+}
+
+// Konversi YYYY-MM-DD → DD/MM/YYYY untuk ekspor
+function toDisplayDate(val: string): string {
+  if (!val || !/^\d{4}-\d{2}-\d{2}$/.test(val)) return val
+  const [y, m, d] = val.split('-')
+  return `${d}/${m}/${y}`
+}
+
+// Trigger download file di browser dari Buffer — ExcelJS tidak punya
+// writeFile langsung di browser (itu API Node.js-nya), jadi kita generate
+// buffer lalu download manual via Blob + anchor, pola standar ExcelJS
+// untuk lingkungan browser.
+async function downloadWorkbook(wb: ExcelJS.Workbook, filename: string): Promise<void> {
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+// Format nilai satu sel — dipakai untuk value final maupun untuk menghitung
+// lebar kolom (harus konsisten, supaya auto-width benar-benar akurat).
+function formatCellValue(val: unknown): string {
+  if (val === null || val === undefined) return ''
+  // Firestore Timestamp → DD/MM/YYYY
+  if (
+    typeof val === 'object' &&
+    'seconds' in (val as object) &&
+    'nanoseconds' in (val as object)
+  ) {
+    const ts = val as { seconds: number; nanoseconds: number }
+    const d = new Date(ts.seconds * 1000)
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+  }
+  // Tanggal format YYYY-MM-DD → DD/MM/YYYY
+  if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+    return toDisplayDate(val)
+  }
+  return String(val)
+}
+
+// Tambah 1 sheet berisi array-of-arrays (setara XLSX.utils.aoa_to_sheet +
+// book_append_sheet), dengan auto-width kolom berdasarkan konten terpanjang.
+function addAoaSheet(
+  wb: ExcelJS.Workbook,
+  sheetName: string,
+  header: string[],
+  body: (string | number)[][]
+): void {
+  const ws = wb.addWorksheet(sheetName.slice(0, 31))
+  ws.addRow(header)
+  body.forEach((row) => ws.addRow(row))
+
+  // Auto-width kolom — setara logika lama: panjang konten terpanjang per
+  // kolom (termasuk header), dibatasi maksimal 50 karakter.
+  header.forEach((h, ci) => {
+    const maxLen = Math.max(
+      h.length,
+      ...body.map((row) => String(row[ci] ?? '').length)
+    )
+    ws.getColumn(ci + 1).width = Math.min(maxLen + 2, 50)
+  })
 }
 
 /**
@@ -18,60 +96,19 @@ export interface ExportColumn {
  * @param filename - Nama file tanpa ekstensi (akan diberi .xlsx otomatis)
  * @param sheetName - Nama sheet dalam workbook (maks 31 karakter)
  */
-// Konversi YYYY-MM-DD → DD/MM/YYYY untuk ekspor
-function toDisplayDate(val: string): string {
-  if (!val || !/^\d{4}-\d{2}-\d{2}$/.test(val)) return val
-  const [y, m, d] = val.split('-')
-  return `${d}/${m}/${y}`
-}
-
-export function exportToExcel(
+export async function exportToExcel(
   rows: Record<string, unknown>[],
   columns: ExportColumn[],
   filename: string,
   sheetName = 'Data'
-): void {
+): Promise<void> {
   const header = columns.map((c) => c.header)
-  const body = rows.map((row) =>
-    columns.map((c) => {
-      const val = row[c.key]
-      if (val === null || val === undefined) return ''
-      // Firestore Timestamp → DD/MM/YYYY
-      if (
-        typeof val === 'object' &&
-        'seconds' in (val as object) &&
-        'nanoseconds' in (val as object)
-      ) {
-        const ts = val as { seconds: number; nanoseconds: number }
-        const d = new Date(ts.seconds * 1000)
-        return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
-      }
-      // Tanggal format YYYY-MM-DD → DD/MM/YYYY
-      if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
-        return toDisplayDate(val)
-      }
-      return String(val)
-    })
-  )
+  const body = rows.map((row) => columns.map((c) => formatCellValue(row[c.key])))
 
-  const wsData = [header, ...body]
-  const ws = XLSX.utils.aoa_to_sheet(wsData)
+  const wb = new ExcelJS.Workbook()
+  addAoaSheet(wb, sheetName, header, body)
 
-  // Auto-width kolom berdasarkan konten
-  const colWidths = columns.map((c, ci) => {
-    const maxLen = Math.max(
-      c.header.length,
-      ...body.map((row) => String(row[ci] ?? '').length)
-    )
-    return { wch: Math.min(maxLen + 2, 50) }
-  })
-  ws['!cols'] = colWidths
-
-  // Style header (bold) — hanya didukung bila pakai xlsx-style, tapi kita mark aja
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31))
-
-  XLSX.writeFile(wb, `${filename}.xlsx`)
+  await downloadWorkbook(wb, `${filename}.xlsx`)
 }
 
 // ── Ekspor Bulanan Multi-Sheet ────────────────────────────────────────────────
@@ -99,7 +136,7 @@ function filterByBulanTahun(tgl: string, bulan: string, tahun: string): boolean 
   return String(d.getMonth() + 1).padStart(2, '0') === bulan && String(d.getFullYear()) === tahun
 }
 
-export function exportBulanan(data: DataBulanan, bulan: string, tahun: string): void {
+export async function exportBulanan(data: DataBulanan, bulan: string, tahun: string): Promise<void> {
   const namaBulan = NAMA_BULAN[parseInt(bulan, 10) - 1] ?? bulan
 
   const mk = data.mk.filter((r) => filterByBulanTahun(r.tanggal, bulan, tahun))
@@ -107,42 +144,48 @@ export function exportBulanan(data: DataBulanan, bulan: string, tahun: string): 
   const lh = data.lh.filter((r) => filterByBulanTahun(r.tanggal_lahir, bulan, tahun))
   const mn = data.mn.filter((r) => filterByBulanTahun(r.tanggal, bulan, tahun))
 
-  const wb = XLSX.utils.book_new()
+  const wb = new ExcelJS.Workbook()
 
   // Sheet Rekap
-  const rekap = [
-    ['Kategori', 'Jumlah'],
+  addAoaSheet(wb, 'Rekap', ['Kategori', 'Jumlah'], [
     ['Mutasi Keluar', mk.length],
     ['Mutasi Masuk', mm.length],
     ['Kelahiran', lh.length],
     ['Kematian', mn.length],
     ['Total Penduduk Aktif', data.totalAktif],
-  ]
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rekap), 'Rekap')
+  ])
 
   // Sheet Mutasi Keluar
   if (mk.length > 0) {
-    const rows = [['Nama', 'NIK', 'No. KK', 'Tujuan', 'Tanggal'], ...mk.map((r) => [r.nama, r.nik_target, r.no_kk, r.tujuan, toDisplayDate(r.tanggal)])]
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Mutasi Keluar')
+    addAoaSheet(wb, 'Mutasi Keluar',
+      ['Nama', 'NIK', 'No. KK', 'Tujuan', 'Tanggal'],
+      mk.map((r) => [r.nama, r.nik_target, r.no_kk, r.tujuan, toDisplayDate(r.tanggal)])
+    )
   }
 
   // Sheet Mutasi Masuk
   if (mm.length > 0) {
-    const rows = [['Nama', 'NIK', 'No. KK', 'Asal Daerah', 'Tanggal'], ...mm.map((r) => [r.nama_lengkap, r.nik, r.no_kk, r.asal_daerah, toDisplayDate(r.tanggal)])]
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Mutasi Masuk')
+    addAoaSheet(wb, 'Mutasi Masuk',
+      ['Nama', 'NIK', 'No. KK', 'Asal Daerah', 'Tanggal'],
+      mm.map((r) => [r.nama_lengkap, r.nik, r.no_kk, r.asal_daerah, toDisplayDate(r.tanggal)])
+    )
   }
 
   // Sheet Kelahiran
   if (lh.length > 0) {
-    const rows = [['Nama Bayi', 'JK', 'Tgl Lahir', 'Nama Ibu', 'Nama Ayah', 'RT', 'RW'], ...lh.map((r) => [r.nama_lengkap, r.jenis_kelamin, toDisplayDate(r.tanggal_lahir), r.nama_ibu, r.nama_ayah, r.rt, r.rw])]
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Kelahiran')
+    addAoaSheet(wb, 'Kelahiran',
+      ['Nama Bayi', 'JK', 'Tgl Lahir', 'Nama Ibu', 'Nama Ayah', 'RT', 'RW'],
+      lh.map((r) => [r.nama_lengkap, r.jenis_kelamin, toDisplayDate(r.tanggal_lahir), r.nama_ibu, r.nama_ayah, r.rt, r.rw])
+    )
   }
 
   // Sheet Kematian
   if (mn.length > 0) {
-    const rows = [['Nama', 'NIK', 'Tgl Meninggal', 'Sebab'], ...mn.map((r) => [r.nama, r.nik_target, toDisplayDate(r.tanggal), r.sebab])]
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Kematian')
+    addAoaSheet(wb, 'Kematian',
+      ['Nama', 'NIK', 'Tgl Meninggal', 'Sebab'],
+      mn.map((r) => [r.nama, r.nik_target, toDisplayDate(r.tanggal), r.sebab])
+    )
   }
 
-  XLSX.writeFile(wb, `Laporan-${namaBulan}-${tahun}.xlsx`)
+  await downloadWorkbook(wb, `Laporan-${namaBulan}-${tahun}.xlsx`)
 }

@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Third-party minified vendor bundles served as static assets
+    // (bukan source code project — lihat public/vendor/README.md)
+    "public/vendor/**",
   ]),
 ]);
 

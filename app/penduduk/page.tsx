@@ -23,6 +23,20 @@ const DEFAULT_FILTER: FilterState = {
   status: 'aktif',
 }
 
+// Urutan hubungan keluarga yang benar untuk sorting dalam 1 KK
+const HUB_ORDER: Record<string, number> = {
+  'Kepala Keluarga': 0,
+  'Istri': 1,
+  'Anak': 2,
+  'Menantu': 3,
+  'Cucu': 4,
+  'Orang Tua': 5,
+  'Mertua': 6,
+  'Famili Lain': 7,
+  'Pembantu': 8,
+  'Lainnya': 9,
+}
+
 function PendudukContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -140,20 +154,6 @@ function PendudukContent() {
     if (!filter.status) return allData.length
     return allData.filter(r => r.status === filter.status).length
   }, [allData, filter.status])
-
-  // Urutan hubungan keluarga yang benar untuk sorting dalam 1 KK
-  const HUB_ORDER: Record<string, number> = {
-    'Kepala Keluarga': 0,
-    'Istri': 1,
-    'Anak': 2,
-    'Menantu': 3,
-    'Cucu': 4,
-    'Orang Tua': 5,
-    'Mertua': 6,
-    'Famili Lain': 7,
-    'Pembantu': 8,
-    'Lainnya': 9,
-  }
 
   const filtered = useMemo(() => {
     let rows = [...allData]

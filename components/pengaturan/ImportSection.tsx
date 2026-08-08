@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { Upload, FileSpreadsheet, Download, CheckCircle2, ArrowLeft, ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -80,45 +80,93 @@ export function ImportSection() {
   const [progressTotal, setProgressTotal] = useState(0)
   const importMutation = useImportPenduduk()
 
-  function downloadTemplate() {
-    const wb = XLSX.utils.book_new()
-    const ws = XLSX.utils.aoa_to_sheet([TEMPLATE_HEADERS])
-    XLSX.utils.book_append_sheet(wb, ws, 'Template')
-    XLSX.writeFile(wb, 'template-import-penduduk.xlsx')
+  async function downloadTemplate() {
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('Template')
+    ws.addRow(TEMPLATE_HEADERS)
+    const buffer = await wb.xlsx.writeBuffer()
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'template-import-penduduk.xlsx'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
-  function parseFile(file: File) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const buffer = e.target?.result as ArrayBuffer
-      // cellDates:true + dateNF memastikan sel tanggal Excel dikonversi ke string YYYY-MM-DD
-      // langsung oleh SheetJS, bukan Date object yang rentan timezone shift
-      const wb = XLSX.read(buffer, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      // raw:false agar Date object dari SheetJS diformat pakai dateNF jadi string YYYY-MM-DD
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: false })
-      if (!rows.length) return
-      const cols = Object.keys(rows[0])
-      const initMap: Record<string, string> = {}
-      cols.forEach((c) => { initMap[c] = autoMap(c) })
-      setRawRows(rows)
-      setExcelCols(cols)
-      setMapping(initMap)
-      setStep('mapping')
+  async function parseFile(file: File) {
+    const buffer = await file.arrayBuffer()
+    const wb = new ExcelJS.Workbook()
+    await wb.xlsx.load(buffer)
+    const ws = wb.worksheets[0]
+    if (!ws) return
+
+    // Baris 1 = header (setara wb.SheetNames[0] + baris pertama sheet_to_json)
+    const headerRow = ws.getRow(1)
+    const cols: string[] = []
+    headerRow.eachCell({ includeEmpty: false }, (cell) => {
+      cols.push(String(cell.value ?? '').trim())
+    })
+    if (!cols.length) return
+
+    const rows: Record<string, unknown>[] = []
+    for (let r = 2; r <= ws.rowCount; r++) {
+      const row = ws.getRow(r)
+      if (row.cellCount === 0) continue // skip baris kosong
+      const obj: Record<string, unknown> = {}
+      cols.forEach((colName, idx) => {
+        const cell = row.getCell(idx + 1)
+        let val: unknown = cell.value
+        if (val instanceof Date) {
+          // PENTING: exceljs mengembalikan tanggal Excel sebagai Date UTC.
+          // Selalu pakai getUTC* (bukan getFullYear/getDate lokal) supaya
+          // hasilnya konsisten YYYY-MM-DD tanpa tergeser timezone browser
+          // operator — mereplikasi persis maksud cellDates+dateNF di SheetJS
+          // sebelumnya.
+          const y = val.getUTCFullYear()
+          const m = String(val.getUTCMonth() + 1).padStart(2, '0')
+          const d = String(val.getUTCDate()).padStart(2, '0')
+          val = `${y}-${m}-${d}`
+        } else if (val === null || val === undefined) {
+          val = '' // setara defval: ''
+        } else if (typeof val === 'object' && 'result' in (val as object)) {
+          // Sel formula — ambil hasil kalkulasinya, bukan object formula
+          val = (val as { result: unknown }).result ?? ''
+        } else {
+          val = String(val) // setara raw: false (nilai terformat sebagai string)
+        }
+        obj[colName] = val
+      })
+      rows.push(obj)
     }
-    reader.readAsArrayBuffer(file)
+
+    if (!rows.length) return
+    const initMap: Record<string, string> = {}
+    cols.forEach((c) => { initMap[c] = autoMap(c) })
+    setRawRows(rows)
+    setExcelCols(cols)
+    setMapping(initMap)
+    setStep('mapping')
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (file) parseFile(file)
+    if (file) parseFile(file).catch(() => {
+      alert('Gagal membaca file Excel. Pastikan file tidak rusak dan berformat .xlsx.')
+    })
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
     setDragging(false)
     const file = e.dataTransfer.files?.[0]
-    if (file) parseFile(file)
+    if (file) parseFile(file).catch(() => {
+      alert('Gagal membaca file Excel. Pastikan file tidak rusak dan berformat .xlsx.')
+    })
   }
 
   async function handleImport() {

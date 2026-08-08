@@ -1,6 +1,6 @@
 {
   "name": "dapendig-next",
-  "version": "2.6.4",
+  "version": "2.7.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -22,15 +22,17 @@
     "@tanstack/react-query-devtools": "^5.99.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "firebase": "^12.12.0",
+    "exceljs": "^4.4.0",
+    "firebase": "^12.17.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.8.0",
-    "next": "16.2.6",
+    "next": "^16.3.0",
     "next-themes": "^0.4.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "tailwind-merge": "^3.5.0",
     "recharts": "^2.15.3",
-    "xlsx": "^0.18.5",
+    "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -39,7 +41,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.6",
+    "eslint-config-next": "^16.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

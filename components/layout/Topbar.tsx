@@ -17,9 +17,9 @@ export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-lin
   const btnRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => { setMounted(true) }, [])
+  // Lazy initializer: true hanya saat benar-benar dievaluasi di client (browser),
+  // tetap false saat SSR/build. Menghindari setState di dalam useEffect body.
+  const [mounted] = useState(() => typeof window !== 'undefined')
 
   const getInisial = (nama: string) => {
     const parts = nama.trim().split(' ')
