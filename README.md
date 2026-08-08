@@ -4,11 +4,7 @@ Aplikasi PWA manajemen data penduduk desa untuk **Desa Karang Sengon, Kecamatan 
 
 ---
 
-<<<<<<< HEAD
 ## Versi Saat Ini: v2.7.1
-=======
-## Versi Saat Ini: v2.6.5
->>>>>>> 162232cfa692194738c14b655570be8041b590cd
 
 ---
 
@@ -136,11 +132,8 @@ Buka `http://localhost:3000`. Pastikan file `.env.local` berisi Firebase config 
 
 | Versi | Tanggal | Ringkasan |
 |-------|---------|-----------|
-<<<<<<< HEAD
 | v2.7.1 | Ags 2026 | Fix 3 kerentanan keamanan dari npm audit: upgrade firebase ke 12.17.1 (hapus 7 kerentanan SDK), upgrade jsPDF ke 4.2.1 (hapus kerentanan critical, perlu verifikasi visual cetak KK — lihat PANDUAN_VERIFIKASI_JSPDF_V4.md), migrasi xlsx (SheetJS, terkunci permanen di npm sejak 2022) ke ExcelJS untuk ekspor/impor data |
 | v2.7.0 | Ags 2026 | Fix suksesi KK (unifikasi 2 jalur pencatatan kematian + rollback yang benar-benar memulihkan), fix race condition NIK duplikat (transaction), fix build gagal jika env Firebase kosong, cetak KK Sementara lepas dari CDN eksternal (vendor lokal), hapus fitur Surat Resmi (sudah tak dipakai), upgrade Next.js 16.3.0 |
-=======
->>>>>>> 162232cfa692194738c14b655570be8041b590cd
 | v2.6.5 | Jun 2026 | Cetak KK: PDF A4 eksak via jsPDF+html2canvas, watermark SVG fix |
 | v2.6.x | Jun 2026 | Iterasi perbaikan ukuran kertas, watermark, dan centering KK |
 | v2.5.x | Mei–Jun 2026 | Cetak KK Sementara (layout, garuda, landscape, footer, filter reset monografi) |
