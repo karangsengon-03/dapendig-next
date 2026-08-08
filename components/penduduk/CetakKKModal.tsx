@@ -363,18 +363,11 @@ tr.dr td{height:3.92mm;max-height:3.92mm;overflow:hidden;font-size:7.5pt}
 .disc{margin-top:2mm;text-align:center;font-size:7pt;color:#333;font-style:italic;line-height:1.4;}
 @media print{html,body{margin:0}}
 </style>
-<<<<<<< HEAD
 <script src="/vendor/html2canvas.min.js" onerror="document.body.innerHTML='<p style=\'font-family:sans-serif;padding:24px;color:#b91c1c\'>Gagal memuat komponen cetak (html2canvas). Coba muat ulang halaman ini.</p>'"></script>
 <script src="/vendor/jspdf.umd.min.js" onerror="document.body.innerHTML='<p style=\'font-family:sans-serif;padding:24px;color:#b91c1c\'>Gagal memuat komponen cetak (jsPDF). Coba muat ulang halaman ini.</p>'"></script>
 <script>
 window.addEventListener('load', async function() {
  try {
-=======
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-window.addEventListener('load', async function() {
->>>>>>> 162232cfa692194738c14b655570be8041b590cd
   // Tunggu sebentar agar font/gambar render sempurna
   await new Promise(r => setTimeout(r, 600));
 
@@ -411,12 +404,9 @@ window.addEventListener('load', async function() {
   
   // Tutup tab setelah download
   setTimeout(() => window.close(), 1000);
-<<<<<<< HEAD
  } catch (err) {
   document.body.innerHTML = '<p style="font-family:sans-serif;padding:24px;color:#b91c1c">Gagal membuat PDF: ' + (err && err.message ? err.message : 'kesalahan tidak diketahui') + '. Coba lagi, atau tutup tab ini dan ulangi dari awal.</p>';
  }
-=======
->>>>>>> 162232cfa692194738c14b655570be8041b590cd
 });
 </script>
 </head>
