@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { Penduduk, ConfigWilayah } from '@/types'
 import { X, Printer } from 'lucide-react'
 
@@ -24,11 +25,22 @@ function fmtTgl(tgl: string | undefined | null): string {
   return tgl
 }
 
-// Format tanggal cetak ke "02 Juni 2026"
-function fmtTglCetak(): string {
-  return new Date().toLocaleDateString('id-ID', {
+// Format tanggal cetak (YYYY-MM-DD dari <input type="date">) ke "02 Juni 2026"
+function fmtTglCetak(tglYmd: string): string {
+  const d = new Date(tglYmd + 'T00:00:00')
+  if (isNaN(d.getTime())) return tglYmd
+  return d.toLocaleDateString('id-ID', {
     day: '2-digit', month: 'long', year: 'numeric'
   })
+}
+
+// Tanggal hari ini dalam format YYYY-MM-DD (default value <input type="date">)
+function todayYmd(): string {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function getKK(anggota: Penduduk[]) {
@@ -37,7 +49,8 @@ function getKK(anggota: Penduduk[]) {
 
 export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
   const kepKK = getKK(anggota)
-  const tglCetak = fmtTglCetak()
+  const [tglCetakYmd, setTglCetakYmd] = useState(todayYmd())
+  const tglCetak = fmtTglCetak(tglCetakYmd)
   const kodePos = wilayah.kode_pos ?? '68284'
   const jabatan = wilayah.jabatan_kades ?? 'Kepala Desa'
   const showNip = !!wilayah.nip_kades &&
@@ -457,13 +470,22 @@ ${buildHalamanHTML()}
               ['Kepala Keluarga', kepKK?.nama_lengkap ?? '—'],
               ['Jumlah Anggota', `${anggota.length} orang`],
               ['Desa', `Desa ${wilayah.desa}`],
-              ['Tanggal Cetak', tglCetak],
             ] as const).map(([l, v]) => (
               <div key={l} className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2">
                 <p className="text-xs text-slate-500">{l}</p>
                 <p className="text-sm font-medium text-slate-200 mt-0.5">{v}</p>
               </div>
             ))}
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2">
+              <label htmlFor="tgl-cetak-kk" className="text-xs text-slate-500">Tanggal Cetak</label>
+              <input
+                id="tgl-cetak-kk"
+                type="date"
+                value={tglCetakYmd}
+                onChange={(e) => setTglCetakYmd(e.target.value || todayYmd())}
+                className="block w-full bg-transparent text-sm font-medium text-slate-200 mt-0.5 focus:outline-none [color-scheme:dark]"
+              />
+            </div>
           </div>
           <p className="text-xs text-slate-500">
             PDF akan terunduh otomatis dalam ukuran{" "}

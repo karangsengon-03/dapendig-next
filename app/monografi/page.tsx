@@ -105,10 +105,10 @@ function UsiaTanggungan({
       <div className="grid grid-cols-3 gap-2 mb-4">
         {buckets.map((b) => (
           <div key={b.label} className={`rounded-xl ${b.bg} border ${b.border} p-3 flex flex-col gap-1`}>
-            <span className="text-xs text-slate-400 leading-tight">{b.label}</span>
+            <span className="text-xs text-slate-400 leading-tight min-h-[2rem] flex items-start">{b.label}</span>
             <span className={`text-2xl font-bold tabular-nums ${b.color}`}>{b.value}</span>
             <span className="text-xs text-slate-500">{b.persen}%</span>
-            <span className="text-xs text-slate-600 leading-tight">{b.sublabel}</span>
+            <span className="text-xs text-slate-600 leading-tight min-h-[2rem] flex items-start">{b.sublabel}</span>
           </div>
         ))}
       </div>

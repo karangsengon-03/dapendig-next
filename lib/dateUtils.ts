@@ -58,7 +58,7 @@ export function hitungUmur(tanggalLahir: string): number {
 export function formatTanggalLahir(str: string): string {
   const d = parseDate(str)
   if (!d) return str || '—'
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 /**
