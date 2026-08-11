@@ -65,7 +65,7 @@ export function CatatMeninggalModal({ penduduk, allPenduduk, onClose, onSuccess 
         {penduduk.hubungan_keluarga === 'Kepala Keluarga' && (
           <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
             <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
-            <p className="text-sm text-amber-400">Penduduk ini adalah Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Suami/Anak tertua).</p>
+            <p className="text-sm text-amber-400">Penduduk ini adalah Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Anak tertua).</p>
           </div>
         )}
 

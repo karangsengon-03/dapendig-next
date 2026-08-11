@@ -31,7 +31,7 @@ function formatRelative(ts: unknown): string {
   if (days < 7) return `${days} hari lalu`
 
   return d.toLocaleDateString('id-ID', {
-    day: 'numeric',
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
   })

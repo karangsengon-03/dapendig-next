@@ -26,6 +26,24 @@ function fmtTgl(tgl: string | undefined | null): string {
 }
 
 // Format tanggal cetak (YYYY-MM-DD dari <input type="date">) ke "02 Juni 2026"
+// SECURITY: escape data penduduk sebelum masuk ke string HTML mentah di
+// bawah — string ini dieksekusi lewat document.write() di jendela print,
+// jadi tanpa escape, karakter HTML/script di nama/alamat akan benar-benar
+// dieksekusi sebagai kode, bukan cuma tampil sebagai teks. Untuk data
+// normal (tanpa karakter <, >, &, kutip), hasilnya identik persis seperti
+// sebelumnya — hanya karakter spesial itu yang diubah jadi entity HTML.
+// fallback dipakai HANYA untuk null/undefined (sama seperti ?? asli),
+// string kosong '' tetap tampil kosong seperti sebelumnya, bukan fallback.
+function esc(val: string | undefined | null, fallback = ''): string {
+  if (val === undefined || val === null) return fallback
+  return String(val)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function fmtTglCetak(tglYmd: string): string {
   const d = new Date(tglYmd + 'T00:00:00')
   if (isNaN(d.getTime())) return tglYmd
@@ -72,15 +90,15 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
       return pageRows.map((p, i) => `
         <tr class="dr">
           <td>${startIdx + i + 1}</td>
-          <td>${p.nama_lengkap ?? ''}</td>
-          <td class="ctr">${p.nik ?? '-'}</td>
-          <td class="uc">${p.jenis_kelamin ?? '-'}</td>
-          <td>${p.tempat_lahir ?? '-'}</td>
+          <td>${esc(p.nama_lengkap)}</td>
+          <td class="ctr">${esc(p.nik, '-')}</td>
+          <td class="uc">${esc(p.jenis_kelamin, '-')}</td>
+          <td>${esc(p.tempat_lahir, '-')}</td>
           <td>${fmtTgl(p.tanggal_lahir)}</td>
-          <td class="uc">${p.agama ?? '-'}</td>
-          <td class="uc">${p.pendidikan ?? '-'}</td>
-          <td class="uc">${p.pekerjaan ?? '-'}</td>
-          <td>${p.golongan_darah ?? '-'}</td>
+          <td class="uc">${esc(p.agama, '-')}</td>
+          <td class="uc">${esc(p.pendidikan, '-')}</td>
+          <td class="uc">${esc(p.pekerjaan, '-')}</td>
+          <td>${esc(p.golongan_darah, '-')}</td>
         </tr>`).join('') +
       Array.from({ length: Math.max(0, 10 - pageRows.length) }).map((_, i) => `
         <tr class="dr">
@@ -95,13 +113,13 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
       return pageRows.map((p, i) => `
         <tr class="dr">
           <td>${startIdx + i + 1}</td>
-          <td class="uc">${p.status_perkawinan ?? '-'}</td>
+          <td class="uc">${esc(p.status_perkawinan, '-')}</td>
           <td>-</td>
-          <td class="uc">${p.hubungan_keluarga ?? '-'}</td>
+          <td class="uc">${esc(p.hubungan_keluarga, '-')}</td>
           <td>WNI</td>
           <td class="ctr">-</td><td class="ctr">-</td>
-          <td>${p.nama_ayah ?? '-'}</td>
-          <td>${p.nama_ibu ?? '-'}</td>
+          <td>${esc(p.nama_ayah, '-')}</td>
+          <td>${esc(p.nama_ibu, '-')}</td>
         </tr>`).join('') +
       Array.from({ length: Math.max(0, 10 - pageRows.length) }).map((_, i) => `
         <tr class="dr">
@@ -184,9 +202,9 @@ export function CetakKKModal({ noKk, anggota, wilayah, onClose }: Props) {
                 <div class="nokk">No. ${noKk}</div>
               </div>
               <div class="col-b-info">
-                <div class="irow"><span class="il">Nama Kepala Keluarga</span><span class="ic">:</span><span class="iv-bold">${kepKK?.nama_lengkap ?? '—'}</span></div>
-                <div class="irow"><span class="il">Alamat</span><span class="ic">:</span><span class="iv">${kepKK?.alamat ?? '—'}</span></div>
-                <div class="irow"><span class="il">RT/RW</span><span class="ic">:</span><span class="iv">${kepKK ? `${kepKK.rt ?? '—'}/${kepKK.rw ?? '—'}` : '—'}</span></div>
+                <div class="irow"><span class="il">Nama Kepala Keluarga</span><span class="ic">:</span><span class="iv-bold">${esc(kepKK?.nama_lengkap, '—')}</span></div>
+                <div class="irow"><span class="il">Alamat</span><span class="ic">:</span><span class="iv">${esc(kepKK?.alamat, '—')}</span></div>
+                <div class="irow"><span class="il">RT/RW</span><span class="ic">:</span><span class="iv">${kepKK ? `${esc(kepKK.rt, '—')}/${esc(kepKK.rw, '—')}` : '—'}</span></div>
                 <div class="irow"><span class="il">Kode Pos</span><span class="ic">:</span><span class="iv">${kodePos}</span></div>
               </div>
             </div>

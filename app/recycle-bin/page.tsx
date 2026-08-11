@@ -13,7 +13,7 @@ function formatTanggal(ts: unknown): string {
   if (!ts) return '-'
   if (typeof ts === 'object' && ts !== null && 'seconds' in ts) {
     return new Date((ts as { seconds: number }).seconds * 1000).toLocaleDateString('id-ID', {
-      day: 'numeric', month: 'long', year: 'numeric',
+      day: '2-digit', month: 'long', year: 'numeric',
     })
   }
   return '-'

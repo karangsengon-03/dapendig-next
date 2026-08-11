@@ -260,7 +260,7 @@ export function MeninggalForm({ onSuccess, onCancel, allPenduduk }: MeninggalFor
       <h3 className="text-sm font-semibold text-sky-400">Catat Kematian</h3>
       {form.hub_asli === 'Kepala Keluarga' && (
         <div className="px-3 py-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-sm text-amber-400">
-          Penduduk ini akan dicatat sebagai Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Suami/Anak tertua).
+          Penduduk ini akan dicatat sebagai Kepala Keluarga. Sistem akan otomatis menentukan penggantinya (Istri/Anak tertua).
         </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

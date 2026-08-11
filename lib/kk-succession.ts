@@ -32,8 +32,18 @@ import type { Penduduk } from '@/types'
 
 const COL = 'penduduk'
 
-/** Urutan prioritas pengganti Kepala Keluarga: Istri → Suami → Anak tertua. */
-const URUTAN_PENGGANTI = ['Istri', 'Suami', 'Anak'] as const
+/**
+ * Urutan prioritas pengganti Kepala Keluarga: Istri → Anak tertua.
+ *
+ * CATATAN: 'Suami' TIDAK termasuk di sini secara sengaja. Daftar resmi
+ * HUBUNGAN_KELUARGA (lib/penduduk-constants.ts) tidak pernah menyediakan
+ * opsi 'Suami' di form manapun — hanya 'Kepala Keluarga', 'Istri', 'Anak',
+ * dst. Versi sebelumnya (diwariskan dari kode asli sebelum modul ini
+ * dibuat) menyertakan 'Suami' di urutan ini, yang secara struktural tidak
+ * pernah bisa match data apa pun — ditemukan lewat unit test yang
+ * memvalidasi silang terhadap type HubunganKeluarga.
+ */
+const URUTAN_PENGGANTI = ['Istri', 'Anak'] as const
 
 /**
  * Cari & tetapkan pengganti sementara saat seorang Kepala Keluarga meninggal.

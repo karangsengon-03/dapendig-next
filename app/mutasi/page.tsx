@@ -23,7 +23,7 @@ function formatTanggal(tgl: string) {
   if (!tgl) return '-'
   const d = parseDate(tgl)
   if (!d) return tgl
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 // ── Modal detail Mutasi Keluar ────────────────────────────────────────────────
