@@ -61,7 +61,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 left-0 bottom-0 z-50 w-64 flex flex-col',
+          'fixed top-0 left-0 bottom-0 z-50 w-64 flex flex-col overflow-hidden',
           'bg-[#070c18] border-r border-white/[0.06]',
           'transition-transform duration-300 ease-in-out',
           // Mobile: drawer
