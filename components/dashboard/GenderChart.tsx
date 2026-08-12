@@ -62,9 +62,10 @@ export function GenderChart({ lakiLaki, perempuan, loading }: GenderChartProps) 
                   }}
                   labelStyle={{ color: '#94a3b8' }}
                   itemStyle={{ color: '#e2e8f0' }}
-                  formatter={(value: number) => [
-                    `${value} jiwa (${((value / total) * 100).toFixed(1)}%)`,
-                  ]}
+                  formatter={(value) => {
+                    const n = typeof value === 'number' ? value : 0
+                    return [`${n} jiwa (${((n / total) * 100).toFixed(1)}%)`]
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>

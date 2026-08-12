@@ -76,7 +76,7 @@ export function RTChart({ data, loading }: RTChartProps) {
                 }}
                 labelStyle={{ color: '#94a3b8' }}
                 itemStyle={{ color: '#e2e8f0' }}
-                formatter={(value: number) => [`${value} jiwa`, 'Jumlah']}
+                formatter={(value) => [`${typeof value === 'number' ? value : 0} jiwa`, 'Jumlah']}
               />
               <Bar dataKey="jumlah" radius={[6, 6, 0, 0]}>
                 {data.map((entry, index) => (

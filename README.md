@@ -4,7 +4,7 @@ Aplikasi PWA manajemen data penduduk desa untuk **Desa Karang Sengon, Kecamatan 
 
 ---
 
-## Versi Saat Ini: v2.8.0
+## Versi Saat Ini: v2.9.0
 
 ---
 
@@ -132,6 +132,7 @@ Buka `http://localhost:3000`. Pastikan file `.env.local` berisi Firebase config 
 
 | Versi | Tanggal | Ringkasan |
 |-------|---------|-----------|
+| v2.9.0 | Ags 2026 | Bersihkan npm deprecation warning: overrides untuk uuid/glob/rimraf (10→4 warning, sisanya genuinely tak ada versi bersih), upgrade recharts v2→v3 (3 chart di dashboard, fix 3 Tooltip formatter untuk tipe ValueType baru, verified sama persis untuk data nyata) |
 | v2.8.0 | Ags 2026 | Infrastruktur testing menyeluruh: Vitest (61 unit+integration test), Firebase Rules test, Playwright E2E — semua siap pakai. Bug ditemukan & diperbaiki lewat proses testing: validasi kalender tanggal (30 Feb dulu diam-diam diterima), dead code "Suami" di suksesi KK, 4 tempat zero-padding tanggal yang terlewat sesi lalu, dan XSS di Cetak KK Sementara (data penduduk kini di-escape sebelum masuk HTML) |
 | v2.7.2 | Ags 2026 | Fix tanggal lahir tidak konsisten zero-padding (01 bukan 1) di 2 tempat, fix perataan card Komposisi Beban Tanggungan di Monografi, Tanggal Cetak KK Sementara kini bisa diubah manual (default hari ini) |
 | v2.7.1 | Ags 2026 | Fix 3 kerentanan keamanan dari npm audit: upgrade firebase ke 12.17.1 (hapus 7 kerentanan SDK), upgrade jsPDF ke 4.2.1 (hapus kerentanan critical, perlu verifikasi visual cetak KK — lihat PANDUAN_VERIFIKASI_JSPDF_V4.md), migrasi xlsx (SheetJS, terkunci permanen di npm sejak 2022) ke ExcelJS untuk ekspor/impor data |

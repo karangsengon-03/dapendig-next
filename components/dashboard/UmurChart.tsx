@@ -77,10 +77,13 @@ export function UmurChart({ data, loading }: UmurChartProps) {
                   }}
                   labelStyle={{ color: '#94a3b8' }}
                   itemStyle={{ color: '#e2e8f0' }}
-                  formatter={(value: number) => [
-                    `${value} jiwa (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`,
-                    'Jumlah',
-                  ]}
+                  formatter={(value) => {
+                    const n = typeof value === 'number' ? value : 0
+                    return [
+                      `${n} jiwa (${total > 0 ? ((n / total) * 100).toFixed(1) : 0}%)`,
+                      'Jumlah',
+                    ]
+                  }}
                   cursor={{ fill: 'rgba(255,255,255,0.04)' }}
                 />
                 <Bar dataKey="jumlah" radius={[0, 4, 4, 0]}>
