@@ -1,28 +1,14 @@
-import Image from 'next/image'
+import { AppLogo } from '@/components/layout/AppLogo'
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-[#050810] flex flex-col items-center justify-center gap-4">
-      {/* Icon baru — balai desa, bersih tanpa border tambahan */}
-      <div
-        className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: '#16447a' }}
-      >
-        <Image
-          src="/icons/icon-192.png"
-          alt="DaPenDig"
-          width={80}
-          height={80}
-          className="w-full h-full object-cover"
-          style={{ display: 'block' }}
-          unoptimized
-        />
-      </div>
+    <div className="min-h-[100dvh] bg-bg flex flex-col items-center justify-center gap-4">
+      <AppLogo size={80} className="shadow-pop ring-1 ring-gold-400/40" />
       <div className="flex flex-col items-center gap-0.5 text-center">
-        <p className="text-base font-semibold text-slate-100">Data Penduduk Digital</p>
-        <p className="text-xs text-slate-500">Desa Karang Sengon</p>
+        <p className="font-display text-base font-semibold text-ink">Data Penduduk Digital</p>
+        <p className="text-xs text-ink-3">Desa Karang Sengon</p>
       </div>
-      <div className="w-5 h-5 border-2 border-white/[0.06] border-t-sky-500 rounded-full animate-spin mt-1" />
+      <div className="w-5 h-5 border-2 border-line-2 border-t-navy-600 rounded-full animate-spin mt-1" />
     </div>
   )
 }

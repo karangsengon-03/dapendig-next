@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { rt3 } from '@/lib/rt-rw'
 import { collection, getDocs, query, where, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Penduduk } from '@/types'
@@ -136,9 +137,10 @@ async function fetchMonografi(): Promise<MonografiData> {
     const statusPerkawinan = p.status_perkawinan?.trim()
     if (statusPerkawinan) byStatusPerkawinan[statusPerkawinan] = (byStatusPerkawinan[statusPerkawinan] ?? 0) + 1
 
-    if (!byRT[p.rt]) byRT[p.rt] = { laki: 0, perempuan: 0 }
-    if (p.jenis_kelamin === 'Laki-laki') byRT[p.rt].laki++
-    else byRT[p.rt].perempuan++
+    const kunciRt = rt3(p.rt)
+    if (!byRT[kunciRt]) byRT[kunciRt] = { laki: 0, perempuan: 0 }
+    if (p.jenis_kelamin === 'Laki-laki') byRT[kunciRt].laki++
+    else byRT[kunciRt].perempuan++
 
     if (p.tanggal_lahir) {
       const umur = hitungUmur(p.tanggal_lahir)

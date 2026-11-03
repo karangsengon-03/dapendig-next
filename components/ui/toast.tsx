@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { X, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react'
+import { X, CheckCircle, XCircle, AlertTriangle, Info, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
@@ -10,6 +10,7 @@ interface ToastItem {
   id: string
   message: string
   type: ToastType
+  keluar?: boolean
 }
 
 interface ToastContextValue {
@@ -18,58 +19,61 @@ interface ToastContextValue {
 
 const ToastContext = React.createContext<ToastContextValue | null>(null)
 
+// Lama tampil sama dengan versi lama (4 detik); batang progres prototype diselaraskan ke angka ini.
+const DURASI_MS = 4000
+const DURASI_KELUAR_MS = 200
+
+const GAYA: Record<ToastType, { Icon: LucideIcon; warna: string; latar: string }> = {
+  success: { Icon: CheckCircle, warna: 'var(--ok)', latar: 'var(--ok-bg)' },
+  error: { Icon: XCircle, warna: 'var(--bad)', latar: 'var(--bad-bg)' },
+  warning: { Icon: AlertTriangle, warna: 'var(--warn)', latar: 'var(--warn-bg)' },
+  info: { Icon: Info, warna: 'var(--info)', latar: 'var(--info-bg)' },
+}
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<ToastItem[]>([])
 
-  const toast = React.useCallback((message: string, type: ToastType = 'success') => {
-    const id = Math.random().toString(36).slice(2)
-    setToasts((prev) => [...prev, { id, message, type }])
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 4000)
+  const remove = React.useCallback((id: string) => {
+    setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, keluar: true } : t)))
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), DURASI_KELUAR_MS)
   }, [])
 
-  const remove = (id: string) => setToasts((prev) => prev.filter((t) => t.id !== id))
+  const toast = React.useCallback(
+    (message: string, type: ToastType = 'success') => {
+      const id = Math.random().toString(36).slice(2)
+      setToasts((prev) => [...prev, { id, message, type }])
+      setTimeout(() => remove(id), DURASI_MS)
+    },
+    [remove]
+  )
 
-  const icons: Record<ToastType, React.ReactNode> = {
-    success: <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />,
-    error: <XCircle className="h-4 w-4 text-red-400 shrink-0" />,
-    warning: <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />,
-    info: <Info className="h-4 w-4 text-sky-400 shrink-0" />,
-  }
-
-  const borders: Record<ToastType, string> = {
-    success: 'border-l-emerald-500',
-    error: 'border-l-red-500',
-    warning: 'border-l-amber-500',
-    info: 'border-l-sky-500',
-  }
+  const value = React.useMemo(() => ({ toast }), [toast])
 
   return (
-    <ToastContext.Provider value={{ toast }}>
+    <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            className={cn(
-              'flex items-center gap-3 px-4 py-3 rounded-xl',
-              'bg-slate-900 border border-white/10 border-l-4 shadow-2xl',
-              'min-w-[260px] max-w-[360px] pointer-events-auto',
-              'animate-in slide-in-from-right-5 fade-in-0 duration-300',
-              borders[t.type]
-            )}
-          >
-            {icons[t.type]}
-            <span className="text-sm text-slate-200 flex-1 leading-snug">{t.message}</span>
-            <button
-              onClick={() => remove(t.id)}
-              className="text-slate-500 hover:text-slate-300 transition-colors"
+      <div className="a-toasts" aria-live="polite">
+        {toasts.map((t) => {
+          const { Icon, warna, latar } = GAYA[t.type]
+          return (
+            <div
+              key={t.id}
+              className={cn('a-toast', t.keluar && 'out')}
+              role={t.type === 'error' ? 'alert' : 'status'}
             >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
+              <span className="ti" style={{ background: latar, color: warna }}>
+                <Icon className="i" />
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <b style={{ fontWeight: 600 }}>{t.message}</b>
+              </div>
+              <button type="button" className="cl" onClick={() => remove(t.id)} aria-label="Tutup notifikasi">
+                <X className="i" />
+              </button>
+              <span className="pg" style={{ color: warna, animationDuration: `${DURASI_MS}ms` }} />
+            </div>
+          )
+        })}
       </div>
     </ToastContext.Provider>
   )

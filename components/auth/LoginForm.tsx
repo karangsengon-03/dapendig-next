@@ -1,13 +1,15 @@
 'use client'
 
-import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import { Eye, EyeOff, LogIn, Loader2, UserCircle2, RefreshCw } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Loader2, Lock, Mail, Moon, Sun } from 'lucide-react'
 import { auth } from '@/lib/firebase'
 import { APP_VERSION } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
+import { AppLogo } from '@/components/layout/AppLogo'
+import { Avatar } from '@/components/ui/avatar'
 // TIDAK memanggil useAuthListener di sini — sudah dipanggil di AppShell.
 // Memanggil dua kali menyebabkan race condition: dua subscriber onAuthStateChanged
 // berlomba set loading/user, mengakibatkan flash form login sebelum redirect.
@@ -19,6 +21,7 @@ type Mode = 'lanjut' | 'ganti' | 'baru'
 
 export function LoginForm() {
   const router = useRouter()
+  const { resolvedTheme, setTheme } = useTheme()
   const { user, loading: authLoading } = useAuthStore()
   const [mode, setMode]         = useState<Mode>('baru')
   const [savedEmail, setSaved]  = useState('')
@@ -48,8 +51,6 @@ export function LoginForm() {
     }
   }, [authLoading, user, router])
 
-
-
   function handleGanti() {
     // Email & password sudah terisi dari simpanan — user bisa langsung klik Masuk
     // atau ubah dulu ke akun lain
@@ -76,7 +77,8 @@ export function LoginForm() {
       await signInWithEmailAndPassword(auth, targetEmail, password)
       localStorage.setItem(KEY_EMAIL, targetEmail)
       localStorage.setItem(KEY_PASS,  password)
-      // Hard redirect agar tidak ada race condition dengan onAuthStateChanged
+      // Hard redirect agar tidak ada race condition dengan onAuthStateChanged (sengaja bukan router.push)
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = '/dashboard'
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code ?? ''
@@ -99,154 +101,174 @@ export function LoginForm() {
   }
 
   const isLanjut = mode === 'lanjut'
+  const gelap = resolvedTheme === 'dark'
 
   // Saat Firebase masih memeriksa sesi ATAU user sudah terdeteksi login:
   // jangan render form login sama sekali — cegah flash sebelum redirect ke dashboard
   if (authLoading || user) {
     return (
-      <div className="min-h-screen bg-[#050810] flex flex-col items-center justify-center gap-4">
-        <div
-          className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
-          style={{ background: '#16447a' }}
-        >
-          <Image src="/icons/icon-192.png" alt="DaPenDig" width={80} height={80} className="w-full h-full object-cover" style={{ display: 'block' }} unoptimized />
-        </div>
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
+        <AppLogo size={80} />
         <div className="flex flex-col items-center gap-0.5 text-center">
-          <p className="text-base font-semibold text-slate-100">Data Penduduk Digital</p>
-          <p className="text-xs text-slate-500">Desa Karang Sengon</p>
+          <p className="font-display text-base font-bold text-ink">Data Penduduk Digital</p>
+          <p className="text-xs text-ink-3">Desa Karang Sengon</p>
         </div>
-        <div className="w-5 h-5 border-2 border-white/[0.06] border-t-sky-500 rounded-full animate-spin mt-1" />
+        <Loader2 className="i animate-spin text-navy-600" style={{ fontSize: 22 }} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#050810] flex items-center justify-center px-4 py-12">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-sky-500/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-sky-500/4 blur-3xl" />
-      </div>
-
-      <div className="relative w-full max-w-sm flex flex-col items-center gap-6">
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border border-white/10">
-            <Image src="/icons/icon-192.png" alt="DaPenDig" width={80} height={80} className="w-full h-full object-cover" unoptimized />
-          </div>
+    <div className="a-lg" style={{ minHeight: '100vh' }}>
+      {/* Panel merek (kiri; di HP menjadi kepala) */}
+      <div className="lg-l">
+        <div className="seal" />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <AppLogo size={46} />
           <div>
-            <p className="text-lg font-bold text-slate-100 tracking-tight">Data Penduduk Digital</p>
-            <p className="text-xs text-slate-500 mt-0.5">Desa Karang Sengon, Kec. Klabang, Kab. Bondowoso</p>
-            <p className="text-xs text-slate-700 mt-1">{APP_VERSION}</p>
+            <b style={{ fontFamily: 'var(--f-display)', fontSize: 19, letterSpacing: '-.01em', display: 'block' }}>DaPenDig</b>
+            <span style={{ fontSize: 12.5, color: 'var(--gold-400)' }}>Data Penduduk Digital</span>
           </div>
         </div>
-
-        {/* Card */}
-        <div className="w-full rounded-2xl border border-white/[0.08] bg-[#0d1424] p-6 shadow-2xl" style={{ minHeight: '320px' }}>
-          <p className="text-sm font-semibold text-slate-300 text-center mb-5">
-            {isLanjut ? 'Selamat Datang Kembali' : 'Masuk ke Akun'}
+        <div style={{ position: 'relative' }}>
+          <p className="lgh">Data warga tertib, pelayanan makin cepat.</p>
+          <p style={{ margin: '14px 0 0', color: '#B8C9E3', fontSize: 14.5, lineHeight: 1.55, maxWidth: '38ch' }}>
+            Kelola penduduk, mutasi, kelahiran, dan kematian Desa Karang Sengon dalam satu tempat.
           </p>
+        </div>
+        <div className="fl">
+          <div><b>{APP_VERSION}</b><span>versi aplikasi</span></div>
+        </div>
+        <div style={{ position: 'relative', fontSize: 12.5, color: '#8FA5C6' }}>
+          Pemerintah Desa Karang Sengon, Kec. Klabang, Kab. Bondowoso
+        </div>
+      </div>
+
+      {/* Form (kanan) */}
+      <div className="lg-r">
+        <button
+          type="button"
+          className="ib tm lgt"
+          aria-label="Ganti tema"
+          onClick={() => setTheme(gelap ? 'light' : 'dark')}
+        >
+          {gelap ? <Sun className="i" /> : <Moon className="i" />}
+        </button>
+
+        <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 27, fontWeight: 700, letterSpacing: '-.025em' }}>
+              {isLanjut ? 'Selamat datang kembali' : 'Masuk ke akun'}
+            </h1>
+            <p style={{ margin: '6px 0 0', color: 'var(--ink-3)', fontSize: 14 }}>
+              {isLanjut
+                ? 'Lanjutkan sebagai akun terakhir Anda.'
+                : 'Gunakan email dan kata sandi akun Anda.'}
+            </p>
+          </div>
 
           {error && (
-            <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <p className="a-err" role="alert" style={{
+              padding: '10px 14px', borderRadius: 11, background: 'var(--bad-bg)', fontSize: 13.5,
+            }}>
               {error}
-            </div>
+            </p>
           )}
 
           {/* Mode Lanjut: tampilkan email tersimpan */}
           {isLanjut && (
-            <div className="mb-5 px-3.5 py-3 rounded-xl bg-sky-500/8 border border-sky-500/20 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-sky-500/15 flex items-center justify-center shrink-0">
-                <UserCircle2 size={16} className="text-sky-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-500">Masuk sebagai</p>
-                <p className="text-sm font-medium text-slate-200 truncate">{savedEmail}</p>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 13,
+              background: 'var(--navy-50)', border: '1px solid var(--navy-100)',
+            }}>
+              <Avatar nama={savedEmail} jk="L" size={40} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 12, color: 'var(--ink-3)' }}>Masuk sebagai</span>
+                <b style={{ display: 'block', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {savedEmail}
+                </b>
               </div>
               <button
+                type="button"
                 onClick={handleGanti}
-                className="flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 transition-colors shrink-0"
+                style={{ fontSize: 13, fontWeight: 600, color: 'var(--lk)', background: 'none', border: 0, cursor: 'pointer', flex: 'none' }}
               >
-                <RefreshCw size={11} />Ganti
+                Ganti akun
               </button>
             </div>
           )}
 
-          <div className="flex flex-col gap-4">
-            {/* Email — hanya di mode ganti/baru */}
-            {!isLanjut && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Email
-                </label>
+          {/* Email — hanya di mode ganti/baru */}
+          {!isLanjut && (
+            <div className="a-field">
+              <label htmlFor="lg-email">Email</label>
+              <div className={`a-in${error ? ' err' : ''}`}>
+                <Mail className="i" />
                 <input
+                  id="lg-email"
                   type="email"
                   placeholder="nama@desa.id"
                   value={email}
                   onChange={e => { setEmail(e.target.value); setError('') }}
                   autoComplete="email"
                   disabled={loading}
-                  className="w-full bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-sky-500/50 transition-colors"
                 />
-              </div>
-            )}
-
-            {/* Password — selalu tampil, sudah terisi dari simpanan */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Kata Sandi
-              </label>
-              <div className="relative">
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => { setPassword(e.target.value); setError('') }}
-                  autoComplete="current-password"
-                  disabled={loading}
-                  onKeyDown={e => e.key === 'Enter' && !loading && handleSubmit()}
-                  className="w-full bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2.5 pr-10 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-sky-500/50 transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(v => !v)}
-                  tabIndex={-1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                >
-                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
             </div>
+          )}
 
-            {/* Tombol */}
-            <div className="flex flex-col gap-2 mt-1">
-              <button
-                onClick={handleSubmit}
+          {/* Kata sandi — selalu tampil, sudah terisi dari simpanan */}
+          <div className="a-field">
+            <label htmlFor="lg-pass">Kata sandi</label>
+            <div className={`a-in${error ? ' err' : ''}`}>
+              <Lock className="i" />
+              <input
+                id="lg-pass"
+                type={showPw ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError('') }}
+                autoComplete="current-password"
                 disabled={loading}
-                className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-60 text-sm font-semibold text-white transition-colors"
+                onKeyDown={e => e.key === 'Enter' && !loading && handleSubmit()}
+              />
+              <button
+                type="button"
+                className="pwt"
+                onClick={() => setShowPw(v => !v)}
+                aria-label={showPw ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
               >
-                {loading
-                  ? <><Loader2 className="h-4 w-4 animate-spin" />Memproses...</>
-                  : isLanjut
-                    ? <><LogIn className="h-4 w-4" />Lanjutkan</>
-                    : <><LogIn className="h-4 w-4" />Masuk</>
-                }
+                {showPw ? <EyeOff className="i" /> : <Eye className="i" />}
               </button>
-
-              {mode === 'ganti' && savedEmail && (
-                <button
-                  onClick={handleBatal}
-                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors py-1"
-                >
-                  ← Kembali ke akun sebelumnya
-                </button>
-              )}
             </div>
           </div>
-        </div>
 
-        <p className="text-xs text-slate-700">
-          © Pemerintah Desa Karang Sengon 2026
-        </p>
+          <button
+            type="button"
+            className="a-btn pri lg"
+            style={{ width: '100%' }}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading
+              ? <><Loader2 className="i animate-spin" />Memproses...</>
+              : <><LogIn className="i" />{isLanjut ? 'Lanjutkan' : 'Masuk'}</>}
+          </button>
+
+          {mode === 'ganti' && savedEmail && (
+            <button
+              type="button"
+              onClick={handleBatal}
+              style={{ fontSize: 13, color: 'var(--ink-3)', background: 'none', border: 0, cursor: 'pointer', padding: '2px 0' }}
+            >
+              ← Kembali ke akun sebelumnya
+            </button>
+          )}
+
+          <p style={{ margin: 0, textAlign: 'center', fontSize: 12.5, color: 'var(--ink-3)' }}>
+            © Pemerintah Desa Karang Sengon 2026
+          </p>
+        </div>
       </div>
     </div>
   )

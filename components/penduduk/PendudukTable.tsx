@@ -1,19 +1,26 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { rt3 } from '@/lib/rt-rw'
 import { useEffect, useRef } from 'react'
-import { User } from 'lucide-react'
+import { ChevronRight, Search } from 'lucide-react'
+import { JkIkon } from '@/components/ui/jk-ikon'
 import type { Penduduk } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Avatar } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { hitungUmur as calcUmur } from '@/lib/dateUtils'
 
 interface PendudukTableProps {
   data: Penduduk[]
   loading: boolean
   page: number
   pageSize: number
+  /** 'tabel' = tabel `.a-t` (desktop); 'kartu' = daftar kartu `.a-lc` (HP). Halaman merender keduanya; CSS memilih yang tampak. */
+  tampilan?: 'tabel' | 'kartu'
+  /** Bila diisi, keadaan kosong menampilkan tombol "Hapus semua filter". */
+  onReset?: () => void
 }
-
-import { hitungUmur as calcUmur } from '@/lib/dateUtils'
 
 function hitungUmur(tanggalLahir: string): string {
   const umur = calcUmur(tanggalLahir)
@@ -21,10 +28,28 @@ function hitungUmur(tanggalLahir: string): string {
   return `${umur} th`
 }
 
-export function PendudukTable({ data, loading, page, pageSize }: PendudukTableProps) {
+const BADGE_STATUS: Record<string, { cls: string; label: string }> = {
+  'aktif':         { cls: 'ok',   label: 'Aktif' },
+  'meninggal':     { cls: 'bad',  label: 'Meninggal' },
+  'mutasi-keluar': { cls: 'warn', label: 'Mutasi keluar' },
+  'tidak aktif':   { cls: 'mute', label: 'Tidak aktif' },
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const b = BADGE_STATUS[status]
+  if (!b) return null
+  return <span className={`a-badge sm ${b.cls}`}>{b.label}</span>
+}
+
+function JkBadge({ jk }: { jk: string }) {
+  const laki = jk === 'Laki-laki'
+  return <span className={`jkb ${laki ? 'lk' : 'pr'}`}><JkIkon jk={laki ? 'L' : 'P'} size={11} />{laki ? 'L' : 'P'}</span>
+}
+
+export function PendudukTable({ data, loading, page, pageSize, tampilan = 'tabel', onReset }: PendudukTableProps) {
   const router = useRouter()
 
-  const tbodyRef = useRef<HTMLTableSectionElement>(null)
+  const wadahRef = useRef<HTMLElement>(null)
   const start = (page - 1) * pageSize
   const paged = data.slice(start, start + pageSize)
 
@@ -32,97 +57,120 @@ export function PendudukTable({ data, loading, page, pageSize }: PendudukTablePr
   useEffect(() => {
     try {
       const lastId = sessionStorage.getItem('penduduk_last_row')
-      if (!lastId || !tbodyRef.current) return
-      const row = tbodyRef.current.querySelector(`[data-id="${lastId}"]`) as HTMLElement | null
+      if (!lastId || !wadahRef.current) return
+      const row = wadahRef.current.querySelector(`[data-id="${lastId}"]`) as HTMLElement | null
       if (row) {
         row.scrollIntoView({ block: 'center', behavior: 'instant' })
       }
     } catch { /* ignore */ }
   }, [paged])
 
+  function buka(id: string) {
+    try { sessionStorage.setItem('penduduk_last_row', id) } catch { /* ignore */ }
+    router.push(`/penduduk/${id}`)
+  }
+
   if (loading) {
-    return (
-      <div className="flex flex-col gap-2">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full rounded-xl" />
-        ))}
+    return tampilan === 'tabel' ? (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 14 }}>
+        {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} style={{ height: 48, borderRadius: 10 }} />)}
+      </div>
+    ) : (
+      <div className="a-card-list">
+        {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} style={{ height: 72, borderRadius: 14 }} />)}
       </div>
     )
   }
 
   if (data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <div className="w-14 h-14 rounded-2xl bg-[#0d1424] flex items-center justify-center">
-          <User size={24} className="text-slate-600" />
-        </div>
-        <p className="text-sm text-slate-500">Tidak ada data penduduk</p>
+      <div className="a-empty">
+        <div className="em"><Search className="i" style={{ fontSize: 30 }} /></div>
+        <h3>Tidak ada penduduk yang cocok</h3>
+        <p>Coba kurangi filter atau periksa ejaan nama dan NIK yang dicari.</p>
+        {onReset && <Button type="button" variant="secondary" onClick={onReset}>Hapus semua filter</Button>}
       </div>
     )
   }
 
-  // Sticky header: z-20 untuk kolom biasa, z-30 untuk kolom freeze (No & Nama)
-  // Sticky body: z-10 untuk kolom biasa, z-20 untuk kolom freeze
-  // bg-[#0d1424] eksplisit di semua sticky cell agar tidak tembus konten scroll
-  const thBase = 'text-left text-xs font-semibold uppercase tracking-wider text-slate-500 py-3 px-3 bg-[#0d1424] border-b border-white/[0.06] whitespace-nowrap'
-  const thSticky  = `${thBase} sticky top-0 z-20`
-  const thFreezeNo  = `${thBase} sticky top-0 left-0 z-30`
-  const thFreezeNama = `${thBase} sticky top-0 left-9 z-30 min-w-[160px]`
-
-  // Lebar kolom No = w-9 (36px), sesuai left-9
-  const tdFreezeNo   = 'py-3 px-3 text-xs text-slate-500 sticky left-0 z-20 bg-[#0d1424] group-hover:bg-[#121a2e] transition-colors w-9'
-  const tdFreezeNama = 'py-3 px-3 sticky left-9 z-20 bg-[#0d1424] group-hover:bg-[#121a2e] transition-colors min-w-[160px]'
+  if (tampilan === 'kartu') {
+    return (
+      <div className="a-card-list" ref={wadahRef as React.RefObject<HTMLDivElement>}>
+        {paged.map(p => (
+          <div
+            key={p.id}
+            data-id={p.id}
+            className="a-lc"
+            role="link"
+            tabIndex={0}
+            onClick={() => buka(p.id)}
+            onKeyDown={e => { if (e.key === 'Enter') buka(p.id) }}
+          >
+            <Avatar nama={p.nama_lengkap} jk={p.jenis_kelamin} size={46} />
+            <div className="m">
+              <b>{p.nama_lengkap}</b>
+              <span>{p.hubungan_keluarga} · {hitungUmur(p.tanggal_lahir)} · RT {rt3(p.rt)}/RW {rt3(p.rw)}</span>
+              <span className="mn">{p.nik}</span>
+            </div>
+            {p.status !== 'aktif' && <StatusBadge status={p.status} />}
+            <ChevronRight className="i" style={{ fontSize: 18, color: 'var(--ink-4)' }} />
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
-    /* Wrapper: fill tinggi parent (flex-1 min-h-0), sticky berfungsi karena tidak ada negative margin */
-    <div className="overflow-x-auto overflow-y-auto h-full rounded-xl">
-      <table className="w-full min-w-[640px] border-collapse">
-        <thead>
-          <tr>
-            <th className={thFreezeNo}>No</th>
-            <th className={thFreezeNama}>Nama Lengkap</th>
-            <th className={thSticky}>NIK</th>
-            <th className={thSticky}>No. KK</th>
-            <th className={`${thSticky} w-12`}>JK</th>
-            <th className={`${thSticky} w-14`}>Umur</th>
-            <th className={`${thSticky} w-16`}>RT/RW</th>
-            <th className={thSticky}>Hub. Keluarga</th>
+    <table className="a-t" style={{ minWidth: 980 }}>
+      <thead>
+        <tr>
+          <th className="frz frz-no">No</th>
+          <th className="frz frz-nm">Nama</th>
+          <th>NIK</th>
+          <th>No. KK</th>
+          <th>JK</th>
+          <th>Hubungan</th>
+          <th>Umur</th>
+          <th>RT/RW</th>
+          <th>Status</th>
+          <th />
+        </tr>
+      </thead>
+      <tbody ref={wadahRef as React.RefObject<HTMLTableSectionElement>}>
+        {paged.map((p, idx) => (
+          <tr
+            key={p.id}
+            data-id={p.id}
+            className="row"
+            tabIndex={0}
+            onClick={() => buka(p.id)}
+            onKeyDown={e => { if (e.key === 'Enter') buka(p.id) }}
+          >
+            <td className="frz frz-no">{start + idx + 1}</td>
+            <td className="frz frz-nm nm2">
+              <div className="nmi">
+                <Avatar nama={p.nama_lengkap} jk={p.jenis_kelamin} size={36} />
+                <div>
+                  <div className="n">{p.nama_lengkap}</div>
+                  <div className="s">{p.pekerjaan}</div>
+                </div>
+              </div>
+            </td>
+            <td className="mn">{p.nik}</td>
+            <td className="mn">{p.no_kk}</td>
+            <td><JkBadge jk={p.jenis_kelamin} /></td>
+            <td>
+              <span className={`a-badge sm nd ${p.hubungan_keluarga === 'Kepala Keluarga' ? 'info' : 'mute'}`}>
+                {p.hubungan_keluarga}
+              </span>
+            </td>
+            <td className="num">{hitungUmur(p.tanggal_lahir)}</td>
+            <td className="num">RT {rt3(p.rt)}/RW {rt3(p.rw)}</td>
+            <td><StatusBadge status={p.status} /></td>
+            <td style={{ textAlign: 'right', color: 'var(--ink-4)' }}><ChevronRight className="i" style={{ fontSize: 17 }} /></td>
           </tr>
-        </thead>
-        <tbody ref={tbodyRef}>
-          {paged.map((p, idx) => (
-            <tr
-              key={p.id}
-              data-id={p.id}
-              onClick={() => {
-                try { sessionStorage.setItem('penduduk_last_row', p.id) } catch { /* ignore */ }
-                router.push(`/penduduk/${p.id}`)
-              }}
-              className="bg-[#0d1424] border-b border-white/[0.04] hover:bg-[#121a2e] transition-colors cursor-pointer group"
-            >
-              <td className={tdFreezeNo}>{start + idx + 1}</td>
-              <td className={tdFreezeNama}>
-                <p className="text-sm text-slate-200 group-hover:text-sky-400 transition-colors font-medium leading-snug">{p.nama_lengkap}</p>
-                <p className="text-xs text-slate-600 mt-0.5">{p.pekerjaan}</p>
-              </td>
-              <td className="py-3 px-3 text-sm text-slate-400 tabular-nums">{p.nik}</td>
-              <td className="py-3 px-3 text-sm text-slate-400 tabular-nums">{p.no_kk}</td>
-              <td className="py-3 px-3">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
-                  p.jenis_kelamin === 'Laki-laki'
-                    ? 'bg-sky-500/10 text-sky-400'
-                    : 'bg-pink-500/10 text-pink-400'
-                }`}>
-                  {p.jenis_kelamin === 'Laki-laki' ? 'L' : 'P'}
-                </span>
-              </td>
-              <td className="py-3 px-3 text-sm text-slate-400">{hitungUmur(p.tanggal_lahir)}</td>
-              <td className="py-3 px-3 text-sm text-slate-400">{p.rt}/{p.rw}</td>
-              <td className="py-3 px-3 text-sm text-slate-400">{p.hubungan_keluarga}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
   )
 }

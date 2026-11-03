@@ -1,92 +1,66 @@
 'use client'
 
+import { Minus, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { LucideIcon } from 'lucide-react'
+import { CountUp, Spark } from './dashParts'
+
+export interface StatDelta {
+  /** Selisih terhadap bulan pembanding (boleh negatif/nol). */
+  selisih: number
+  /** true bila arah selisih itu baik (kelahiran naik, kematian turun, dst.). */
+  baik: boolean
+  /** Nama bulan pembanding, mis. "Agustus". */
+  banding: string
+}
 
 interface StatCardProps {
   label: string
-  value: number | string | undefined
+  value: number | undefined
   loading?: boolean
   icon: LucideIcon
-  color: 'sky' | 'violet' | 'emerald' | 'rose' | 'amber' | 'slate'
+  tone?: 'navy' | 'ok' | 'bad' | 'warn' | 'gold' | 'mute' | 'lk' | 'pr'
   suffix?: string
   subLabel?: string
+  /** Tanpa delta (data pembanding tidak ada) kartu tampil tanpa selisih. */
+  delta?: StatDelta
+  /** Titik sparkline (bulanan, lama → baru). */
+  spark?: number[]
 }
 
-const colorMap = {
-  sky: {
-    text: 'text-sky-400',
-    bg: 'bg-sky-500/10',
-    border: 'border-sky-500/20',
-    icon: 'text-sky-400',
-  },
-  violet: {
-    text: 'text-violet-400',
-    bg: 'bg-violet-500/10',
-    border: 'border-violet-500/20',
-    icon: 'text-violet-400',
-  },
-  emerald: {
-    text: 'text-emerald-400',
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/20',
-    icon: 'text-emerald-400',
-  },
-  rose: {
-    text: 'text-rose-400',
-    bg: 'bg-rose-500/10',
-    border: 'border-rose-500/20',
-    icon: 'text-rose-400',
-  },
-  amber: {
-    text: 'text-amber-400',
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/20',
-    icon: 'text-amber-400',
-  },
-  slate: {
-    text: 'text-slate-400',
-    bg: 'bg-slate-500/10',
-    border: 'border-slate-500/20',
-    icon: 'text-slate-400',
-  },
-}
-
-export function StatCard({
-  label,
-  value,
-  loading,
-  icon: Icon,
-  color,
-  suffix,
-  subLabel,
-}: StatCardProps) {
-  const c = colorMap[color]
+// Kartu statistik gaya prototype (`.a-stat`). Angka datang dari pemanggil.
+export function StatCard({ label, value, loading, icon: Icon, tone = 'navy', suffix, subLabel, delta, spark }: StatCardProps) {
+  const arah = !delta || delta.selisih === 0 ? 'fl' : delta.baik ? 'up' : 'dn'
+  const warnaSpark = arah === 'up' ? 'var(--ok)' : arah === 'dn' ? 'var(--bad)' : 'var(--ink-4)'
+  const IkonDelta = !delta || delta.selisih === 0 ? Minus : delta.selisih > 0 ? TrendingUp : TrendingDown
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider leading-tight">
-          {label}
-        </p>
-        <div className={`w-8 h-8 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center flex-shrink-0`}>
-          <Icon size={15} className={c.icon} />
-        </div>
+    <div className="a-stat lift">
+      <div className="l">
+        <span className={`ico ico-${tone}`}><Icon className="i" /></span>
+        {label}
       </div>
-
-      {loading ? (
-        <Skeleton className="h-8 w-16 rounded-lg" />
+      <div className="v">
+        {loading ? (
+          <Skeleton style={{ height: 30, width: 70 }} />
+        ) : value === undefined ? (
+          '—'
+        ) : (
+          <>
+            <CountUp value={value} />
+            {suffix && <small>{suffix}</small>}
+          </>
+        )}
+      </div>
+      {!loading && delta ? (
+        <span className={`d ${arah}`}>
+          <IkonDelta className="i" style={{ fontSize: 14 }} />
+          {delta.selisih > 0 ? '+' : ''}{delta.selisih} <span>vs {delta.banding}</span>
+        </span>
       ) : (
-        <p className={`text-2xl font-bold ${c.text} tabular-nums`}>
-          {value ?? '—'}
-          {suffix && (
-            <span className="text-sm font-medium text-slate-500 ml-1">{suffix}</span>
-          )}
-        </p>
+        subLabel && !loading && <span className="d fl">{subLabel}</span>
       )}
-
-      {subLabel && (
-        <p className="text-xs text-slate-600">{subLabel}</p>
+      {!loading && spark && spark.length > 1 && (
+        <span style={{ color: warnaSpark }}><Spark values={spark} /></span>
       )}
     </div>
   )

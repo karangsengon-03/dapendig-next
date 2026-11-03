@@ -1,584 +1,475 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { BarChart2, Settings2, X, Check } from 'lucide-react'
+import Link from 'next/link'
+import {
+  CircleAlert,
+  CircleDashed,
+  Check,
+  Layers,
+  Plus,
+  SlidersVertical,
+  Trash2,
+  Users,
+} from 'lucide-react'
+import { JK_VISUAL } from '@/lib/visual'
+import { PENDIDIKAN, STATUS_PERKAWINAN } from '@/lib/penduduk-constants'
+import { kunciRentang } from '@/lib/umur'
 import { AppShell } from '@/components/layout/AppShell'
-import { useMonografi, useSaveKelompokUmurConfig, DEFAULT_KELOMPOK_UMUR_CONFIG, formatKelompokLabel, type KelompokUmurConfig, type KelompokUmurEntry } from '@/hooks/useMonografi'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { StatCard } from '@/components/dashboard/StatCard'
+import { BarRows, CountUp, useMasuk, type BarRow } from '@/components/dashboard/dashParts'
+import {
+  useMonografi, useSaveKelompokUmurConfig, DEFAULT_KELOMPOK_UMUR_CONFIG, formatKelompokLabel,
+  type KelompokUmurConfig,
+} from '@/hooks/useMonografi'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Modal } from '@/components/ui/dialog'
+import { useToast } from '@/components/ui/toast'
+import { useAppStore } from '@/store/appStore'
+import { useAuthStore } from '@/store/authStore'
 
-function StatCard({ label, value, sub, color = 'sky' }: {
-  label: string; value: number | string; sub?: string
-  color?: 'sky' | 'emerald' | 'rose' | 'amber'
-}) {
-  const colors = {
-    sky:     { border: 'border-sky-500',     text: 'text-sky-400' },
-    emerald: { border: 'border-emerald-500', text: 'text-emerald-400' },
-    rose:    { border: 'border-rose-500',    text: 'text-rose-400' },
-    amber:   { border: 'border-amber-500',   text: 'text-amber-400' },
-  }[color]
+type DataKel = { kelompok: string; laki: number; perempuan: number }
 
+const fmt = (n: number) => n.toLocaleString('id-ID')
+
+// ── Piramida penduduk ─────────────────────────────────────────────────────────
+function Piramida({ data }: { data: DataKel[] }) {
+  const masuk = useMasuk()
+  const mx = Math.max(...data.flatMap(d => [d.laki, d.perempuan]), 1)
+  const lebar = (n: number) => (masuk ? `${((n / mx) * 100).toFixed(1)}%` : '0%')
+  const minLebar = (n: number) => (masuk && n > 0 ? 26 : 0)
   return (
-    <div className={`rounded-xl border-l-4 ${colors.border} bg-[#0d1424] border border-white/[0.06] p-4`}>
-      <p className="text-sm text-slate-500 mb-1">{label}</p>
-      <p className={`text-3xl font-bold ${colors.text}`}>{value}</p>
-      {sub && <p className="text-sm text-slate-500 mt-1">{sub}</p>}
-    </div>
-  )
-}
-
-// ── Statistik Usia Produktif & Tanggungan ────────────────────────────────────
-function UsiaTanggungan({
-  data,
-  kelompokConfig,
-  total,
-}: {
-  data: { kelompok: string; laki: number; perempuan: number }[]
-  kelompokConfig: import('@/hooks/useMonografi').KelompokUmurConfig
-  total: number
-}) {
-  // Hitung 3 bucket dari konfigurasi piramida yang aktif
-  let tanggunganMuda = 0  // 0–14
-  let produktif = 0       // 15–64
-  let tanggunganTua = 0   // 65+
-
-  data.forEach((row, i) => {
-    const cfg = kelompokConfig[i]
-    if (!cfg) return
-    const jumlah = row.laki + row.perempuan
-    if (cfg.max <= 14) tanggunganMuda += jumlah
-    else if (cfg.min >= 65) tanggunganTua += jumlah
-    else produktif += jumlah
-  })
-
-  const totalTertanggungan = tanggunganMuda + tanggunganTua
-  const rasio = produktif > 0
-    ? Math.round((totalTertanggungan / produktif) * 100)
-    : 0
-
-  const pct = (n: number) =>
-    total > 0 ? Math.round((n / total) * 100) : 0
-
-  const buckets = [
-    {
-      label: 'Tanggungan Muda',
-      sublabel: 'Usia 0–14 tahun',
-      value: tanggunganMuda,
-      persen: pct(tanggunganMuda),
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10',
-      border: 'border-amber-500/20',
-      bar: 'bg-amber-500',
-    },
-    {
-      label: 'Usia Produktif',
-      sublabel: 'Usia 15–64 tahun',
-      value: produktif,
-      persen: pct(produktif),
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10',
-      border: 'border-emerald-500/20',
-      bar: 'bg-emerald-500',
-    },
-    {
-      label: 'Tanggungan Tua',
-      sublabel: 'Usia 65+ tahun',
-      value: tanggunganTua,
-      persen: pct(tanggunganTua),
-      color: 'text-rose-400',
-      bg: 'bg-rose-500/10',
-      border: 'border-rose-500/20',
-      bar: 'bg-rose-400',
-    },
-  ]
-
-  return (
-    <div className="bg-[#0d1424] rounded-xl p-4 border border-white/[0.06]">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-slate-200">Komposisi Beban Tanggungan</h3>
-        <span className="text-xs text-slate-500 bg-white/[0.04] border border-white/[0.06] rounded-lg px-2 py-1">
-          {total} jiwa aktif
-        </span>
+    <>
+      <div className="pyrh">
+        <span><i style={{ background: 'var(--lk)' }} />Laki-laki</span>
+        <span><i style={{ background: 'var(--pr)' }} />Perempuan</span>
       </div>
-
-      {/* 3 kartu bucket */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        {buckets.map((b) => (
-          <div key={b.label} className={`rounded-xl ${b.bg} border ${b.border} p-3 flex flex-col gap-1`}>
-            <span className="text-xs text-slate-400 leading-tight min-h-[2rem] flex items-start">{b.label}</span>
-            <span className={`text-2xl font-bold tabular-nums ${b.color}`}>{b.value}</span>
-            <span className="text-xs text-slate-500">{b.persen}%</span>
-            <span className="text-xs text-slate-600 leading-tight min-h-[2rem] flex items-start">{b.sublabel}</span>
+      <div className="a-pyr big">
+        {[...data].reverse().map(row => (
+          <div className="r" key={row.kelompok}>
+            <div className="bl"><i style={{ width: lebar(row.laki), minWidth: minLebar(row.laki) }}>{row.laki > 0 ? row.laki : ''}</i></div>
+            <span className="lb">{row.kelompok}</span>
+            <div className="br"><i style={{ width: lebar(row.perempuan), minWidth: minLebar(row.perempuan) }}>{row.perempuan > 0 ? row.perempuan : ''}</i></div>
           </div>
         ))}
       </div>
-
-      {/* Bar perbandingan */}
-      <div className="flex h-3 rounded-full overflow-hidden gap-px mb-3">
-        {buckets.map((b) => (
-          <div
-            key={b.label}
-            className={`${b.bar} transition-all`}
-            style={{ width: `${b.persen}%` }}
-            title={`${b.label}: ${b.value} jiwa (${b.persen}%)`}
-          />
-        ))}
-      </div>
-
-      {/* Rasio Beban Tanggungan */}
-      <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
-        <div>
-          <p className="text-sm font-semibold text-slate-300">Rasio Beban Tanggungan</p>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Per 100 jiwa produktif menanggung{' '}
-            <span className="text-slate-300 font-medium">{rasio} jiwa</span>
-          </p>
-        </div>
-        <div className="text-right">
-          <span className={`text-3xl font-bold tabular-nums ${
-            rasio <= 50 ? 'text-emerald-400' :
-            rasio <= 80 ? 'text-amber-400' : 'text-rose-400'
-          }`}>{rasio}</span>
-          <p className="text-xs text-slate-600 mt-0.5">
-            {rasio <= 50 ? 'Rendah ✓' : rasio <= 80 ? 'Sedang' : 'Tinggi'}
-          </p>
-        </div>
-      </div>
-    </div>
+    </>
   )
 }
 
-function BarRow({ label, value, total, color = 'bg-sky-500', onClick }: {
-  label: string; value: number; total: number; color?: string; onClick?: () => void
-}) {
-  const pct = total > 0 ? Math.round((value / total) * 100) : 0
-  return (
-    <div
-      className={[
-        'flex items-center gap-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors group',
-        onClick ? 'cursor-pointer hover:bg-white/[0.05] active:bg-white/[0.08]' : '',
-      ].join(' ')}
-      onClick={onClick}
-      title={onClick ? `Klik untuk lihat ${value} penduduk` : undefined}
-    >
-      <span className={[
-        'w-36 truncate text-sm shrink-0',
-        onClick ? 'text-slate-200 group-hover:text-sky-400 transition-colors' : 'text-slate-400',
-      ].join(' ')}>{label}</span>
-      <div className="flex-1 bg-[#0d1424] rounded-full h-2">
-        <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${pct}%` }} />
-      </div>
-      <span className={[
-        'w-24 text-right text-sm shrink-0 tabular-nums flex items-center justify-end gap-1',
-        onClick ? 'text-slate-300' : 'text-slate-500',
-      ].join(' ')}>
-        <span>{value} <span className="text-slate-500 text-xs">({pct}%)</span></span>
-        {onClick && (
-          <span className="text-sky-400 text-xs font-semibold bg-sky-500/10 border border-sky-500/20 rounded px-1 py-0.5 leading-none group-hover:bg-sky-500/20 transition-colors">
-            →
-          </span>
-        )}
-      </span>
-    </div>
-  )
-}
+// ── Klasifikasi umur (tetap, tidak dipengaruhi konfigurasi piramida) ──────────
+const KLASIFIKASI_UMUR = [
+  { label: 'Balita', min: 0, max: 5, tone: 'ok' },
+  { label: 'Anak-anak', min: 6, max: 10, tone: 'info' },
+  { label: 'Remaja', min: 11, max: 19, tone: 'pur' },
+  { label: 'Dewasa', min: 20, max: 44, tone: 'warn' },
+  { label: 'Lansia', min: 45, max: 999, tone: 'bad' },
+]
 
-function PiramidaUmur({ data }: { data: { kelompok: string; laki: number; perempuan: number }[] }) {
-  const maxVal = Math.max(...data.flatMap((d) => [d.laki, d.perempuan]), 1)
+function KlasifikasiUmur({ byKlasifikasi, total }: { byKlasifikasi: Record<string, number>; total: number }) {
+  const tercatat = Object.values(byKlasifikasi).reduce((a, b) => a + b, 0)
   return (
-    <div className="bg-[#0d1424] rounded-xl p-4 border border-white/[0.06]">
-      <h3 className="font-semibold text-slate-200 mb-4">Piramida Umur</h3>
-      <div className="flex justify-center gap-6 mb-3 text-sm text-slate-400">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-sky-500 inline-block" />Laki-laki</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-rose-400 inline-block" />Perempuan</span>
+    <div className="a-card p lift">
+      <div className="ch2" style={{ marginBottom: 12 }}>
+        <h3>Klasifikasi umur</h3>
+        <span className="a-badge mute nd">Klik untuk melihat warga</span>
       </div>
-      <div className="space-y-1">
-        {[...data].reverse().map((row) => {
-          const lakiPct = (row.laki / maxVal) * 100
-          const perPct = (row.perempuan / maxVal) * 100
+      <div className="klas">
+        {KLASIFIKASI_UMUR.map(k => {
+          const n = byKlasifikasi[k.label] ?? 0
           return (
-            <div key={row.kelompok} className="flex items-center gap-1">
-              {/* Bar kiri — laki */}
-              <div className="flex-1 flex justify-end">
-                <div
-                  className="bg-sky-500 h-7 rounded-l flex items-center justify-end pr-1.5 text-white text-sm font-medium tabular-nums shrink-0"
-                  style={{ width: `${lakiPct}%`, minWidth: row.laki > 0 ? '24px' : '0' }}
-                >
-                  {row.laki > 0 ? row.laki : ''}
-                </div>
-              </div>
-              {/* Label kelompok umur — lebar tetap, no-wrap */}
-              <div className="w-14 text-center text-sm text-slate-400 shrink-0 whitespace-nowrap font-mono leading-none">
-                {row.kelompok}
-              </div>
-              {/* Bar kanan — perempuan */}
-              <div className="flex-1 flex justify-start">
-                <div
-                  className="bg-rose-400 h-7 rounded-r flex items-center justify-start pl-1.5 text-white text-sm font-medium tabular-nums shrink-0"
-                  style={{ width: `${perPct}%`, minWidth: row.perempuan > 0 ? '24px' : '0' }}
-                >
-                  {row.perempuan > 0 ? row.perempuan : ''}
-                </div>
-              </div>
-            </div>
+            <Link className="kt clk" key={k.label} href={`/penduduk?umur=${kunciRentang(k.min, k.max)}&status=aktif`}>
+              <span className={`a-badge ${k.tone} sm nd`}>{k.label}</span>
+              <b><CountUp value={n} /></b>
+              <small>
+                {k.max === 999 ? `${k.min}+ th` : `${k.min}–${k.max} th`} · {total ? Math.round((n / total) * 100) : 0}%
+              </small>
+            </Link>
           )
         })}
       </div>
+      <div className="rtot">
+        <span>Total tercatat dalam klasifikasi</span>
+        <span>{fmt(tercatat)} jiwa</span>
+      </div>
     </div>
   )
 }
 
-// Klasifikasi umur sesuai ketentuan Angga
-const KLASIFIKASI_UMUR = [
-  { label: 'Balita', min: 0, max: 5, color: 'text-emerald-400', border: 'border-emerald-500/40', bg: 'bg-emerald-500/10' },
-  { label: 'Anak-anak', min: 6, max: 10, color: 'text-sky-400', border: 'border-sky-500/40', bg: 'bg-sky-500/10' },
-  { label: 'Remaja', min: 11, max: 19, color: 'text-violet-400', border: 'border-violet-500/40', bg: 'bg-violet-500/10' },
-  { label: 'Dewasa', min: 20, max: 44, color: 'text-amber-400', border: 'border-amber-500/40', bg: 'bg-amber-500/10' },
-  { label: 'Lansia', min: 45, max: 999, color: 'text-rose-400', border: 'border-rose-500/40', bg: 'bg-rose-500/10' },
-]
+// ── Komposisi beban tanggungan (dihitung dari konfigurasi piramida yang aktif) ─
+function BebanTanggungan({ data, config, total }: { data: DataKel[]; config: KelompokUmurConfig; total: number }) {
+  const masuk = useMasuk()
+  let muda = 0 // 0–14
+  let produktif = 0 // 15–64
+  let tua = 0 // 65+
+  data.forEach((row, i) => {
+    const cfg = config[i]
+    if (!cfg) return
+    const jumlah = row.laki + row.perempuan
+    if (cfg.max <= 14) muda += jumlah
+    else if (cfg.min >= 65) tua += jumlah
+    else produktif += jumlah
+  })
+  const rasio = produktif > 0 ? Math.round(((muda + tua) / produktif) * 100) : 0
+  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
+  const bagian = [
+    { label: 'Tanggungan muda', ket: 'usia 0–14 tahun', n: muda, warna: 'var(--gold-500)' },
+    { label: 'Usia produktif', ket: 'usia 15–64 tahun', n: produktif, warna: 'var(--navy-600)' },
+    { label: 'Tanggungan tua', ket: 'usia 65+ tahun', n: tua, warna: 'var(--pr)' },
+  ]
+  const tingkat = rasio <= 50 ? { teks: 'Rendah ✓', tone: 'ok' } : rasio <= 80 ? { teks: 'Sedang', tone: 'warn' } : { teks: 'Tinggi', tone: 'bad' }
 
-function KlasifikasiUmur({ byKlasifikasi }: { byKlasifikasi: Record<string, number> }) {
   return (
-    <div className="bg-[#0d1424] rounded-xl p-4 border border-white/[0.06]">
-      <h3 className="font-semibold text-slate-200 mb-3">Klasifikasi Umur</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-        {KLASIFIKASI_UMUR.map((k) => (
-          <div key={k.label} className={`rounded-xl ${k.bg} border ${k.border} p-3 flex flex-col gap-1`}>
-            <span className="text-xs text-slate-400 font-medium">{k.label}</span>
-            <span className={`text-2xl font-bold ${k.color}`}>{byKlasifikasi[k.label] ?? 0}</span>
-            <span className="text-sm text-slate-500">
-              {k.min === 0 ? `0–${k.max} th` : k.max === 999 ? `${k.min}+ th` : `${k.min}–${k.max} th`}
-            </span>
+    <div className="a-card p lift">
+      <div className="ch2">
+        <h3>Rasio beban tanggungan</h3>
+        <span className="a-badge mute nd">{fmt(total)} jiwa aktif</span>
+      </div>
+      <p className="sub2">Komposisi tanggungan muda (0–14), produktif (15–64), tanggungan tua (65+)</p>
+      <div className="a-bar t" style={{ margin: '12px 0' }}>
+        {bagian.map(b => (
+          <i
+            key={b.label}
+            title={`${b.label}: ${b.n} jiwa (${pct(b.n)}%)`}
+            style={{ width: masuk ? `${pct(b.n)}%` : '0%', background: b.warna }}
+          />
+        ))}
+      </div>
+      <div className="rs">
+        {bagian.map(b => (
+          <div key={b.label}>
+            <span style={{ background: b.warna }} />
+            {b.label}<b>{fmt(b.n)}</b>
+            <small style={{ color: 'var(--ink-3)' }}>{b.ket} · {pct(b.n)}%</small>
           </div>
         ))}
       </div>
+      <div className="rasio">
+        <b>{rasio}</b>
+        <span>tanggungan per 100 penduduk usia produktif</span>
+        <span className={`a-badge ${tingkat.tone} sm nd`} style={{ marginLeft: 'auto' }}>{tingkat.teks}</span>
+      </div>
     </div>
   )
 }
 
-function Card({ title, children, total, totalLabel = 'total data' }: {
-  title: string; children: React.ReactNode; total?: number; totalLabel?: string
+// ── Kartu sebaran (Agama, Status perkawinan, Pendidikan, Pekerjaan) ───────────
+// Urutan: bila `baku` diberikan (status perkawinan, pendidikan = urutan bertingkat) ikuti urutan itu, nilai lama di luar daftar di akhir;
+// selain itu (agama, pekerjaan) dari yang terbanyak.
+function barisSebaran(rec: Record<string, number>, kunci: string, baku?: readonly string[]): BarRow[] {
+  const posisi = (k: string) => { const i = baku ? baku.indexOf(k) : -1; return i < 0 ? Number.MAX_SAFE_INTEGER : i }
+  return Object.entries(rec)
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => (baku ? posisi(a[0]) - posisi(b[0]) : 0) || b[1] - a[1])
+    .map(([k, n]) => ({
+      key: k,
+      label: k,
+      nilai: n,
+      href: `/penduduk?${kunci}=${encodeURIComponent(k)}&status=aktif`,
+    }))
+}
+
+function KartuSebaran({
+  judul, sub, rec, kunci, total, warna, batas, baku,
+}: {
+  judul: string; sub: string; rec: Record<string, number>; kunci: string
+  total: number; warna: string; batas?: number; baku?: readonly string[]
 }) {
+  const [semua, setSemua] = useState(false)
+  const rows = barisSebaran(rec, kunci, baku)
+  const tampil = batas && !semua ? rows.slice(0, batas) : rows
+  const tercatat = Object.values(rec).reduce((a, b) => a + b, 0)
   return (
-    <div className="bg-[#0d1424] rounded-xl p-4 border border-white/[0.06]">
-      <h3 className="text-sm font-semibold text-slate-200 mb-3">{title}</h3>
-      {children}
-      {total !== undefined && (
-        <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between">
-          <span className="text-sm text-slate-500 uppercase tracking-wider">Total tercatat</span>
-          <span className="text-sm font-semibold text-slate-400 tabular-nums">{total} {totalLabel}</span>
-        </div>
+    <div className="a-card p lift">
+      <div className="ch2">
+        <h3>{judul}</h3>
+        <span className="a-badge mute nd">Klik untuk melihat warga</span>
+      </div>
+      <p className="sub2">{sub}</p>
+      {rows.length === 0 ? (
+        <p className="a-hint" style={{ padding: '10px 0' }}>Belum ada data.</p>
+      ) : (
+        <BarRows rows={tampil} total={total} warna={warna} />
       )}
+      {batas !== undefined && rows.length > batas && (
+        <Button type="button" variant="ghost" size="sm" style={{ marginTop: 8 }} onClick={() => setSemua(v => !v)}>
+          {semua ? `Tampilkan ${batas} teratas` : `Tampilkan semua (${rows.length})`}
+        </Button>
+      )}
+      <div className="rtot">
+        <span>Total tercatat</span>
+        <span>{fmt(tercatat)} jiwa</span>
+      </div>
     </div>
   )
 }
 
-// ── Modal Pengaturan Rentang Umur Piramida (Custom Bebas) ───────────────────
-//
-// User bisa definisikan kelompok umur sepenuhnya bebas:
-//   - Tambah baris: isi min & max lalu klik Tambah
-//   - Hapus baris yang tidak diinginkan
-//   - Tidak ada batasan interval — bebas: 0-4, 5-14, 15-19, 20-40, dst.
-//
-// Satu aturan validasi utama: kelompok tidak boleh overlap dan harus urut.
+// ── Modal kelompok umur piramida ──────────────────────────────────────────────
+interface BarisKel { min: string; max: string }
 
-function PengaturanPiramidaModal({
-  config,
-  onClose,
-  onSave,
+const keBaris = (cfg: KelompokUmurConfig): BarisKel[] =>
+  cfg.map(e => ({ min: String(e.min), max: e.max === 999 ? '' : String(e.max) }))
+
+const PRESET: { label: string; kel: KelompokUmurConfig }[] = [
+  { label: '5 tahunan (bawaan)', kel: DEFAULT_KELOMPOK_UMUR_CONFIG },
+  { label: 'Sekolah', kel: [{ min: 0, max: 6 }, { min: 7, max: 12 }, { min: 13, max: 15 }, { min: 16, max: 18 }, { min: 19, max: 59 }, { min: 60, max: 999 }] },
+  { label: 'Produktif', kel: [{ min: 0, max: 14 }, { min: 15, max: 64 }, { min: 65, max: 999 }] },
+  { label: 'Dasawarsa', kel: [{ min: 0, max: 9 }, { min: 10, max: 19 }, { min: 20, max: 29 }, { min: 30, max: 39 }, { min: 40, max: 49 }, { min: 50, max: 59 }, { min: 60, max: 999 }] },
+]
+
+function KelompokUmurModal({
+  config, menyimpan, onClose, onSave,
 }: {
   config: KelompokUmurConfig
+  menyimpan: boolean
   onClose: () => void
   onSave: (c: KelompokUmurConfig) => void
 }) {
-  // Editable list of entries; kita tampilkan sebagai rows
-  const [rows, setRows] = useState<KelompokUmurEntry[]>(() =>
-    config.length > 0 ? config.map((e) => ({ ...e })) : [...DEFAULT_KELOMPOK_UMUR_CONFIG]
+  const [rows, setRows] = useState<BarisKel[]>(() =>
+    keBaris(config.length > 0 ? config : DEFAULT_KELOMPOK_UMUR_CONFIG)
   )
-  // Input untuk tambah baru
-  const [newMin, setNewMin] = useState('')
-  const [newMax, setNewMax] = useState('')
-  const [addError, setAddError] = useState('')
-  const [saveError, setSaveError] = useState('')
+  const [galat, setGalat] = useState('')
+  const [buruk, setBuruk] = useState(-1)
+  const [contoh, setContoh] = useState(false)
 
-  function handleTambah() {
-    setAddError('')
-    const mn = parseInt(newMin, 10)
-    const mx = newMax.trim() === '+' || newMax.trim() === '' ? 999 : parseInt(newMax, 10)
-    if (isNaN(mn) || mn < 0) { setAddError('Umur min tidak valid'); return }
-    if (isNaN(mx) || (mx !== 999 && mx < mn)) { setAddError('Umur maks tidak valid atau lebih kecil dari min'); return }
-    // Cek overlap dengan yang sudah ada
-    const overlap = rows.some((r) => !(mx < r.min || mn > r.max))
-    if (overlap) { setAddError('Rentang umur ini overlap dengan kelompok yang sudah ada'); return }
-    const newRows = [...rows, { min: mn, max: mx }].sort((a, b) => a.min - b.min)
-    setRows(newRows)
-    setNewMin('')
-    setNewMax('')
+  const gagal = (pesan: string, idx = -1) => { setGalat(pesan); setBuruk(idx) }
+
+  function ubah(i: number, sisi: 'min' | 'max', nilai: string) {
+    setRows(prev => prev.map((r, j) => (j === i ? { ...r, [sisi]: nilai } : r)))
+    setGalat(''); setBuruk(-1)
   }
 
-  function handleHapus(idx: number) {
-    setRows((prev) => prev.filter((_, i) => i !== idx))
-    setSaveError('')
+  function tambah() {
+    if (rows.length >= 30) { gagal('Maksimal 30 kelompok umur'); return }
+    const t = rows[rows.length - 1]
+    const mxT = t ? (t.max.trim() === '' || t.max.trim() === '+' ? 999 : parseInt(t.max, 10)) : NaN
+    const baru = !t || isNaN(mxT) || mxT === 999
+      ? { min: '0', max: '4' }
+      : { min: String(mxT + 1), max: String(mxT + 5) }
+    setRows(prev => [...prev, baru])
+    setGalat(''); setBuruk(-1)
   }
 
-  function handleReset() {
-    setRows([...DEFAULT_KELOMPOK_UMUR_CONFIG])
-    setSaveError('')
-    setAddError('')
+  function hapus(i: number) {
+    setRows(prev => prev.filter((_, j) => j !== i))
+    setGalat(''); setBuruk(-1)
   }
 
-  function handleSave() {
-    setSaveError('')
-    if (rows.length === 0) { setSaveError('Minimal harus ada 1 kelompok umur'); return }
-    if (rows.length > 30) { setSaveError('Maksimal 30 kelompok umur'); return }
-    // Pastikan sorted dan tidak overlap
-    const sorted = [...rows].sort((a, b) => a.min - b.min)
-    for (let i = 1; i < sorted.length; i++) {
-      if (sorted[i].min <= sorted[i - 1].max && sorted[i - 1].max !== 999) {
-        setSaveError('Ada kelompok umur yang overlap — harap perbaiki')
-        return
-      }
+  function pakaiContoh(kel: KelompokUmurConfig) {
+    setRows(keBaris(kel))
+    setContoh(false)
+    setGalat(''); setBuruk(-1)
+  }
+
+  function simpan() {
+    setGalat(''); setBuruk(-1)
+    if (rows.length === 0) { gagal('Minimal harus ada 1 kelompok umur'); return }
+    if (rows.length > 30) { gagal('Maksimal 30 kelompok umur'); return }
+    const hasil: KelompokUmurConfig = []
+    for (let i = 0; i < rows.length; i++) {
+      const mn = parseInt(rows[i].min, 10)
+      const t = rows[i].max.trim()
+      const mx = t === '+' || t === '' ? 999 : parseInt(t, 10)
+      if (isNaN(mn) || mn < 0) { gagal('Umur min tidak valid', i); return }
+      if (isNaN(mx) || (mx !== 999 && mx < mn)) { gagal('Umur maks tidak valid atau lebih kecil dari min', i); return }
+      hasil.push({ min: mn, max: mx })
     }
-    onSave(sorted)
+    const urut = [...hasil].sort((a, b) => a.min - b.min)
+    for (let i = 1; i < urut.length; i++) {
+      if (urut[i].min <= urut[i - 1].max) { gagal('Ada kelompok umur yang overlap — harap perbaiki'); return }
+    }
+    onSave(urut)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-[#0d1424] border border-white/[0.08] rounded-2xl p-6 max-w-md w-full flex flex-col gap-5 max-h-[90dvh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/20 flex items-center justify-center">
-              <Settings2 size={18} className="text-sky-400" />
-            </div>
-            <div>
-              <p className="font-semibold text-slate-100 text-sm">Rentang Umur Piramida</p>
-              <p className="text-sm text-slate-500 mt-0.5">Atur kelompok umur sesuai kebutuhan</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5">
-            <X size={15} />
-          </button>
+    <Modal
+      onClose={onClose}
+      width={560}
+      icon={<SlidersVertical className="i" />}
+      title="Kelompok umur piramida"
+      sub="Atur rentang umur sesuai kebutuhan laporan"
+      foot={
+        <>
+          <Button type="button" variant="ghost" style={{ marginRight: 'auto' }} onClick={() => setContoh(v => !v)} aria-expanded={contoh}>
+            <Layers className="i" />Contoh format
+          </Button>
+          <Button type="button" variant="outline" onClick={onClose} disabled={menyimpan}>Batal</Button>
+          <Button type="button" onClick={simpan} disabled={menyimpan}><Check className="i" />Simpan</Button>
+        </>
+      }
+    >
+      {galat && (
+        <div className="a-alert bad" role="alert" style={{ marginBottom: 12 }}>
+          <CircleAlert className="i" />
+          <div>{galat}</div>
         </div>
-
-        {/* Daftar kelompok yang sudah ada */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-400">{rows.length} Kelompok Umur</p>
-            <button
-              onClick={handleReset}
-              className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              Reset ke default
-            </button>
-          </div>
-          {rows.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-4">Belum ada kelompok. Tambah di bawah.</p>
-          ) : (
-            <div className="flex flex-col gap-1 max-h-52 overflow-y-auto">
-              {[...rows].sort((a, b) => a.min - b.min).map((row, i) => (
-                <div key={i} className="flex items-center justify-between bg-white/[0.03] rounded-xl px-3 py-2 border border-white/[0.06]">
-                  <span className="text-sm text-slate-200 font-mono">{formatKelompokLabel(row)}</span>
-                  <button
-                    onClick={() => handleHapus(rows.indexOf(row))}
-                    className="text-rose-400/60 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors"
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+      )}
+      {contoh && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+          {PRESET.map(p => (
+            <Button key={p.label} type="button" variant="outline" size="sm" onClick={() => pakaiContoh(p.kel)}>
+              {p.label}
+            </Button>
+          ))}
         </div>
-
-        {/* Tambah kelompok baru */}
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-slate-400">Tambah Kelompok Baru</p>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 flex flex-col gap-1">
-                <label className="text-sm text-slate-500">Umur Min</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={120}
-                  value={newMin}
-                  onChange={(e) => { setNewMin(e.target.value); setAddError('') }}
-                  placeholder="0"
-                  className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
-                />
-              </div>
-              <span className="text-slate-600 pt-5">—</span>
-              <div className="flex-1 flex flex-col gap-1">
-                <label className="text-sm text-slate-500">Umur Maks (+ = tak terbatas)</label>
-                <input
-                  type="text"
-                  value={newMax}
-                  onChange={(e) => { setNewMax(e.target.value); setAddError('') }}
-                  placeholder="4 atau +"
-                  className="bg-[#111827] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20"
-                />
-              </div>
-            </div>
-            <button
-              onClick={handleTambah}
-              className="w-full py-2 rounded-xl bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-medium hover:bg-sky-500/30 transition-colors"
-            >
-              + Tambah Kelompok
-            </button>
-          </div>
-          {addError && <p className="text-xs text-rose-400">{addError}</p>}
-          <p className="text-xs text-slate-600">
-            Contoh: min=0 maks=4 → &ldquo;0–4&rdquo; &nbsp;|&nbsp; min=65 maks=+ → &ldquo;65+&rdquo;
-          </p>
-        </div>
-
-        {saveError && <p className="text-xs text-rose-400">{saveError}</p>}
-
-        {/* Actions */}
-        <div className="flex gap-2">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-white/[0.08] text-slate-400 text-sm hover:text-slate-200 transition-colors"
-          >
-            Batal
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-sky-500 text-white text-sm font-medium hover:bg-sky-600 transition-colors flex items-center justify-center gap-2"
-          >
-            <Check size={14} />
-            Terapkan
-          </button>
-        </div>
+      )}
+      <div className="krh">
+        <span>Umur min</span><span /><span>Umur maks (kosong atau + = tak terbatas)</span><span />
       </div>
-    </div>
+      {rows.map((r, i) => (
+        <div className="kr" key={i}>
+          <input
+            type="number"
+            min={0}
+            max={120}
+            aria-label={`Umur min kelompok ${i + 1}`}
+            aria-invalid={buruk === i}
+            value={r.min}
+            onChange={e => ubah(i, 'min', e.target.value)}
+          />
+          <span>–</span>
+          <input
+            type="text"
+            placeholder="+"
+            aria-label={`Umur maks kelompok ${i + 1}`}
+            aria-invalid={buruk === i}
+            value={r.max}
+            onChange={e => ubah(i, 'max', e.target.value)}
+          />
+          <button type="button" aria-label={`Hapus kelompok ${formatKelompokLabel({ min: parseInt(r.min, 10) || 0, max: r.max.trim() === '' || r.max.trim() === '+' ? 999 : parseInt(r.max, 10) || 0 })}`} onClick={() => hapus(i)}>
+            <Trash2 className="i" style={{ fontSize: 15 }} />
+          </button>
+        </div>
+      ))}
+      {rows.length === 0 && <p className="a-hint" style={{ textAlign: 'center', padding: '10px 0' }}>Belum ada kelompok. Tambah di bawah.</p>}
+      <Button type="button" variant="secondary" size="sm" style={{ marginTop: 8 }} onClick={tambah}>
+        <Plus className="i" />Tambah kelompok
+      </Button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+        <p className="a-hint" style={{ margin: 0, flex: 1 }}>{rows.length} dari maksimal 30 kelompok.</p>
+        <Button type="button" variant="ghost" size="xs" onClick={() => pakaiContoh(DEFAULT_KELOMPOK_UMUR_CONFIG)}>
+          Reset ke default
+        </Button>
+      </div>
+      <p className="a-hint" style={{ marginTop: 6 }}>
+        Contoh: min 0 maks 4 menjadi &ldquo;0–4&rdquo;; min 65 dengan maks kosong atau + menjadi &ldquo;65+&rdquo;.
+      </p>
+    </Modal>
   )
 }
 
+// ── Halaman ───────────────────────────────────────────────────────────────────
 export default function MonografiPage() {
   const { data, isLoading } = useMonografi()
   const saveMutation = useSaveKelompokUmurConfig()
-  const router = useRouter()
-  const [showPengaturan, setShowPengaturan] = useState(false)
-
-  function goFilter(key: string, value: string) {
-    router.push(`/penduduk?${key}=${encodeURIComponent(value)}&status=aktif`)
-  }
+  const { toast } = useToast()
+  const { wilayah } = useAppStore()
+  const { isAdmin } = useAuthStore()
+  const canAtur = isAdmin()   // rules: config write = admin
+  const [bukaKel, setBukaKel] = useState(false)
 
   function handleSaveConfig(config: KelompokUmurConfig) {
     saveMutation.mutate(config, {
-      onSuccess: () => setShowPengaturan(false),
+      onSuccess: () => {
+        setBukaKel(false)
+        toast('Kelompok umur disimpan', 'success')
+      },
+      // Modal tetap terbuka supaya isian tidak hilang
+      onError: () => toast('Gagal menyimpan kelompok umur', 'error'),
     })
   }
 
+  const total = data?.totalAktif ?? 0
+  const persen = (n: number) => `${total ? Math.round((n / Math.max(total, 1)) * 100) : 0}% dari total`
+  const tercatatPiramida = data ? data.piramidaUmur.reduce((s, r) => s + r.laki + r.perempuan, 0) : 0
+
   return (
     <AppShell title="Monografi">
-      <div className="flex flex-col gap-4 max-w-5xl mx-auto">
-        {/* Sub-header */}
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5">
-            <BarChart2 size={18} className="text-sky-400 shrink-0" />
-            <h1 className="text-base font-semibold text-slate-100">Monografi</h1>
-          </div>
-          <button
-            onClick={() => setShowPengaturan(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-slate-200 text-xs transition-colors"
-          >
-            <Settings2 size={13} />
-            Rentang Umur
-          </button>
-        </div>
+      <PageHeader title="Monografi desa" description={`Statistik penduduk aktif Desa ${wilayah.desa}`} />
 
-        {isLoading ? (
-          <div className="flex flex-col gap-3">
-            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
-          </div>
-        ) : !data ? null : (
-          <>
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Total Penduduk Aktif" value={data.totalAktif} color="sky" />
-              <StatCard label="Tidak Aktif" value={data.totalTidakAktif} color="amber" />
-              <StatCard label="Laki-laki" value={data.laki}
-                sub={`${Math.round((data.laki / Math.max(data.totalAktif, 1)) * 100)}%`} color="sky" />
-              <StatCard label="Perempuan" value={data.perempuan}
-                sub={`${Math.round((data.perempuan / Math.max(data.totalAktif, 1)) * 100)}%`} color="rose" />
-            </div>
-
-            <div className="relative">
-              <PiramidaUmur data={data.piramidaUmur} />
-              <div className="absolute top-3 right-3">
-                <span className="text-[10px] text-slate-600 bg-[#0d1424] px-2 py-0.5 rounded-full border border-white/[0.06]">
-                  {data.kelompokUmurConfig.length} kelompok
-                </span>
-              </div>
-            </div>
-            <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
-              <span className="text-sm text-slate-500 uppercase tracking-wider">Total tercatat dalam piramida</span>
-              <span className="text-xs font-semibold text-slate-400 tabular-nums">
-                {data.piramidaUmur.reduce((s,r)=>s+r.laki+r.perempuan,0)} jiwa
-              </span>
-            </div>
-
-            <KlasifikasiUmur byKlasifikasi={data.byKlasifikasiUmur} />
-            <div className="bg-[#0d1424] rounded-xl px-4 py-2.5 border border-white/[0.06] flex items-center justify-between -mt-2">
-              <span className="text-sm text-slate-500 uppercase tracking-wider">Total tercatat dalam klasifikasi</span>
-              <span className="text-xs font-semibold text-slate-400 tabular-nums">
-                {Object.values(data.byKlasifikasiUmur).reduce((a,b)=>a+b,0)} jiwa
-              </span>
-            </div>
-
-            {/* ── Statistik Usia Produktif & Tanggungan ── */}
-            <UsiaTanggungan data={data.piramidaUmur} kelompokConfig={data.kelompokUmurConfig} total={data.totalAktif} />
-
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card title="Agama" total={Object.values(data.byAgama).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-                <p className="text-sm text-slate-500 mb-2">Klik untuk lihat penduduk ↗</p>
-                <div className="space-y-1">
-                  {(Object.entries(data.byAgama) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([agama, n]) => (
-                    <BarRow key={agama} label={agama} value={n} total={data.totalAktif} color="bg-emerald-500"
-                      onClick={() => goFilter('agama', agama)} />
-                  ))}
-                </div>
-              </Card>
-              <Card title="Status Perkawinan" total={Object.values(data.byStatusPerkawinan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-                <p className="text-sm text-slate-500 mb-2">Klik untuk lihat penduduk ↗</p>
-                <div className="space-y-1">
-                  {(Object.entries(data.byStatusPerkawinan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([status, n]) => (
-                    <BarRow key={status} label={status} value={n} total={data.totalAktif} color="bg-amber-500"
-                      onClick={() => goFilter('statusPerkawinan', status)} />
-                  ))}
-                </div>
-              </Card>
-            </div>
-
-            <Card title="Tingkat Pendidikan" total={Object.values(data.byPendidikan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-              <p className="text-sm text-slate-500 mb-2">Klik untuk lihat penduduk ↗</p>
-              <div className="space-y-1">
-                {(Object.entries(data.byPendidikan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pend, n]) => (
-                  <BarRow key={pend} label={pend} value={n} total={data.totalAktif} color="bg-sky-500"
-                    onClick={() => goFilter('pendidikan', pend)} />
-                ))}
-              </div>
-            </Card>
-
-            <Card title="Pekerjaan" total={Object.values(data.byPekerjaan).reduce((a,b)=>a+b,0)} totalLabel="jiwa">
-              <p className="text-sm text-slate-500 mb-2">Klik untuk lihat penduduk ↗</p>
-              <div className="space-y-1">
-                {(Object.entries(data.byPekerjaan) as [string, number][]).filter(([,n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([pek, n]) => (
-                  <BarRow key={pek} label={pek} value={n} total={data.totalAktif} color="bg-rose-400"
-                    onClick={() => goFilter('pekerjaan', pek)} />
-                ))}
-              </div>
-            </Card>
-          </>
-        )}
+      <div className="g4">
+        <StatCard label="Penduduk aktif" icon={Users} tone="navy" value={data?.totalAktif} loading={isLoading} subLabel="dihitung dari status Aktif" />
+        <StatCard label="Laki-laki" icon={JK_VISUAL.L.Icon} tone="lk" value={data?.laki} loading={isLoading} subLabel={data ? persen(data.laki) : undefined} />
+        <StatCard label="Perempuan" icon={JK_VISUAL.P.Icon} tone="pr" value={data?.perempuan} loading={isLoading} subLabel={data ? persen(data.perempuan) : undefined} />
+        <StatCard label="Tidak aktif" icon={CircleDashed} tone="mute" value={data?.totalTidakAktif} loading={isLoading} subLabel="meninggal, pindah, dll." />
       </div>
-      {showPengaturan && (
-        <PengaturanPiramidaModal
+
+      {isLoading ? (
+        <>
+          <div className="g2 eq" style={{ marginTop: 14 }}>
+            {[0, 1].map(i => (
+              <div className="a-card p" key={i}>
+                <Skeleton style={{ height: 18, width: 140, marginBottom: 14 }} />
+                {[...Array(5)].map((_, j) => <Skeleton key={j} style={{ height: 14, marginBottom: 14 }} />)}
+              </div>
+            ))}
+          </div>
+          <div className="a-card p" style={{ marginTop: 14 }}>
+            <Skeleton style={{ height: 18, width: 180, marginBottom: 14 }} />
+            {[...Array(6)].map((_, j) => <Skeleton key={j} style={{ height: 22, marginBottom: 10 }} />)}
+          </div>
+        </>
+      ) : !data ? (
+        <div className="a-card" style={{ marginTop: 14 }}>
+          <div className="a-empty">
+            <div className="em"><CircleDashed className="i" style={{ fontSize: 30 }} /></div>
+            <h3>Data monografi tidak tersedia</h3>
+            <p>Muat ulang halaman ini beberapa saat lagi.</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="g2 eq" style={{ marginTop: 14 }}>
+            <KartuSebaran judul="Agama" sub="Sebaran pemeluk agama" rec={data.byAgama} kunci="agama" total={total}
+              warna="linear-gradient(90deg,var(--navy-700),var(--navy-500))" />
+            <KartuSebaran judul="Status perkawinan" sub="Sebaran status kawin" rec={data.byStatusPerkawinan} kunci="statusPerkawinan" total={total} baku={STATUS_PERKAWINAN}
+              warna="linear-gradient(90deg,var(--gold-600),var(--gold-400))" />
+          </div>
+          <div className="g2 eq" style={{ marginTop: 14 }}>
+            <KartuSebaran judul="Tingkat pendidikan" sub="Pendidikan terakhir" rec={data.byPendidikan} kunci="pendidikan" total={total} baku={PENDIDIKAN}
+              warna="linear-gradient(90deg,var(--navy-600),#6FA8F0)" />
+            <KartuSebaran judul="Pekerjaan" sub="Pekerjaan terbanyak" rec={data.byPekerjaan} kunci="pekerjaan" total={total} batas={8}
+              warna="linear-gradient(90deg,var(--gold-600),var(--gold-400))" />
+          </div>
+
+          <div className="a-card" style={{ marginTop: 14 }}>
+            <div className="ch">
+              <div>
+                <h3>Piramida penduduk</h3>
+                <p>{data.kelompokUmurConfig.length} kelompok umur · {fmt(total)} penduduk aktif</p>
+              </div>
+              {canAtur && (
+                <Button type="button" variant="secondary" size="sm" onClick={() => setBukaKel(true)}>
+                  <SlidersVertical className="i" />Atur kelompok umur
+                </Button>
+              )}
+            </div>
+            <div style={{ padding: '18px 22px 22px' }}>
+              <Piramida data={data.piramidaUmur} />
+              <p className="a-hint" style={{ marginTop: 14 }}>
+                Kelompok umur bisa disesuaikan untuk permintaan data dengan format berbeda (mis. data sekolah atau usia produktif).
+              </p>
+              <div className="rtot">
+                <span>Total tercatat dalam piramida</span>
+                <span>{fmt(tercatatPiramida)} jiwa</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="g2 eq" style={{ marginTop: 14 }}>
+            <KlasifikasiUmur byKlasifikasi={data.byKlasifikasiUmur} total={total} />
+            <BebanTanggungan data={data.piramidaUmur} config={data.kelompokUmurConfig} total={total} />
+          </div>
+        </>
+      )}
+
+      {bukaKel && canAtur && (
+        <KelompokUmurModal
           config={data?.kelompokUmurConfig ?? DEFAULT_KELOMPOK_UMUR_CONFIG}
-          onClose={() => setShowPengaturan(false)}
+          menyimpan={saveMutation.isPending}
+          onClose={() => setBukaKel(false)}
           onSave={handleSaveConfig}
         />
       )}

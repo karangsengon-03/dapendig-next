@@ -1,17 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { collection, getDocs, writeBatch, doc } from 'firebase/firestore'
+import { collection, getDocs, writeBatch, doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { AppShell } from '@/components/layout/AppShell'
+import { AksesDitolakAdmin } from '@/components/ui/akses-ditolak'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
 import { MigrasiProgress } from '@/components/ui/migrasi-progress'
-import { CheckCircle, AlertCircle, ArrowLeft, Info, FileSpreadsheet, Check, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/toast'
+import { FileSpreadsheet, Info } from 'lucide-react'
+import { MigLayout, MigBox, MigPrimary, MigEmpty, MigSummary, MigTable, MigRowBtn, MigDone, MigError, MigGagal } from '@/components/pengaturan/migrasi-parts'
+import { tulisBertahap, pesanGalatTulis } from '@/lib/tulis-bertahap'
 
 // ── Data tanggal lahir dari file Excel "Semua.xls" ─────────────────────────
 // Diekstrak pada: 2026-05-02
-// Total: 1187 penduduk
+// Jumlah penduduk dihitung dari data di bawah (Object.keys), bukan angka tetap
 // Format: NIK -> YYYY-MM-DD
 // HANYA tanggal_lahir yang diambil — field lain tidak disentuh
 
@@ -20,6 +25,8 @@ const TANGGAL_DARI_EXCEL: Record<string, string> = {"3511140109480002":"1948-09-
 // ── Tipe data ─────────────────────────────────────────────────────────────────
 
 type ItemResult = {
+  /** ID dokumen sebenarnya di Firestore (dokumen lama ber-ID acak: ID ≠ NIK). Dipakai untuk menulis. */
+  id: string
   nik: string
   nama: string
   lama: string
@@ -30,6 +37,7 @@ type RunResult = {
   diperbaiki: number
   sama: number
   tidakAdaDiExcel: number
+  gagal: { nama: string; pesan: string }[]
   items: ItemResult[]
 }
 
@@ -48,6 +56,7 @@ function formatTgl(s: string): string {
 export default function FixTanggalExcelPage() {
   const { isAdmin } = useAuthStore()
   const router = useRouter()
+  const { toast } = useToast()
   const [status, setStatus] = useState<'idle' | 'preview' | 'loading' | 'done' | 'error'>('idle')
   const [previewData, setPreviewData] = useState<ItemResult[]>([])
   const [result, setResult] = useState<RunResult | null>(null)
@@ -56,6 +65,7 @@ export default function FixTanggalExcelPage() {
   const [progressTotal, setProgressTotal] = useState(0)
   const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set())
   const [doneItems, setDoneItems] = useState<Set<string>>(new Set())
+  const [statistik, setStatistik] = useState({ sama: 0, tidakAdaDiExcel: 0 })
 
   // Tahap 1: scan Firestore, bandingkan dengan data Excel, tampilkan preview
   async function handlePreview() {
@@ -68,6 +78,8 @@ export default function FixTanggalExcelPage() {
       setProgressTotal(snap.docs.length)
 
       const toFix: ItemResult[] = []
+      let sama = 0
+      let tidakAdaDiExcel = 0
 
       for (let i = 0; i < snap.docs.length; i++) {
         setProgressCurrent(i + 1)
@@ -78,12 +90,13 @@ export default function FixTanggalExcelPage() {
         const nama = String(data.nama_lengkap ?? '').trim()
 
         const tanggalExcel = TANGGAL_DARI_EXCEL[nik]
-        if (!tanggalExcel) continue           // NIK tidak ada di file Excel → skip
-        if (tanggalExcel === tanggalFirestore) continue  // sudah sama → skip
+        if (!tanggalExcel) { tidakAdaDiExcel++; continue }           // NIK tidak ada di file Excel → skip
+        if (tanggalExcel === tanggalFirestore) { sama++; continue }  // sudah sama → skip
 
-        toFix.push({ nik, nama, lama: tanggalFirestore, baru: tanggalExcel })
+        toFix.push({ id: d.id, nik, nama, lama: tanggalFirestore, baru: tanggalExcel })
       }
 
+      setStatistik({ sama, tidakAdaDiExcel })
       setPreviewData(toFix)
       setStatus('preview')
     } catch (e) {
@@ -92,48 +105,40 @@ export default function FixTanggalExcelPage() {
     }
   }
 
-  // Tahap 2: eksekusi fix setelah konfirmasi
+  // Tahap 2: eksekusi fix setelah konfirmasi.
+  // Menulis ke ID dokumen sebenarnya (d.id). Dokumen yang tidak ada dihitung gagal untuk barisnya saja;
+  // proses lanjut dan tidak ada dokumen baru dibuat (hanya update).
   async function handleFix() {
     if (!isAdmin()) return
+    const target = previewData.filter((x) => !doneItems.has(x.id))
+    if (target.length === 0) return
     setStatus('loading')
     setProgressCurrent(0)
-    setProgressTotal(previewData.length)
+    setProgressTotal(target.length)
 
     try {
-      let batch = writeBatch(db)
-      let batchSize = 0
-
-      for (let i = 0; i < previewData.length; i++) {
-        setProgressCurrent(i + 1)
-        const { nik, baru } = previewData[i]
-        // HANYA update tanggal_lahir, field lain tidak disentuh (merge otomatis karena updateDoc)
-        batch.update(doc(db, 'penduduk', nik), { tanggal_lahir: baru })
-        batchSize++
-
-        if (batchSize >= 499) {
+      const hasil = await tulisBertahap(target, {
+        // HANYA update tanggal_lahir, field lain tidak disentuh (merge otomatis karena update)
+        tulisBatch: async (kelompok) => {
+          const batch = writeBatch(db)
+          for (const it of kelompok) batch.update(doc(db, 'penduduk', it.id), { tanggal_lahir: it.baru })
           await batch.commit()
-          batch = writeBatch(db)
-          batchSize = 0
-        }
-      }
-      if (batchSize > 0) await batch.commit()
+        },
+        tulisSatu: (it) => updateDoc(doc(db, 'penduduk', it.id), { tanggal_lahir: it.baru }),
+        onProgress: (n) => setProgressCurrent(n),
+      })
 
-      // Hitung statistik akhir
-      const snap = await getDocs(collection(db, 'penduduk'))
-      let sama = 0
-      let tidakAdaDiExcel = 0
-      for (const d of snap.docs) {
-        const nik = String(d.data().nik ?? d.id ?? '').trim()
-        const tanggalExcel = TANGGAL_DARI_EXCEL[nik]
-        if (!tanggalExcel) { tidakAdaDiExcel++; continue }
-        sama++
-      }
+      // Ringkasan dari hasil nyata: satuan (sebelumnya) + massal (barusan) yang benar-benar berhasil
+      const selesai = new Set([...doneItems, ...hasil.berhasil.map((x) => x.id)])
+      setDoneItems(selesai)
+      const items = previewData.filter((x) => selesai.has(x.id))
 
       setResult({
-        diperbaiki: previewData.length,
-        sama: sama - previewData.length,
-        tidakAdaDiExcel,
-        items: previewData,
+        diperbaiki: items.length,
+        sama: statistik.sama,
+        tidakAdaDiExcel: statistik.tidakAdaDiExcel,
+        gagal: hasil.gagal.map((g) => ({ nama: g.item.nama || g.item.nik, pesan: g.pesan })),
+        items,
       })
       setStatus('done')
     } catch (e) {
@@ -142,216 +147,131 @@ export default function FixTanggalExcelPage() {
     }
   }
 
-  async function handleOneItem(nik: string, baru: string) {
-    setLoadingItems(prev => new Set([...prev, nik]))
+  async function handleOneItem(item: ItemResult) {
+    if (!isAdmin()) return
+    setLoadingItems(prev => new Set([...prev, item.id]))
     try {
-      const { writeBatch: wb, doc: d } = await import('firebase/firestore')
-      const b = wb(db)
-      b.update(d(db, 'penduduk', nik), { tanggal_lahir: baru })
-      await b.commit()
-      setDoneItems(prev => new Set([...prev, nik]))
-    } catch { /* ignore */ }
-    setLoadingItems(prev => { const s = new Set(prev); s.delete(nik); return s })
+      await updateDoc(doc(db, 'penduduk', item.id), { tanggal_lahir: item.baru })
+      setDoneItems(prev => new Set([...prev, item.id]))
+    } catch (e) {
+      toast(`Gagal memperbarui tanggal lahir: ${pesanGalatTulis(e)}`, 'error')
+    }
+    setLoadingItems(prev => { const s = new Set(prev); s.delete(item.id); return s })
+  }
+
+  const jumlahPending = previewData.filter((x) => !doneItems.has(x.id)).length
+
+  // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
+  if (!isAdmin()) {
+    return (
+      <AppShell title="Fix Tanggal Lahir dari Excel">
+        <AksesDitolakAdmin />
+      </AppShell>
+    )
   }
 
   return (
     <AppShell title="Fix Tanggal Lahir dari Excel">
-      <div className="max-w-2xl mx-auto flex flex-col gap-4 pb-10">
-
-        {/* Header */}
-        <div className="flex items-center gap-2.5">
-          <button onClick={() => router.back()}
-            className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 shrink-0">
-            <ArrowLeft size={15} />
-          </button>
-          <div>
-            <h1 className="text-base font-semibold text-slate-100">Fix Tanggal Lahir dari Excel</h1>
-            <p className="text-sm text-slate-500">Sumber: file Semua.xls (1187 penduduk)</p>
+      <MigLayout
+        title="Fix Tanggal Lahir dari Excel"
+        desc={`Sumber: file Semua.xls (${Object.keys(TANGGAL_DARI_EXCEL).length} penduduk)`}
+        before={
+          <div className="a-alert info">
+            <Info className="i" />
+            <div>
+              <b>Hanya field tanggal_lahir yang diubah</b>
+              <p style={{ margin: 0 }}>
+                Migrasi ini membandingkan <span className="mig-code">tanggal_lahir</span> di Firestore dengan
+                data dari file Excel Dispenduk. Penduduk yang NIK-nya tidak ada di file Excel (misal: kelahiran baru,
+                pindah masuk) akan dilewati otomatis. Field lain seperti pendidikan, pekerjaan, alamat <strong>tidak disentuh sama sekali</strong>.
+              </p>
+            </div>
           </div>
-        </div>
+        }
+      >
+        {status === 'idle' && (
+          <>
+            <MigBox>
+              <p style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--ink)', fontWeight: 600 }}>
+                <FileSpreadsheet className="i" style={{ color: 'var(--ok)' }} />
+                Data dimuat dari Semua.xls
+              </p>
+              <p>① Scan seluruh koleksi <span className="mig-code">penduduk</span> di Firestore</p>
+              <p>② Cari NIK di data Excel — jika tidak ada → skip (pindah masuk / kelahiran baru)</p>
+              <p>③ Bandingkan <span className="mig-code">tanggal_lahir</span> — jika sudah sama → skip</p>
+              <p>④ Tampilkan preview sebelum eksekusi</p>
+            </MigBox>
+            <MigPrimary onClick={handlePreview} disabled={!isAdmin()} icon={<FileSpreadsheet className="i" />}>Scan & Preview Perbedaan</MigPrimary>
+          </>
+        )}
 
-        {/* Info box */}
-        <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4 flex gap-3">
-          <Info size={16} className="text-sky-400 shrink-0 mt-0.5" />
-          <div className="flex flex-col gap-1.5">
-            <p className="text-sm font-medium text-sky-300">Hanya field tanggal_lahir yang diubah</p>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Migrasi ini membandingkan <span className="font-mono text-slate-300">tanggal_lahir</span> di Firestore dengan
-              data dari file Excel Dispenduk. Penduduk yang NIK-nya tidak ada di file Excel (misal: kelahiran baru,
-              pindah masuk) akan dilewati otomatis. Field lain seperti pendidikan, pekerjaan, alamat <span className="text-emerald-400 font-semibold">tidak disentuh sama sekali</span>.
-            </p>
-          </div>
-        </div>
+        {status === 'loading' && (
+          <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diperiksa" />
+        )}
 
-        {/* Panel utama */}
-        <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-5 flex flex-col gap-4">
+        {status === 'preview' && (
+          previewData.length === 0 ? (
+            <MigEmpty
+              title="Semua tanggal lahir sudah sesuai!"
+              text="Tidak ada perbedaan antara Firestore dan data Excel."
+              onBack={() => router.push('/pengaturan')}
+              backLabel="Kembali ke Pengaturan"
+            />
+          ) : (
+            <>
+              <MigSummary>
+                <span><b className="w">{previewData.length}</b> data berbeda dengan Excel</span>
+                <small>Scroll untuk cek semua</small>
+              </MigSummary>
 
-          {/* IDLE */}
-          {status === 'idle' && (
-            <div className="flex flex-col gap-4">
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 flex flex-col gap-2 text-sm text-slate-400">
-                <div className="flex items-center gap-2 text-slate-300 font-medium">
-                  <FileSpreadsheet size={13} className="text-emerald-400" />
-                  Data dimuat dari Semua.xls
-                </div>
-                <p>① Scan seluruh koleksi <span className="font-mono text-slate-300">penduduk</span> di Firestore</p>
-                <p>② Cari NIK di data Excel — jika tidak ada → skip (pindah masuk / kelahiran baru)</p>
-                <p>③ Bandingkan <span className="font-mono text-slate-300">tanggal_lahir</span> — jika sudah sama → skip</p>
-                <p>④ Tampilkan preview sebelum eksekusi</p>
+              <MigTable tinggi={288} head={<><th>Nama</th><th>NIK</th><th className="cx">Di Firestore</th><th className="cy">Dari Excel</th><th className="r">Aksi</th></>}>
+                {previewData.map((item) => (
+                  <tr key={item.id}>
+                    <td className="nmx">{item.nama || '—'}</td>
+                    <td className="mn">{item.nik}</td>
+                    <td className="x">{formatTgl(item.lama) || <span style={{ fontStyle: 'italic', color: 'var(--ink-4)' }}>kosong</span>}</td>
+                    <td className="y">{formatTgl(item.baru)}</td>
+                    <td className="r">
+                      <MigRowBtn done={doneItems.has(item.id)} loading={loadingItems.has(item.id)} onClick={() => handleOneItem(item)} label="Update" />
+                    </td>
+                  </tr>
+                ))}
+              </MigTable>
+
+              <div className="mig-ft">
+                <Button variant="outline" onClick={() => setStatus('idle')}>Batal</Button>
+                <Button variant="success" onClick={handleFix} disabled={jumlahPending === 0}>Update {jumlahPending} Tanggal Lahir</Button>
               </div>
-              <button onClick={handlePreview} disabled={!isAdmin()}
-                className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-sm font-semibold text-white transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
-                <FileSpreadsheet size={15} />
-                Scan & Preview Perbedaan
-              </button>
+            </>
+          )
+        )}
+
+        {status === 'done' && result && (
+          <MigDone title="Selesai!" onBack={() => router.push('/pengaturan')}>
+            <div className="mig-stats">
+              <div className="ok"><b>{result.diperbaiki}</b><span>diperbarui</span></div>
+              <div className="inf"><b>{result.sama}</b><span>sudah sama</span></div>
+              <div><b>{result.tidakAdaDiExcel}</b><span>tidak di Excel</span></div>
             </div>
-          )}
 
-          {/* LOADING */}
-          {status === 'loading' && (
-            <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diperiksa" />
-          )}
+            <MigGagal daftar={result.gagal} />
 
-          {/* PREVIEW */}
-          {status === 'preview' && (
-            <div className="flex flex-col gap-4">
-              {previewData.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-4">
-                  <CheckCircle size={32} className="text-emerald-400" />
-                  <p className="text-sm font-semibold text-emerald-400">Semua tanggal lahir sudah sesuai!</p>
-                  <p className="text-sm text-slate-500 text-center">
-                    Tidak ada perbedaan antara Firestore dan data Excel.
-                  </p>
-                  <button onClick={() => router.push('/pengaturan')}
-                    className="mt-1 px-4 py-2 rounded-xl bg-slate-700/60 border border-white/[0.08] text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-                    Kembali ke Pengaturan
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-slate-200">
-                      <span className="text-amber-400">{previewData.length}</span> data berbeda dengan Excel
-                    </p>
-                    <p className="text-sm text-slate-500">Scroll untuk cek semua</p>
-                  </div>
+            {result.diperbaiki > 0 && (
+              <MigTable tinggi={208} head={<><th>Nama</th><th className="cx">Lama</th><th className="cy">Sekarang</th></>}>
+                {result.items.map((item) => (
+                  <tr key={item.id}>
+                    <td className="nmx">{item.nama || item.nik}</td>
+                    <td className="x">{formatTgl(item.lama)}</td>
+                    <td className="y">{formatTgl(item.baru)}</td>
+                  </tr>
+                ))}
+              </MigTable>
+            )}
+          </MigDone>
+        )}
 
-                  <div className="overflow-x-auto rounded-xl border border-white/[0.06] max-h-72 overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="sticky top-0 bg-[#0d1424] z-10">
-                        <tr className="border-b border-white/[0.06]">
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">NIK</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-rose-500 uppercase tracking-wider">Di Firestore</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-emerald-500 uppercase tracking-wider">Dari Excel</th>
-                          <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {previewData.map((item) => (
-                          <tr key={item.nik} className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]">
-                            <td className="px-3 py-2 text-slate-300 font-medium truncate max-w-[130px]">{item.nama || '—'}</td>
-                            <td className="px-3 py-2 text-slate-500 font-mono text-xs">{item.nik}</td>
-                            <td className="px-3 py-2 text-rose-400 font-mono">{formatTgl(item.lama) || <span className="text-slate-600 italic">kosong</span>}</td>
-                            <td className="px-3 py-2 text-emerald-400 font-mono">{formatTgl(item.baru)}</td>
-                            <td className="px-3 py-2 text-right">
-                              {doneItems.has(item.nik)
-                                ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><Check size={11} />Selesai</span>
-                                : <button onClick={() => handleOneItem(item.nik, item.baru)} disabled={loadingItems.has(item.nik)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium hover:bg-sky-500/20 transition-colors disabled:opacity-40">
-                                    {loadingItems.has(item.nik) ? <Loader2 size={10} className="animate-spin" /> : null}
-                                    {loadingItems.has(item.nik) ? 'Proses...' : 'Update'}
-                                  </button>}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="flex gap-2.5">
-                    <button onClick={() => setStatus('idle')}
-                      className="flex-1 py-2 rounded-xl border border-white/[0.08] bg-white/[0.03] text-sm text-slate-400 hover:bg-white/[0.06] transition-colors">
-                      Batal
-                    </button>
-                    <button onClick={handleFix}
-                      className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold text-white transition-colors">
-                      Update {previewData.length} Tanggal Lahir
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* DONE */}
-          {status === 'done' && result && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle size={18} className="text-emerald-400 shrink-0" />
-                <p className="text-sm font-semibold text-emerald-400">Selesai!</p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 flex flex-col gap-0.5">
-                  <p className="text-xl font-bold text-emerald-400 tabular-nums">{result.diperbaiki}</p>
-                  <p className="text-sm text-slate-400">diperbarui</p>
-                </div>
-                <div className="rounded-xl bg-sky-500/10 border border-sky-500/20 p-3 flex flex-col gap-0.5">
-                  <p className="text-xl font-bold text-sky-400 tabular-nums">{result.sama}</p>
-                  <p className="text-sm text-slate-400">sudah sama</p>
-                </div>
-                <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 flex flex-col gap-0.5">
-                  <p className="text-xl font-bold text-slate-400 tabular-nums">{result.tidakAdaDiExcel}</p>
-                  <p className="text-sm text-slate-400">tidak di Excel</p>
-                </div>
-              </div>
-
-              {result.diperbaiki > 0 && (
-                <div className="rounded-xl border border-white/[0.06] overflow-hidden max-h-52 overflow-y-auto">
-                  <table className="w-full text-xs">
-                    <thead className="sticky top-0 bg-[#0d1424]">
-                      <tr className="border-b border-white/[0.06]">
-                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                        <th className="px-3 py-2 text-left text-xs font-semibold text-rose-500 uppercase tracking-wider">Lama</th>
-                        <th className="px-3 py-2 text-left text-xs font-semibold text-emerald-500 uppercase tracking-wider">Sekarang</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {result.items.map((item) => (
-                        <tr key={item.nik} className="border-b border-white/[0.04] last:border-0">
-                          <td className="px-3 py-2 text-slate-300 truncate max-w-[140px]">{item.nama || item.nik}</td>
-                          <td className="px-3 py-2 text-rose-400 font-mono">{formatTgl(item.lama)}</td>
-                          <td className="px-3 py-2 text-emerald-400 font-mono">{formatTgl(item.baru)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              <button onClick={() => router.push('/pengaturan')}
-                className="w-full py-2.5 rounded-xl bg-slate-700/60 border border-white/[0.08] text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-                Kembali ke Pengaturan
-              </button>
-            </div>
-          )}
-
-          {/* ERROR */}
-          {status === 'error' && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2.5">
-                <AlertCircle size={18} className="text-rose-400 shrink-0" />
-                <p className="text-sm font-medium text-rose-400">Terjadi kesalahan</p>
-              </div>
-              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2 font-mono">{errorMsg}</p>
-              <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">Coba lagi</button>
-            </div>
-          )}
-
-        </div>
-
-        <p className="text-xs text-slate-600 text-center">Hanya dapat diakses oleh admin.</p>
-      </div>
+        {status === 'error' && <MigError title="Terjadi kesalahan" msg={errorMsg} mono onRetry={() => setStatus('idle')} />}
+      </MigLayout>
     </AppShell>
   )
 }

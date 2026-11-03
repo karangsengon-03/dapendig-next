@@ -241,11 +241,13 @@ export async function checkNikExists(
 
 // ── Exported hooks ────────────────────────────────────────────────────────────
 
-export function usePendudukList() {
+/** `enabled: false` = jangan memuat dulu (mis. daftar baru dibutuhkan saat filter RT dipakai). Bawaan: dimuat. */
+export function usePendudukList(opsi?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['penduduk', 'list'],
     queryFn: fetchAllPenduduk,
     staleTime: 60_000,
+    enabled: opsi?.enabled ?? true,
   })
 }
 

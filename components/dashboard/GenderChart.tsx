@@ -1,7 +1,7 @@
 'use client'
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useMasuk } from './dashParts'
 
 interface GenderChartProps {
   lakiLaki: number
@@ -9,85 +9,83 @@ interface GenderChartProps {
   loading?: boolean
 }
 
-const COLORS = ['#0ea5e9', '#a78bfa']
+const UKURAN = 150
+const TEBAL = 22
 
+// Donut jenis kelamin gaya prototype (`.a-donut` + legenda `.a-lgd`); angka dari props.
 export function GenderChart({ lakiLaki, perempuan, loading }: GenderChartProps) {
-  const data = [
-    { name: 'Laki-laki', value: lakiLaki },
-    { name: 'Perempuan', value: perempuan },
-  ]
-
+  const masuk = useMasuk()
   const total = lakiLaki + perempuan
 
+  const r = (UKURAN - TEBAL) / 2
+  const c = UKURAN / 2
+  const keliling = 2 * Math.PI * r
+  const irisan = [
+    { nilai: lakiLaki, warna: 'var(--lk)' },
+    { nilai: perempuan, warna: 'var(--pr)' },
+  ]
+  let offset = 0
+  const busur = irisan.map(s => {
+    const panjang = total ? (keliling * s.nilai) / total : 0
+    const tampak = Math.max(0, panjang - 3)
+    const item = { ...s, tampak, offset: -offset }
+    offset += panjang
+    return item
+  })
+
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4 flex flex-col gap-3">
-      <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
-        Jenis Kelamin
-      </p>
+    <div className="a-card p">
+      <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>Jenis kelamin</h3>
 
       {loading ? (
-        <div className="flex items-center justify-center h-[160px]">
-          <Skeleton className="w-32 h-32 rounded-full" />
+        <div className="dw">
+          <Skeleton style={{ width: UKURAN, height: UKURAN, borderRadius: '50%' }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 11, minWidth: 130 }}>
+            <Skeleton style={{ height: 14 }} />
+            <Skeleton style={{ height: 14 }} />
+          </div>
         </div>
       ) : total === 0 ? (
-        <div className="flex items-center justify-center h-[160px] text-slate-600 text-sm">
-          Belum ada data
-        </div>
+        <div className="feed"><p className="kosong">Belum ada data</p></div>
       ) : (
-        <>
-          <div className="h-[160px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={70}
-                  paddingAngle={3}
-                  dataKey="value"
-                  strokeWidth={0}
-                >
-                  {data.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#111827',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '10px',
-                    fontSize: '12px',
-                    color: '#e2e8f0',
-                  }}
-                  labelStyle={{ color: '#94a3b8' }}
-                  itemStyle={{ color: '#e2e8f0' }}
-                  formatter={(value) => {
-                    const n = typeof value === 'number' ? value : 0
-                    return [`${n} jiwa (${((n / total) * 100).toFixed(1)}%)`]
-                  }}
+        <div className="dw">
+          <div className="a-donut">
+            <svg width={UKURAN} height={UKURAN} viewBox={`0 0 ${UKURAN} ${UKURAN}`} role="img" aria-label={`Laki-laki ${lakiLaki}, perempuan ${perempuan}`}>
+              <circle cx={c} cy={c} r={r} fill="none" stroke="var(--line)" strokeWidth={TEBAL} />
+              {busur.map((b, i) => (
+                <circle
+                  key={i}
+                  className="dn"
+                  cx={c}
+                  cy={c}
+                  r={r}
+                  fill="none"
+                  stroke={b.warna}
+                  strokeWidth={TEBAL}
+                  strokeDashoffset={b.offset}
+                  strokeDasharray={masuk ? `${b.tampak} ${keliling - b.tampak}` : `0 ${keliling}`}
+                  transform={`rotate(-90 ${c} ${c})`}
                 />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="flex gap-4 justify-center">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-400 flex-shrink-0" />
-              <span className="text-xs text-slate-400">
-                Laki-laki{' '}
-                <span className="font-semibold text-sky-400">{lakiLaki}</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-violet-400 flex-shrink-0" />
-              <span className="text-xs text-slate-400">
-                Perempuan{' '}
-                <span className="font-semibold text-violet-400">{perempuan}</span>
-              </span>
+              ))}
+            </svg>
+            <div className="c">
+              <b className="tab">{total.toLocaleString('id-ID')}</b>
+              <span>jiwa</span>
             </div>
           </div>
-        </>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 11, minWidth: 130 }}>
+            <div className="a-lgd"><i style={{ background: 'var(--navy-600)' }} />Laki-laki<b>{lakiLaki.toLocaleString('id-ID')}</b></div>
+            <div className="a-lgd"><i style={{ background: 'var(--pr)' }} />Perempuan<b>{perempuan.toLocaleString('id-ID')}</b></div>
+            {perempuan > 0 && (
+              <>
+                <div style={{ height: 1, background: 'var(--line)' }} />
+                <div style={{ fontSize: 12.5, color: 'var(--ink-3)', lineHeight: 1.45 }}>
+                  Rasio <b style={{ color: 'var(--ink)' }}>{Math.round((lakiLaki / perempuan) * 100)} laki-laki</b> per 100 perempuan
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

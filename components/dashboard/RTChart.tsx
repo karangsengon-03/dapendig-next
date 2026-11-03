@@ -25,8 +25,8 @@ interface RTChartProps {
 export function RTChart({ data, loading }: RTChartProps) {
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4 flex flex-col gap-3">
-      <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+    <div className="a-card p flex flex-col gap-3">
+      <p className="text-xs text-ink-3 font-semibold uppercase tracking-wider">
         Penduduk per RT
       </p>
 
@@ -37,7 +37,7 @@ export function RTChart({ data, loading }: RTChartProps) {
           ))}
         </div>
       ) : data.length === 0 ? (
-        <div className="flex items-center justify-center h-[200px] text-slate-600 text-sm">
+        <div className="flex items-center justify-center h-[200px] text-ink-4 text-sm">
           Belum ada data
         </div>
       ) : (
@@ -50,37 +50,37 @@ export function RTChart({ data, loading }: RTChartProps) {
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.04)"
+                stroke="var(--line)"
                 vertical={false}
               />
               <XAxis
                 dataKey="rt"
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: 'var(--ink-3)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: 'var(--ink-3)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 allowDecimals={false}
               />
               <Tooltip
-                cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                cursor={{ fill: 'var(--navy-50)' }}
                 contentStyle={{
-                  backgroundColor: '#111827',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid var(--line)',
                   borderRadius: '10px',
                   fontSize: '12px',
-                  color: '#e2e8f0',
+                  color: 'var(--ink)',
                 }}
-                labelStyle={{ color: '#94a3b8' }}
-                itemStyle={{ color: '#e2e8f0' }}
+                labelStyle={{ color: 'var(--ink-3)' }}
+                itemStyle={{ color: 'var(--ink)' }}
                 formatter={(value) => [`${typeof value === 'number' ? value : 0} jiwa`, 'Jumlah']}
               />
               <Bar dataKey="jumlah" radius={[6, 6, 0, 0]}>
                 {data.map((entry, index) => (
-                  <Cell key={index} fill="#1e6fa8" />
+                  <Cell key={index} fill="var(--navy-600)" />
                 ))}
               </Bar>
             </BarChart>

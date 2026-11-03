@@ -1,11 +1,21 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ClipboardList, Search, X, RefreshCw } from 'lucide-react'
+import {
+  Activity, ArchiveRestore, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
+  Info, Layers, Pencil, Plus, RefreshCw, RotateCcw, Search, Trash2, Undo2, X, type LucideIcon,
+} from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { useIsDesktop } from '@/components/layout/useIsDesktop'
+import { PopLayer, hitungPos, type PopPos } from '@/components/penduduk/PopLayer'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useLogList, AKSI_FILTER_OPTIONS, KOLEKSI_FILTER_OPTIONS } from '@/hooks/useLog'
+import { useLogList, KOLEKSI_FILTER_OPTIONS } from '@/hooks/useLog'
+import { cn } from '@/lib/utils'
+import { hariIni, formatTanggalLokal } from '@/lib/tanggal-lokal'
+import { OPSI_FILTER_AKSI, cocokAksi, infoBatasLog } from '@/lib/log-aksi'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -56,23 +66,6 @@ function tsToDate(ts: unknown): Date | null {
   return null
 }
 
-function aksiColor(aksi: string): string {
-  const a = aksi.toLowerCase()
-  if (a.includes('tambah') || a.includes('catat') || a.includes('masuk')) {
-    return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-  }
-  if (a.includes('edit') || a.includes('update')) {
-    return 'bg-sky-500/15 text-sky-400 border border-sky-500/20'
-  }
-  if (a.includes('hapus') || a.includes('keluar') || a.includes('meninggal')) {
-    return 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
-  }
-  if (a.includes('pindah')) {
-    return 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-  }
-  return 'bg-slate-500/15 text-slate-400 border border-slate-500/20'
-}
-
 function koleksiBadge(koleksi: string | undefined): string | null {
   if (!koleksi) return null
   const map: Record<string, string> = {
@@ -85,7 +78,26 @@ function koleksiBadge(koleksi: string | undefined): string | null {
   return map[koleksi] ?? koleksi
 }
 
-// ── Komponen Filter ───────────────────────────────────────────────────────────
+// Lencana aksi: nilai aksi NYATA yang ditulis hook (huruf kecil). Hanya yang punya padanan di prototype
+// (Tambah, Edit, Hapus, Pulihkan, Batal) berwarna; aksi lain tampil dari nilainya sendiri dengan lencana netral.
+type Nada = 'ok' | 'info' | 'bad' | 'warn' | 'mute'
+const AKSI_LOG: Record<string, { label: string; nada: Nada; Icon: LucideIcon }> = {
+  tambah: { label: 'Tambah', nada: 'ok', Icon: Plus },
+  edit: { label: 'Edit', nada: 'info', Icon: Pencil },
+  hapus: { label: 'Hapus', nada: 'bad', Icon: Trash2 },
+  restore: { label: 'Pulihkan', nada: 'ok', Icon: ArchiveRestore },
+  rollback: { label: 'Batal', nada: 'warn', Icon: Undo2 },
+}
+
+function metaAksi(aksi: string | undefined) {
+  const a = (aksi ?? '').trim()
+  const m = AKSI_LOG[a.toLowerCase()]
+  if (m) return m
+  const t = a.replace(/_/g, ' ')
+  return { label: t ? t.charAt(0).toUpperCase() + t.slice(1) : '—', nada: 'mute' as Nada, Icon: Activity }
+}
+
+// ── Bilah filter ──────────────────────────────────────────────────────────────
 
 interface LogFilterState {
   search: string
@@ -95,117 +107,160 @@ interface LogFilterState {
   dateTo: string
 }
 
-interface LogFilterProps {
+type Opsi = { value: string; label: string }
+
+function LogFilter({
+  filter, onChange, total, filtered, onRefresh, isRefreshing,
+}: {
   filter: LogFilterState
   onChange: (f: LogFilterState) => void
   total: number
   filtered: number
   onRefresh: () => void
   isRefreshing: boolean
-}
+}) {
+  const [pop, setPop] = useState<{ jenis: 'aksi' | 'koleksi'; pos: PopPos } | null>(null)
 
-function LogFilter({ filter, onChange, total, filtered, onRefresh, isRefreshing }: LogFilterProps) {
   function set(patch: Partial<LogFilterState>) {
     onChange({ ...filter, ...patch })
   }
 
-  const hasActiveFilter = filter.search || filter.aksi || filter.koleksi
+  // Filter bawaan: tanpa kata kunci/aksi/koleksi, rentang tanggal = hari ini (lokal)
+  const today = hariIni()
+  const sudahBawaan = !filter.search && !filter.aksi && !filter.koleksi && filter.dateFrom === today && filter.dateTo === today
 
   function handleReset() {
-    const today = new Date().toISOString().split('T')[0]
     onChange({ search: '', aksi: '', koleksi: '', dateFrom: today, dateTo: today })
-    onRefresh()
   }
 
+  const opsiAksi: readonly Opsi[] = OPSI_FILTER_AKSI
+  const opsiKoleksi: readonly Opsi[] = KOLEKSI_FILTER_OPTIONS
+  const labelAksi = filter.aksi ? opsiAksi.find(o => o.value === filter.aksi)?.label ?? filter.aksi : 'Semua aksi'
+  const labelKoleksi = filter.koleksi ? opsiKoleksi.find(o => o.value === filter.koleksi)?.label ?? filter.koleksi : 'Semua koleksi'
+  const daftar = pop?.jenis === 'aksi' ? opsiAksi : opsiKoleksi
+  const terpilih = pop?.jenis === 'aksi' ? filter.aksi : filter.koleksi
+
   return (
-    <div className="flex flex-col gap-2.5">
-      {/* Baris 1: Search */}
-      <div className="relative">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+    <div className="fbar" style={{ marginBottom: 12 }}>
+      <div className="a-in srch">
+        <Search className="i" />
         <input
           type="text"
-          placeholder="Cari nama, keterangan, email..."
+          placeholder="Cari nama, keterangan, NIK, atau petugas"
+          aria-label="Cari log"
           value={filter.search}
-          onChange={(e) => set({ search: e.target.value })}
-          className="w-full bg-[#0d1424] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-colors"
+          onChange={e => set({ search: e.target.value })}
+          autoComplete="off"
         />
         {filter.search && (
-          <button onClick={() => set({ search: '' })} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
-            <X size={14} />
+          <button type="button" className="pwt" aria-label="Hapus pencarian" onClick={() => set({ search: '' })}>
+            <X className="i" />
           </button>
         )}
       </div>
 
-      {/* Baris 2: Aksi + Koleksi + tombol Refresh/Reset + Count */}
-      <div className="flex items-center gap-2">
-        <select
-          value={filter.aksi}
-          onChange={(e) => set({ aksi: e.target.value })}
-          className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
-        >
-          {AKSI_FILTER_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-
-        <select
-          value={filter.koleksi}
-          onChange={(e) => set({ koleksi: e.target.value })}
-          className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
-        >
-          {KOLEKSI_FILTER_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-
+      <div className="chips-row">
         <button
-          onClick={handleReset}
-          disabled={isRefreshing}
-          title={hasActiveFilter ? 'Reset filter & muat ulang' : 'Muat ulang'}
-          className={[
-            'flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm transition-colors disabled:opacity-40 shrink-0',
-            hasActiveFilter
-              ? 'bg-sky-500/10 border-sky-500/20 text-sky-400 hover:bg-sky-500/20'
-              : 'bg-white/[0.04] border-white/[0.06] text-slate-400 hover:text-slate-200',
-          ].join(' ')}
+          type="button"
+          className={cn('a-chip', filter.aksi && 'on')}
+          aria-haspopup="menu"
+          onClick={e => setPop({ jenis: 'aksi', pos: hitungPos(e.currentTarget, 220) })}
         >
-          <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
-          {hasActiveFilter && <span>Reset</span>}
+          <Activity className="i" />{labelAksi}<ChevronDown className="i" style={{ fontSize: 13 }} />
+        </button>
+        <button
+          type="button"
+          className={cn('a-chip', filter.koleksi && 'on')}
+          aria-haspopup="menu"
+          onClick={e => setPop({ jenis: 'koleksi', pos: hitungPos(e.currentTarget, 220) })}
+        >
+          <Layers className="i" />{labelKoleksi}<ChevronDown className="i" style={{ fontSize: 13 }} />
         </button>
       </div>
 
-      {/* Baris 3: Tanggal dari + Tanggal ke (sejajar tanpa label, lebar sama dengan baris 2) */}
-      <div className="flex items-center gap-2">
+      <div className="dtr">
+        <Calendar className="i" />
         <input
           type="date"
+          className="dt-in"
+          aria-label="Tanggal dari"
           value={filter.dateFrom}
-          onChange={(e) => set({ dateFrom: e.target.value })}
-          className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          onChange={e => set({ dateFrom: e.target.value })}
         />
+        <span>s/d</span>
         <input
           type="date"
+          className="dt-in"
+          aria-label="Tanggal sampai"
           value={filter.dateTo}
-          onChange={(e) => set({ dateTo: e.target.value })}
-          className="flex-1 bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500/50 cursor-pointer"
+          onChange={e => set({ dateTo: e.target.value })}
         />
-        {/* Count — lebar sama dengan tombol refresh agar kolom sejajar */}
-        <span className="text-xs text-slate-500 shrink-0 min-w-[52px] text-center tabular-nums">
-          {filtered === total ? <>{total} log</> : <>{filtered}/{total} log</>}
-        </span>
       </div>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onRefresh}
+        disabled={isRefreshing}
+        title="Muat ulang data (filter tidak berubah)"
+        aria-label="Segarkan"
+      >
+        <RefreshCw className="i" style={isRefreshing ? { animation: 'spin 1s linear infinite' } : undefined} />
+        Segarkan
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={handleReset}
+        disabled={sudahBawaan}
+        title="Kembalikan filter ke bawaan"
+        aria-label="Reset filter"
+        style={sudahBawaan ? undefined : { color: 'var(--lk)' }}
+      >
+        <RotateCcw className="i" />
+        Reset
+      </Button>
+
+      <span className="cnt" style={{ marginLeft: 'auto' }}>
+        <b>{filtered.toLocaleString('id-ID')}</b>{filtered !== total && <> dari {total.toLocaleString('id-ID')}</>} entri
+      </span>
+
+      {pop && (
+        <PopLayer pos={pop.pos} lebar={220} title={pop.jenis === 'aksi' ? 'Aksi' : 'Koleksi'} onClose={() => setPop(null)}>
+          {daftar.map(o => (
+            <button
+              key={o.value || '__semua'}
+              type="button"
+              role="menuitemradio"
+              aria-checked={o.value === terpilih}
+              className={`o${o.value === terpilih ? ' on' : ''}`}
+              onClick={() => {
+                set(pop.jenis === 'aksi' ? { aksi: o.value } : { koleksi: o.value })
+                setPop(null)
+              }}
+            >
+              {o.value === '' ? 'Semua' : o.label}
+              {o.value === terpilih && <Check className="i ck" />}
+            </button>
+          ))}
+        </PopLayer>
+      )}
     </div>
   )
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Halaman ───────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 50
 
 export default function LogPage() {
   const { data: allLogs = [], isLoading, refetch, isFetching } = useLogList()
+  const isDesktop = useIsDesktop()
 
-  // Tanggal hari ini dalam format YYYY-MM-DD untuk default filter
-  const todayStr = new Date().toISOString().split('T')[0]
+  // Tanggal hari ini (LOKAL, YYYY-MM-DD) untuk default filter
+  const todayStr = hariIni()
 
   const [filter, setFilter] = useState<LogFilterState>({
     search: '',
@@ -224,10 +279,9 @@ export default function LogPage() {
   const filtered = useMemo(() => {
     let rows = [...allLogs]
 
-    // Filter aksi (partial match)
+    // Filter aksi (pencocokan eksak; "Hapus" mencakup hapus dan hapus_permanen)
     if (filter.aksi) {
-      const q = filter.aksi.toLowerCase()
-      rows = rows.filter((r) => r.aksi?.toLowerCase().includes(q))
+      rows = rows.filter((r) => cocokAksi(r.aksi, filter.aksi))
     }
 
     // Filter koleksi
@@ -268,130 +322,158 @@ export default function LogPage() {
     return rows
   }, [allLogs, filter])
 
+  // Log hanya memuat 500 entri terbaru (limit di hook); beri tahu bila hasil bisa belum lengkap
+  const tertuaDate = allLogs.length > 0 ? tsToDate(allLogs[allLogs.length - 1].ts) : null
+  const tertua = tertuaDate ? formatTanggalLokal(tertuaDate) : null
+  const batas = infoBatasLog(allLogs.length, filter.dateFrom, tertua)
+
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  const kosong = (
+    <div className="a-empty">
+      <div className="em"><ClipboardList className="i" style={{ fontSize: 30 }} /></div>
+      <h3>Tidak ada log ditemukan</h3>
+      <p>Coba ubah kata kunci, filter, atau rentang tanggal.</p>
+      {batas.mulaiSebelumTertua && tertuaDate && (
+        <p>Rentang tanggal dimulai sebelum entri tertua yang dimuat ({tertuaDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}); entri yang lebih lama tidak dimuat.</p>
+      )}
+    </div>
+  )
+
   return (
-    <AppShell title="Log Aktivitas" fullHeight>
-      <div className="h-full flex flex-col gap-3">
-        {/* Sub-header */}
-        <div className="flex items-center gap-2.5">
-          <ClipboardList size={18} className="text-sky-400 shrink-0" />
-          <h1 className="text-base font-semibold text-slate-100">Log Aktivitas</h1>
+    <AppShell title="Log Aktivitas">
+      <PageHeader
+        title="Log aktivitas"
+        description={`Rekam jejak perubahan data oleh petugas · ${allLogs.length.toLocaleString('id-ID')} entri`}
+      />
+
+      <LogFilter
+        filter={filter}
+        onChange={handleFilter}
+        total={allLogs.length}
+        filtered={filtered.length}
+        onRefresh={() => refetch()}
+        isRefreshing={isFetching}
+      />
+
+      {!isLoading && batas.terpotong && (
+        <div className="a-alert info" style={{ marginBottom: 12 }}>
+          <Info className="i" />
+          <div>
+            Menampilkan 500 entri terbaru; entri yang lebih lama tidak dimuat.
+            {batas.mulaiSebelumTertua && tertuaDate && (
+              <> Rentang tanggal dimulai sebelum entri tertua yang dimuat ({tertuaDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}), jadi hasilnya bisa belum lengkap.</>
+            )}
+          </div>
         </div>
+      )}
 
-        {/* Filter */}
-        <LogFilter
-          filter={filter}
-          onChange={handleFilter}
-          total={allLogs.length}
-          filtered={filtered.length}
-          onRefresh={() => refetch()}
-          isRefreshing={isFetching}
-        />
-
-        {/* Table — flex-1 min-h-0 memastikan container tidak overflow keluar */}
-        <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-white/[0.06] bg-[#0d1424] overflow-hidden">
-          {isLoading ? (
-            <div className="flex flex-col gap-2 p-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-[#0d1424] flex items-center justify-center">
-                <ClipboardList size={24} className="text-slate-600" />
-              </div>
-              <p className="text-sm text-slate-500">Tidak ada log ditemukan</p>
-            </div>
-          ) : (
-            <>
-              {/* Tabel — area scroll terbatas, tidak tembus ke luar */}
-              <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
-                <table className="w-full min-w-[680px] border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/[0.06] sticky top-0 bg-[#0d1424] z-10">
-                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-8">No</th>
-                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-32">Aksi</th>
-                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3">Keterangan</th>
-                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-28">Koleksi</th>
-                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-32">Oleh</th>
-                      <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600 py-2 px-3 w-36">Waktu</th>
+      {isLoading ? (
+        <div className="a-tw">
+          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} style={{ height: 40 }} />)}
+          </div>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="a-tw">{kosong}</div>
+      ) : isDesktop ? (
+        <div className="a-tw">
+          <div style={{ overflow: 'auto' }}>
+            <table className="a-t" style={{ minWidth: 900 }}>
+              <thead>
+                <tr>
+                  <th style={{ width: 56 }}>No</th>
+                  <th>Waktu</th>
+                  <th>Aksi</th>
+                  <th>Koleksi</th>
+                  <th>Keterangan</th>
+                  <th>Oleh</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paged.map((log, idx) => {
+                  const m = metaAksi(log.aksi)
+                  return (
+                    <tr key={log.id}>
+                      <td className="num" style={{ color: 'var(--ink-3)' }}>{(page - 1) * PAGE_SIZE + idx + 1}</td>
+                      <td className="num">
+                        <div style={{ color: 'var(--ink-2)' }}>{formatWaktu(log.ts)}</div>
+                        <div style={{ fontSize: 12, color: 'var(--ink-4)', marginTop: 2 }}>{formatRelative(log.ts)}</div>
+                      </td>
+                      <td><span className={`a-badge ${m.nada}`}>{m.label}</span></td>
+                      <td>{koleksiBadge(log.koleksi) ?? '—'}</td>
+                      <td style={{ whiteSpace: 'normal', minWidth: 260, color: 'var(--ink)' }}>
+                        {log.keterangan || log.nama || '—'}
+                        {log.nik_target && <div className="mn" style={{ marginTop: 3, color: 'var(--ink-3)' }}>NIK {log.nik_target}</div>}
+                      </td>
+                      <td title={log.oleh}>{log.oleh}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {paged.map((log, idx) => (
-                      <tr
-                        key={log.id}
-                        className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
-                      >
-                        <td className="py-3 px-3 text-sm text-slate-600">
-                          {(page - 1) * PAGE_SIZE + idx + 1}
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${aksiColor(log.aksi)}`}>
-                            {log.aksi}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <p className="text-sm text-slate-300 leading-snug">
-                            {log.keterangan || log.nama || '—'}
-                          </p>
-                          {log.nik_target && (
-                            <p className="text-xs text-slate-600 mt-0.5 font-mono">NIK {log.nik_target}</p>
-                          )}
-                        </td>
-                        <td className="py-3 px-3">
-                          {log.koleksi ? (
-                            <span className="text-xs text-slate-500 bg-white/[0.04] px-1.5 py-0.5 rounded">
-                              {koleksiBadge(log.koleksi)}
-                            </span>
-                          ) : (
-                            <span className="text-slate-700 text-xs">—</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-sm text-slate-400 truncate max-w-[128px]" title={log.oleh}>
-                          {log.oleh}
-                        </td>
-                        <td className="py-3 px-3">
-                          <p className="text-sm text-slate-400">{formatWaktu(log.ts)}</p>
-                          <p className="text-xs text-slate-600 mt-0.5">{formatRelative(log.ts)}</p>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filtered.length > PAGE_SIZE && (
+            <div className="a-pg">
+              <span>
+                Halaman <b style={{ color: 'var(--ink)' }}>{page}</b> dari <b style={{ color: 'var(--ink)' }}>{totalPages}</b>
+                {' '}· {filtered.length.toLocaleString('id-ID')} log
+              </span>
+              <div className="pgs">
+                <button type="button" className="ar" aria-label="Halaman sebelumnya"
+                  onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+                  <ChevronLeft className="i" style={{ fontSize: 15 }} />
+                </button>
+                <button type="button" className="ar" aria-label="Halaman berikutnya"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                  <ChevronRight className="i" style={{ fontSize: 15 }} />
+                </button>
               </div>
-
-              {/* Pagination — di dalam container tabel, di bawah scroll area */}
-              {filtered.length > PAGE_SIZE && (
-                <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-2.5 border-t border-white/[0.06] bg-[#0d1424]">
-                  <span className="text-xs text-slate-500">
-                    Hal {page} / {totalPages} · {filtered.length} log
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-sm text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
-                    >
-                      ← Sebelumnya
-                    </button>
-                    <button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
-                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-sm text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors"
-                    >
-                      Selanjutnya →
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+            </div>
           )}
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="a-card-list">
+            {paged.map(log => {
+              const m = metaAksi(log.aksi)
+              return (
+                <div key={log.id} className="a-lc" style={{ cursor: 'default', alignItems: 'flex-start' }}>
+                  <span
+                    className="fi"
+                    style={{
+                      background: `var(--${m.nada}-bg)`, color: `var(--${m.nada})`,
+                      width: 36, height: 36, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
+                    }}
+                  >
+                    <m.Icon className="i" style={{ fontSize: 16 }} />
+                  </span>
+                  <div className="m">
+                    <b style={{ fontSize: 13.5, whiteSpace: 'normal' }}>{log.keterangan || log.nama || '—'}</b>
+                    <span>{m.label} · {koleksiBadge(log.koleksi) ?? '—'}</span>
+                    <span>{formatWaktu(log.ts)} · {log.oleh}</span>
+                    {log.nik_target && <span className="mn">NIK {log.nik_target}</span>}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {filtered.length > PAGE_SIZE && (
+            <div className="mpg">
+              <Button type="button" variant="outline" size="sm" disabled={page === 1} aria-label="Halaman sebelumnya"
+                onClick={() => setPage(p => Math.max(1, p - 1))}>
+                <ChevronLeft className="i" />Baru
+              </Button>
+              <span>{page}/{totalPages}</span>
+              <Button type="button" variant="outline" size="sm" disabled={page === totalPages} aria-label="Halaman berikutnya"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
+                Lama<ChevronRight className="i" />
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </AppShell>
   )
 }

@@ -157,3 +157,6 @@ export type Agama = typeof AGAMA[number]
 export type Pendidikan = typeof PENDIDIKAN[number]
 export type Pekerjaan = typeof PEKERJAAN[number]
 export type StatusPerkawinan = typeof STATUS_PERKAWINAN[number]
+
+/** Golongan darah (opsional di semua form; kosong dicetak "-" di KK). */
+export const GOLONGAN_DARAH = ['A', 'B', 'AB', 'O'] as const

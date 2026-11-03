@@ -1,13 +1,15 @@
 'use client'
 
-import Image from 'next/image'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
+import { useAppStore } from '@/store/appStore'
 import { useWilayah } from '@/hooks/useWilayah'
+import { cn } from '@/lib/utils'
+import { AppLogo } from './AppLogo'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
-import { ToastProvider } from '@/components/ui/toast'
+import { CommandPalette } from './CommandPalette'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -28,18 +30,13 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] bg-[#050810] flex flex-col items-center justify-center gap-4">
-        <div
-          className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl"
-          style={{ background: '#164472' }}
-        >
-          <Image src="/icons/icon-192.png" alt="DaPenDig" width={80} height={80} className="w-full h-full object-cover" style={{ display: 'block' }} priority unoptimized />
-        </div>
+      <div className="min-h-[100dvh] bg-bg flex flex-col items-center justify-center gap-4">
+        <AppLogo size={80} className="shadow-pop ring-1 ring-gold-400/40" />
         <div className="flex flex-col items-center gap-0.5 text-center">
-          <p className="text-base font-semibold text-slate-100">Data Penduduk Digital</p>
-          <p className="text-xs text-slate-500">Desa Karang Sengon</p>
+          <p className="font-display text-base font-semibold text-ink">Data Penduduk Digital</p>
+          <p className="text-xs text-ink-3">Desa Karang Sengon</p>
         </div>
-        <div className="w-5 h-5 border-2 border-white/[0.06] border-t-sky-500 rounded-full animate-spin mt-1" />
+        <div className="w-5 h-5 border-2 border-line-2 border-t-navy-600 rounded-full animate-spin mt-1" />
       </div>
     )
   }
@@ -49,30 +46,51 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Dipasang hanya setelah login terverifikasi, sehingga pintasan Ctrl+K tidak aktif di layar muat.
+function ShellFrame({ children, title, fullHeight }: AppShellProps) {
+  const sidebarOpen = useAppStore((s) => s.sidebarOpen)
+  const [cmdOpen, setCmdOpen] = useState(false)
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCmdOpen((o) => !o)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
+  return (
+    <div className={cn('a-app', sidebarOpen && 'drawer-on')} style={{ height: '100dvh' }}>
+      <Sidebar />
+      <div className="a-main">
+        <Topbar title={title} onSearch={() => setCmdOpen(true)} />
+        {/* fullHeight: konten mengisi penuh, tidak ada scroll di main */}
+        {/* non-fullHeight: scroll terjadi di dalam main, Topbar tetap terlihat */}
+        <main className={cn('a-content', fullHeight && 'flex flex-col overflow-hidden pb-6')}>
+          <div className={cn('pg rise', fullHeight && 'flex flex-col flex-1 min-h-0 w-full')}>
+            {children}
+          </div>
+        </main>
+      </div>
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
+    </div>
+  )
+}
+
 export function AppShell({ children, title, fullHeight }: AppShellProps) {
   // useAuthListener TIDAK dipanggil di sini — sudah dipanggil di root AuthProvider (app/layout.tsx)
   // Memanggil dua kali menyebabkan dua subscriber onAuthStateChanged yang race condition
   useWilayah()
 
+  // ToastProvider hanya di root (app/layout.tsx): satu penampung toast untuk semua halaman, termasuk /login.
   return (
-    <ToastProvider>
-      <AuthGuard>
-        <div className="h-[100dvh] bg-[#0a0f1e] flex overflow-hidden">
-          <Sidebar />
-          {/* Main content — offset for desktop icon sidebar */}
-          <div className="flex-1 flex flex-col min-w-0 md:ml-14 overflow-hidden">
-            <Topbar title={title} />
-            {/* fullHeight: konten mengisi penuh, tidak ada scroll di main */}
-            {/* non-fullHeight: scroll terjadi di dalam main, Topbar tetap terlihat */}
-            <main className={fullHeight
-              ? "flex-1 min-h-0 overflow-hidden p-4 md:p-6 flex flex-col"
-              : "flex-1 min-h-0 overflow-y-auto overscroll-none p-4 md:p-6"
-            }>
-              {children}
-            </main>
-          </div>
-        </div>
-      </AuthGuard>
-    </ToastProvider>
+    <AuthGuard>
+      <ShellFrame title={title} fullHeight={fullHeight}>
+        {children}
+      </ShellFrame>
+    </AuthGuard>
   )
 }

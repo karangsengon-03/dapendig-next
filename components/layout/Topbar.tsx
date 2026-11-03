@@ -1,149 +1,214 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Menu, LogIn, LogOut, UserCircle } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
+import {
+  ChevronDown, ChevronRight, LogIn, LogOut, Menu, Moon, Search, Settings, Sun, UserCircle,
+} from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { useAuthStore } from '@/store/authStore'
-import { useRouter } from 'next/navigation'
 import { logout } from '@/hooks/useAuth'
-import { cn } from '@/lib/utils'
+import { usePendudukDetail } from '@/hooks/usePenduduk'
+import { getInisial } from '@/components/ui/avatar'
+import { ROLE_LABEL } from './nav'
 
-export function Topbar({ title: _ }: { title?: string }) { // eslint-disable-line @typescript-eslint/no-unused-vars
+interface TopbarProps {
+  /** Judul halaman dari AppShell; dipakai sebagai remah roti untuk halaman yang tidak dikenal */
+  title?: string
+  /** Dipanggil saat kolom cari / ikon cari ditekan (membuka palet Ctrl+K) */
+  onSearch?: () => void
+}
+
+interface Crumb {
+  label: string
+  href?: string
+}
+
+const LEBAR_MENU = 248
+
+function buatCrumb(pathname: string, title: string | undefined, namaPenduduk: string): Crumb[] {
+  const [root, a, b] = pathname.split('/').filter(Boolean)
+  switch (root) {
+    case 'dashboard':
+      return [{ label: 'Beranda' }]
+    case 'penduduk':
+      if (!a) return [{ label: 'Utama' }, { label: 'Penduduk' }]
+      if (a === 'tambah') return [{ label: 'Penduduk', href: '/penduduk' }, { label: 'Tambah' }]
+      return [
+        { label: 'Penduduk', href: '/penduduk' },
+        ...(b === 'edit'
+          ? [{ label: namaPenduduk, href: `/penduduk/${a}` }, { label: 'Edit' }]
+          : [{ label: namaPenduduk }]),
+      ]
+    case 'mutasi':
+      return [{ label: 'Peristiwa' }, { label: 'Mutasi' }]
+    case 'vital':
+      return [{ label: 'Peristiwa' }, { label: 'Kelahiran & Kematian' }]
+    case 'monografi':
+      return [{ label: 'Laporan' }, { label: 'Monografi' }]
+    case 'log':
+      return [{ label: 'Laporan' }, { label: 'Log Aktivitas' }]
+    case 'recycle-bin':
+      return [{ label: 'Tempat Sampah' }]
+    case 'pengaturan':
+      return a
+        ? [{ label: 'Pengaturan', href: '/pengaturan' }, { label: title || a }]
+        : [{ label: 'Pengaturan' }]
+    case 'profil':
+      return [{ label: 'Profil Saya' }]
+    default:
+      return [{ label: title || 'Beranda' }]
+  }
+}
+
+export function Topbar({ title, onSearch }: TopbarProps) {
   const { toggleSidebar } = useAppStore()
-  const { user } = useAuthStore()
+  const user = useAuthStore((s) => s.user)
   const router = useRouter()
-  const [open, setOpen] = useState(false)
-  const btnRef = useRef<HTMLButtonElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
+  const pathname = usePathname()
+  const { resolvedTheme, setTheme } = useTheme()
+  const [menu, setMenu] = useState<{ left: number; top: number } | null>(null)
   // Lazy initializer: true hanya saat benar-benar dievaluasi di client (browser),
   // tetap false saat SSR/build. Menghindari setState di dalam useEffect body.
   const [mounted] = useState(() => typeof window !== 'undefined')
 
-  const getInisial = (nama: string) => {
-    const parts = nama.trim().split(' ')
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
-  }
+  // Nama penduduk untuk remah roti halaman detail/edit. Memakai hook detail yang sama dengan
+  // halaman itu (kunci cache sama), jadi tidak ada pembacaan tambahan; di halaman lain nonaktif (id kosong).
+  const [seg0, seg1] = pathname.split('/').filter(Boolean)
+  const idDetail = seg0 === 'penduduk' && seg1 && seg1 !== 'tambah' ? seg1 : ''
+  const { data: penduduk, isLoading } = usePendudukDetail(idDetail)
+  const namaPenduduk = penduduk?.nama_lengkap ?? (isLoading ? 'Memuat…' : 'Tidak ditemukan')
+  const crumbs = buatCrumb(pathname, title, namaPenduduk)
 
-  function openDropdown() {
-    if (!btnRef.current) return
-    const rect = btnRef.current.getBoundingClientRect()
-    setDropdownPos({
-      top: rect.bottom + 8,
-      right: window.innerWidth - rect.right,
-    })
-    setOpen(true)
-  }
+  const gelap = resolvedTheme === 'dark'
+  const namaUser = user ? user.nama || user.email : ''
 
-  // Tutup dropdown jika klik di luar
+  // Esc menutup menu pengguna
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      const target = e.target as Node
-      if (
-        dropdownRef.current && !dropdownRef.current.contains(target) &&
-        btnRef.current && !btnRef.current.contains(target)
-      ) {
-        setOpen(false)
-      }
+    if (!menu) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenu(null)
     }
-    if (open) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [menu])
+
+  function bukaMenu(el: HTMLElement) {
+    const r = el.getBoundingClientRect()
+    const kiri = Math.max(8, Math.min(r.right - LEBAR_MENU, window.innerWidth - LEBAR_MENU - 8))
+    setMenu({ left: kiri, top: r.bottom + 6 })
+  }
 
   async function handleLogout() {
-    setOpen(false)
+    setMenu(null)
     await logout(router)
   }
 
+  // Ganti Akun = keluar lalu kembali ke halaman masuk (perilaku sama dengan versi lama)
   async function handleGantiAkun() {
-    setOpen(false)
+    setMenu(null)
     await logout(router)
   }
 
-  function handleProfil() {
-    setOpen(false)
-    router.push('/profil')
+  function pindah(href: string) {
+    setMenu(null)
+    router.push(href)
   }
 
   return (
     <>
-      {/* shrink-0 + will-change memastikan header tidak ikut bergeser saat address bar mobile naik/turun */}
-      <header className="h-13 flex items-center gap-3 px-4 border-b border-white/[0.06] bg-[#0a0f1e] shrink-0" style={{ willChange: 'transform' }}>
-        {/* Hamburger — mobile only */}
-        <button
-          onClick={toggleSidebar}
-          className={cn(
-            'md:hidden flex items-center justify-center w-8 h-8 rounded-lg shrink-0',
-            'text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors'
-          )}
-          aria-label="Buka menu"
-        >
-          <Menu className="h-5 w-5" />
+      {/* will-change memastikan header tidak ikut bergeser saat address bar mobile naik/turun */}
+      <header className="a-top" style={{ willChange: 'transform' }}>
+        <button type="button" className="hb" onClick={toggleSidebar} aria-label="Buka menu">
+          <Menu className="i" />
         </button>
 
-        {/* App name — 2 baris */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-slate-100 leading-tight tracking-tight">
-            Data Penduduk Digital
-          </p>
-          <p className="text-xs text-slate-500 leading-tight">
-            Desa Karang Sengon
-          </p>
-        </div>
+        <nav className="crumb" aria-label="Posisi halaman">
+          {crumbs.map((c, i) => (
+            <Fragment key={i}>
+              {i > 0 && <ChevronRight className="i" />}
+              {i === crumbs.length - 1 ? (
+                <b>{c.label}</b>
+              ) : (
+                <span>{c.href ? <Link href={c.href}>{c.label}</Link> : c.label}</span>
+              )}
+            </Fragment>
+          ))}
+        </nav>
 
-        {/* Avatar — clickable, dropdown via Portal */}
+        <div className="grow" />
+
+        <button type="button" className="find" onClick={onSearch}>
+          <Search className="i" />
+          <span>Cari penduduk, KK, atau menu…</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+        <button type="button" className="ib fs" onClick={onSearch} aria-label="Cari">
+          <Search className="i" />
+        </button>
+
+        <button
+          type="button"
+          className="ib tm"
+          onClick={() => setTheme(gelap ? 'light' : 'dark')}
+          aria-label="Ganti tema"
+          title="Ganti tema"
+        >
+          {gelap ? <Sun className="i" /> : <Moon className="i" />}
+        </button>
+
         {user && (
           <button
-            ref={btnRef}
-            onClick={() => open ? setOpen(false) : openDropdown()}
-            className={cn(
-              'flex items-center justify-center w-9 h-9 rounded-full bg-sky-500 text-sm font-bold text-white shrink-0',
-              'hover:bg-sky-400 transition-colors ring-2 ring-transparent',
-              open && 'ring-sky-500/50'
-            )}
-            title={`${user.nama || user.email} (${user.role})`}
+            type="button"
+            className="usr"
+            onClick={(e) => (menu ? setMenu(null) : bukaMenu(e.currentTarget))}
+            aria-haspopup="menu"
+            aria-expanded={!!menu}
+            title={`${namaUser} (${user.role})`}
           >
-            {getInisial(user.nama || user.email)}
+            <div className="av">{getInisial(namaUser)}</div>
+            <div>
+              <b>{namaUser}</b>
+              <span>{ROLE_LABEL[user.role] ?? user.role}</span>
+            </div>
+            <ChevronDown className="i" style={{ fontSize: 13 }} />
           </button>
         )}
       </header>
 
-      {/* Dropdown via Portal — selalu di atas semua konten, tidak terpotong overflow */}
-      {mounted && open && user && createPortal(
+      {/* Menu pengguna via Portal: selalu di atas konten dan tidak terpotong overflow.
+          Di HP kelas .pop berubah menjadi sheet dari bawah (CSS prototype). */}
+      {mounted && menu && user && createPortal(
         <div
-          ref={dropdownRef}
-          className="fixed w-52 rounded-2xl bg-[#0d1424] border border-white/[0.08] shadow-2xl overflow-hidden"
-          style={{ top: dropdownPos.top, right: dropdownPos.right, zIndex: 9999 }}
+          className="a-pops"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setMenu(null)
+          }}
         >
-          {/* Info user */}
-          <div className="px-4 py-3 border-b border-white/[0.06]">
-            <p className="text-sm font-semibold text-slate-200 truncate">{user.nama || user.email}</p>
-            <p className="text-sm text-slate-500 capitalize mt-0.5">{user.role}</p>
-          </div>
-          {/* Menu items */}
-          <div className="py-1.5">
-            <button
-              onClick={handleProfil}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-colors text-left"
-            >
-              <UserCircle size={16} className="shrink-0" />
+          <div className="pop" role="menu" style={{ left: menu.left, top: menu.top, width: LEBAR_MENU }}>
+            <div className="pt" style={{ paddingBottom: 8 }}>
+              <div style={{ fontSize: 13.5, color: 'var(--ink)', fontWeight: 600, wordBreak: 'break-word' }}>{namaUser}</div>
+              <div style={{ fontWeight: 500 }}>{ROLE_LABEL[user.role] ?? user.role}</div>
+            </div>
+            <div className="sep" />
+            <button type="button" role="menuitem" className="o" onClick={() => pindah('/profil')}>
+              <UserCircle className="i" style={{ fontSize: 16 }} />
               Profil Saya
             </button>
-            <button
-              onClick={handleGantiAkun}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-colors text-left"
-            >
-              <LogIn size={16} className="shrink-0" />
+            <button type="button" role="menuitem" className="o" onClick={() => pindah('/pengaturan')}>
+              <Settings className="i" style={{ fontSize: 16 }} />
+              Pengaturan
+            </button>
+            <button type="button" role="menuitem" className="o" onClick={handleGantiAkun}>
+              <LogIn className="i" style={{ fontSize: 16 }} />
               Ganti Akun
             </button>
-            <div className="mx-3 my-1 border-t border-white/[0.06]" />
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/[0.07] transition-colors text-left"
-            >
-              <LogOut size={16} className="shrink-0" />
+            <div className="sep" />
+            <button type="button" role="menuitem" className="o bad" onClick={handleLogout}>
+              <LogOut className="i" style={{ fontSize: 16 }} />
               Keluar
             </button>
           </div>

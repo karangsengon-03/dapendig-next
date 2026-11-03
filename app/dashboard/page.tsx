@@ -1,49 +1,98 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Users, Home, Baby, HeartPulse, ArrowRightFromLine, ArrowLeftFromLine } from 'lucide-react'
+import Link from 'next/link'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+} from 'lucide-react'
+import { PERISTIWA } from '@/lib/visual'
+import { JkIkon } from '@/components/ui/jk-ikon'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { GenderChart } from '@/components/dashboard/GenderChart'
 import { WilayahBadge } from '@/components/dashboard/WilayahBadge'
+import { UmurChart } from '@/components/dashboard/UmurChart'
+import { RecentActivity } from '@/components/dashboard/RecentActivity'
+import { BarRows, CountUp, useMasuk } from '@/components/dashboard/dashParts'
 import {
   usePendudukStats,
   usePendudukBaruBulanIni,
+  useUmurStats,
+  useRecentLog,
 } from '@/hooks/useDashboard'
 import { useLahir } from '@/hooks/useVital'
 import { useMeninggal } from '@/hooks/useVital'
 import { useMutasiKeluar, useMutasiMasuk } from '@/hooks/useMutasi'
+import { useAuthStore } from '@/store/authStore'
+import { cocokBulan } from '@/lib/tanggal-lokal'
 
 const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
 
-function filterBulan(tgl: unknown, bulan: number, tahun: number): boolean {
-  if (!tgl) return false
-  let d: Date
-  if (typeof tgl === 'object' && tgl !== null && 'seconds' in tgl) {
-    d = new Date((tgl as { seconds: number }).seconds * 1000)
-  } else if (typeof tgl === 'string') {
-    d = new Date(tgl)
-  } else return false
-  if (isNaN(d.getTime())) return false
-  return d.getMonth() === bulan && d.getFullYear() === tahun
+// Tanggal berupa string 'YYYY-MM-DD' dipotong (bukan new Date(str)) agar tidak bergeser di zona barat UTC
+const filterBulan = cocokBulan
+
+function geser(bulan: number, tahun: number, n: number) {
+  const t = tahun * 12 + bulan + n
+  return { b: ((t % 12) + 12) % 12, y: Math.floor(t / 12) }
+}
+
+// Jumlah bulan terpilih, selisih dari bulan sebelumnya, dan 9 titik sparkline: semua dari data yang sudah dimuat Beranda (tanpa query baru).
+function hitungKartu<T>(rows: T[] | undefined, ambil: (r: T) => unknown, bulan: number, tahun: number) {
+  if (!rows) return null
+  const seri = Array.from({ length: 9 }, (_, i) => {
+    const m = geser(bulan, tahun, i - 8)
+    return rows.filter(r => filterBulan(ambil(r), m.b, m.y)).length
+  })
+  const lalu = geser(bulan, tahun, -1)
+  return { n: seri[8], selisih: seri[8] - seri[7], banding: NAMA_BULAN[lalu.b], seri }
+}
+
+// Tombol pencatatan cepat; param URL dibaca halaman Mutasi/Vital di Tahap 4: ?tab=<tab>&tambah=1
+const AKSI_CEPAT = [
+  { href: '/vital?tab=lahir&tambah=1', label: 'Kelahiran', ikon: PERISTIWA.kelahiran.Icon },
+  { href: '/vital?tab=meninggal&tambah=1', label: 'Kematian', ikon: PERISTIWA.kematian.Icon },
+  { href: '/mutasi?tab=masuk&tambah=1', label: 'Pindah masuk', ikon: PERISTIWA.pindah_masuk.Icon },
+  { href: '/mutasi?tab=keluar&tambah=1', label: 'Pindah keluar', ikon: PERISTIWA.pindah_keluar.Icon },
+]
+
+function AksiCepat() {
+  return (
+    <div className="qa">
+      <span>Catat cepat</span>
+      {AKSI_CEPAT.map(({ href, label, ikon: Ikon }) => (
+        <Button key={href} asChild variant="secondary" size="sm">
+          <Link href={href}><Ikon className="i" />{label}</Link>
+        </Button>
+      ))}
+    </div>
+  )
 }
 
 export default function DashboardPage() {
   const now = new Date()
   const [bulan, setBulan] = useState(now.getMonth())
   const [tahun, setTahun] = useState(now.getFullYear())
+  const masuk = useMasuk()
+  const { isOperator, isAdmin } = useAuthStore()
 
   const { data: stats, isLoading: loadingStats } = usePendudukStats()
   const { data: pendudukBaru = 0 } = usePendudukBaruBulanIni()
-  const { data: allLahir = [] } = useLahir()
-  const { data: allMeninggal = [] } = useMeninggal()
-  const { data: allKeluar = [] } = useMutasiKeluar()
-  const { data: allMasuk = [] } = useMutasiMasuk()
+  const { data: umur = [], isLoading: loadingUmur } = useUmurStats()
+  const { data: logs = [], isLoading: loadingLog } = useRecentLog()
+  const { data: allLahir, isLoading: loadLahir } = useLahir()
+  const { data: allMeninggal, isLoading: loadMeninggal } = useMeninggal()
+  const { data: allKeluar, isLoading: loadKeluar } = useMutasiKeluar()
+  const { data: allMasuk, isLoading: loadMasuk } = useMutasiMasuk()
 
-  const kelahiran = allLahir.filter(r => filterBulan(r.tanggal_lahir, bulan, tahun)).length
-  const kematian = allMeninggal.filter(r => filterBulan(r.tanggal, bulan, tahun)).length
-  const mutasiKeluar = allKeluar.filter(r => filterBulan(r.tanggal, bulan, tahun)).length
-  const mutasiMasuk = allMasuk.filter(r => filterBulan(r.tanggal, bulan, tahun)).length
+  const kLahir = hitungKartu(allLahir, r => r.tanggal_lahir, bulan, tahun)
+  const kMati = hitungKartu(allMeninggal, r => r.tanggal, bulan, tahun)
+  const kKeluar = hitungKartu(allKeluar, r => r.tanggal, bulan, tahun)
+  const kMasuk = hitungKartu(allMasuk, r => r.tanggal, bulan, tahun)
 
   function prevBulan() {
     if (bulan === 0) { setBulan(11); setTahun(t => t - 1) }
@@ -58,145 +107,169 @@ export default function DashboardPage() {
 
   const isCurrentMonth = bulan === now.getMonth() && tahun === now.getFullYear()
 
+  const laki = stats?.lakiLaki ?? 0
+  const perempuan = stats?.perempuan ?? 0
+  const totalPenduduk = stats?.totalPenduduk ?? 0
+  const persenLaki = laki + perempuan > 0 ? (laki / (laki + perempuan)) * 100 : 50
+
+  const rtRows = (stats?.rtData ?? []).map(row => ({
+    key: row.rt,
+    label: row.rt === 'Lain-lain' ? row.rt : `RT ${row.rt}`,
+    nilai: row.jumlah,
+    laki: row.laki,
+    perempuan: row.perempuan,
+    // Klik RT → daftar penduduk RT itu (param rt dibaca app/penduduk/page.tsx); "Lain-lain" bukan satu RT.
+    href: row.rt === 'Lain-lain' ? undefined : `/penduduk?rt=${row.rt}`,
+  }))
+  const dusunRows = (stats?.dusunData ?? []).map(row => ({
+    key: row.dusun,
+    label: row.dusun,
+    nilai: row.jumlah,
+    laki: row.laki,
+    perempuan: row.perempuan,
+    // Klik dusun → daftar penduduk aktif di dusun itu (param dusun dibaca app/penduduk/page.tsx); "Lain-lain" bukan satu dusun.
+    href: row.dusun === 'Lain-lain' ? undefined : `/penduduk?dusun=${encodeURIComponent(row.dusun)}&status=aktif`,
+  }))
+
   return (
     <AppShell title="Beranda">
-      <div className="flex flex-col gap-4">
-        {/* Sub-header */}
-        <div className="flex items-center gap-2.5">
-          <Home size={18} className="text-sky-400 shrink-0" />
-          <h1 className="text-base font-semibold text-slate-100">Beranda</h1>
-        </div>
-        <div className="flex justify-center">
-          <WilayahBadge />
-        </div>
-
-        {/* Total stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Total Penduduk" value={stats?.totalPenduduk} loading={loadingStats}
-            icon={Users} color="sky" suffix="jiwa"
-            subLabel={pendudukBaru > 0 ? `+${pendudukBaru} baru bulan ini` : undefined} />
-          <StatCard label="Kepala Keluarga" value={stats?.totalKK} loading={loadingStats}
-            icon={Home} color="violet" suffix="KK" />
-        </div>
-
-        {/* Navigasi bulan */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2 px-0.5">
-            <button onClick={prevBulan}
-              className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors shrink-0">
-              <ChevronLeft size={15} />
-            </button>
-            {/* Picker bulan + tahun langsung */}
-            <div className="flex items-center gap-1.5 flex-1 justify-center">
+      <PageHeader
+        title="Beranda"
+        description={`Ringkasan kependudukan per ${NAMA_BULAN[bulan]} ${tahun}`}
+        action={
+          <>
+            <div className="a-seg mn">
+              <button type="button" onClick={prevBulan} aria-label="Bulan sebelumnya" style={{ padding: '0 12px' }}>
+                <ChevronLeft className="i" />
+              </button>
               <select
+                aria-label="Bulan"
                 value={bulan}
-                onChange={(e) => { setBulan(Number(e.target.value)); }}
-                className="bg-[#111827] border border-white/[0.08] rounded-xl px-2 py-1.5 text-sm font-semibold text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 cursor-pointer"
+                onChange={e => setBulan(Number(e.target.value))}
               >
-                {NAMA_BULAN.map((nm, i) => (
-                  <option key={i} value={i}>{nm}</option>
-                ))}
+                {NAMA_BULAN.map((nm, i) => <option key={i} value={i}>{nm}</option>)}
               </select>
               <select
+                aria-label="Tahun"
                 value={tahun}
-                onChange={(e) => setTahun(Number(e.target.value))}
-                className="bg-[#111827] border border-white/[0.08] rounded-xl px-2 py-1.5 text-sm font-semibold text-slate-200 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 cursor-pointer"
+                onChange={e => setTahun(Number(e.target.value))}
               >
-                {Array.from({ length: now.getFullYear() - 1944 }, (_, i) => now.getFullYear() - i).map((y) => (
+                {Array.from({ length: now.getFullYear() - 1944 }, (_, i) => now.getFullYear() - i).map(y => (
                   <option key={y} value={y}>{y}</option>
                 ))}
               </select>
+              <button type="button" onClick={nextBulan} disabled={isCurrentMonth} aria-label="Bulan berikutnya" style={{ padding: '0 12px' }}>
+                <ChevronRight className="i" />
+              </button>
             </div>
-            <button onClick={nextBulan} disabled={isCurrentMonth}
-              className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-30 shrink-0">
-              <ChevronRight size={15} />
-            </button>
+            {isAdmin() && (
+              <Button asChild variant="outline">
+                <Link href="/pengaturan?bagian=ekspor" title="Ekspor, Impor, dan Laporan Bulanan ada di Pengaturan">
+                  <Download className="i" /><span className="hm">Ekspor / Impor / Laporan</span>
+                </Link>
+              </Button>
+            )}
+          </>
+        }
+      />
+
+      {/* Kop desa: total penduduk, kepala keluarga, L/P */}
+      <div className="a-kop">
+        <div className="seal" />
+        <div className="kin">
+          <div>
+            <WilayahBadge />
+            <div className="big tab">
+              {loadingStats
+                ? <Skeleton style={{ height: 56, width: 190, borderRadius: 12 }} />
+                : <><CountUp value={totalPenduduk} /><small>jiwa</small></>}
+            </div>
+            <div className="sub">
+              dalam <b>{loadingStats ? '…' : (stats?.totalKK ?? 0).toLocaleString('id-ID')} kepala keluarga</b>
+              {pendudukBaru > 0 && <> · <b>+{pendudukBaru}</b> penduduk baru bulan ini</>}
+            </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Kelahiran" value={kelahiran} icon={Baby} color="emerald" subLabel="Bayi lahir" />
-            <StatCard label="Kematian" value={kematian} icon={HeartPulse} color="slate" subLabel="Warga meninggal" />
-            <StatCard label="Pindah Keluar" value={mutasiKeluar} icon={ArrowRightFromLine} color="rose" subLabel="Mutasi keluar" />
-            <StatCard label="Pindah Masuk" value={mutasiMasuk} icon={ArrowLeftFromLine} color="amber" subLabel="Mutasi masuk" />
-          </div>
-        </div>
-
-        {/* Charts */}
-        <GenderChart lakiLaki={stats?.lakiLaki ?? 0} perempuan={stats?.perempuan ?? 0} loading={loadingStats} />
-
-        {/* Tabel Penduduk per RT */}
-        <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Penduduk per RT</p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/[0.06]">
-                  {['RT','L','P','Total'].map(h => (
-                    <th key={h} className="py-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loadingStats ? (
-                  <tr><td colSpan={4} className="text-center py-4 text-slate-600 text-sm">Memuat...</td></tr>
-                ) : (stats?.rtData ?? []).map(row => (
-                  <tr key={row.rt} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                    <td className="py-2 px-2 text-center text-slate-300 font-medium text-sm">
-                      {row.rt === 'Lain-lain' ? row.rt : `RT ${row.rt}`}
-                    </td>
-                    <td className="py-2 px-2 text-center text-sky-400 tabular-nums text-sm">{row.laki}</td>
-                    <td className="py-2 px-2 text-center text-pink-400 tabular-nums text-sm">{row.perempuan}</td>
-                    <td className="py-2 px-2 text-center text-slate-200 font-semibold tabular-nums text-sm">{row.jumlah}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t border-white/[0.08]">
-                  <td className="py-2 px-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Total</td>
-                  <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-sm">{stats?.lakiLaki ?? 0}</td>
-                  <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-sm">{stats?.perempuan ?? 0}</td>
-                  <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-sm">{stats?.totalPenduduk ?? 0}</td>
-                </tr>
-              </tfoot>
-            </table>
+          <div className="kx">
+            <div><span><JkIkon jk="L" size={13} /> Laki-laki</span><b><CountUp value={laki} /></b></div>
+            <i />
+            <div><span><JkIkon jk="P" size={13} /> Perempuan</span><b><CountUp value={perempuan} /></b></div>
           </div>
         </div>
-
-        {/* Tabel Penduduk per Dusun */}
-        <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Penduduk per Dusun</p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/[0.06]">
-                  {['Dusun','L','P','Total'].map(h => (
-                    <th key={h} className="py-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loadingStats ? (
-                  <tr><td colSpan={4} className="text-center py-4 text-slate-600 text-sm">Memuat...</td></tr>
-                ) : (stats?.dusunData ?? []).map(row => (
-                  <tr key={row.dusun} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                    <td className="py-2 px-2 text-slate-300 font-medium text-sm text-center">{row.dusun}</td>
-                    <td className="py-2 px-2 text-center text-sky-400 tabular-nums text-sm">{row.laki}</td>
-                    <td className="py-2 px-2 text-center text-pink-400 tabular-nums text-sm">{row.perempuan}</td>
-                    <td className="py-2 px-2 text-center text-slate-200 font-semibold tabular-nums text-sm">{row.jumlah}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t border-white/[0.08]">
-                  <td className="py-2 px-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Total</td>
-                  <td className="py-2 px-2 text-center text-sky-400 font-bold tabular-nums text-sm">{stats?.lakiLaki ?? 0}</td>
-                  <td className="py-2 px-2 text-center text-pink-400 font-bold tabular-nums text-sm">{stats?.perempuan ?? 0}</td>
-                  <td className="py-2 px-2 text-center text-slate-100 font-bold tabular-nums text-sm">{stats?.totalPenduduk ?? 0}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+        <div className="gbar">
+          <i style={{ width: masuk ? `${persenLaki.toFixed(1)}%` : '0%', background: '#7DB2F0' }} />
+          <i style={{ background: '#F0A2CC', flex: 1 }} />
         </div>
+      </div>
+
+      {/* Kelahiran, kematian, mutasi bulan terpilih */}
+      <div className="g4" style={{ marginTop: 16 }}>
+        <StatCard label="Kelahiran" icon={PERISTIWA.kelahiran.Icon} tone={PERISTIWA.kelahiran.nada} loading={loadLahir}
+          value={kLahir?.n ?? 0} spark={kLahir?.seri}
+          delta={kLahir ? { selisih: kLahir.selisih, baik: kLahir.selisih >= 0, banding: kLahir.banding } : undefined} />
+        <StatCard label="Kematian" icon={PERISTIWA.kematian.Icon} tone={PERISTIWA.kematian.nada} loading={loadMeninggal}
+          value={kMati?.n ?? 0} spark={kMati?.seri}
+          delta={kMati ? { selisih: kMati.selisih, baik: kMati.selisih <= 0, banding: kMati.banding } : undefined} />
+        <StatCard label="Pindah keluar" icon={PERISTIWA.pindah_keluar.Icon} tone={PERISTIWA.pindah_keluar.nada} loading={loadKeluar}
+          value={kKeluar?.n ?? 0} spark={kKeluar?.seri}
+          delta={kKeluar ? { selisih: kKeluar.selisih, baik: kKeluar.selisih <= 0, banding: kKeluar.banding } : undefined} />
+        <StatCard label="Pindah masuk" icon={PERISTIWA.pindah_masuk.Icon} tone={PERISTIWA.pindah_masuk.nada} loading={loadMasuk}
+          value={kMasuk?.n ?? 0} spark={kMasuk?.seri}
+          delta={kMasuk ? { selisih: kMasuk.selisih, baik: kMasuk.selisih >= 0, banding: kMasuk.banding } : undefined} />
+      </div>
+
+      {/* Sebaran per RT dan dusun + jenis kelamin */}
+      <div className="g2" style={{ marginTop: 14 }}>
+        <div className="a-card p">
+          <div className="ch2">
+            <h3>Sebaran per RT</h3>
+            <span className="a-badge mute nd">Klik untuk melihat warga</span>
+          </div>
+          {loadingStats ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '6px 10px' }}>
+              {[...Array(5)].map((_, i) => <Skeleton key={i} style={{ height: 14 }} />)}
+            </div>
+          ) : (
+            <>
+              <BarRows rows={rtRows} total={totalPenduduk} warna="linear-gradient(90deg,var(--navy-700),var(--navy-500))" />
+              <div className="rtot">
+                <span>Total</span>
+                <span className="lp"><b className="l">L {laki.toLocaleString('id-ID')}</b> · <b className="p">P {perempuan.toLocaleString('id-ID')}</b></span>
+                <span>{totalPenduduk.toLocaleString('id-ID')}</span>
+              </div>
+            </>
+          )}
+
+          <div className="ch2" style={{ marginTop: 18 }}>
+            <h3>Sebaran per dusun</h3>
+            <span className="a-badge mute nd">Klik untuk melihat warga</span>
+          </div>
+          {loadingStats ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '6px 10px' }}>
+              {[...Array(4)].map((_, i) => <Skeleton key={i} style={{ height: 14 }} />)}
+            </div>
+          ) : (
+            <>
+              <BarRows rows={dusunRows} total={totalPenduduk} warna="linear-gradient(90deg,var(--gold-600),var(--gold-400))" />
+              <div className="rtot">
+                <span>Total</span>
+                <span className="lp"><b className="l">L {laki.toLocaleString('id-ID')}</b> · <b className="p">P {perempuan.toLocaleString('id-ID')}</b></span>
+                <span>{totalPenduduk.toLocaleString('id-ID')}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <GenderChart lakiLaki={laki} perempuan={perempuan} loading={loadingStats} />
+      </div>
+
+      {/* Kelompok umur + aktivitas terbaru */}
+      <div className="g2" style={{ marginTop: 14 }}>
+        <UmurChart data={umur} loading={loadingUmur} />
+        <RecentActivity
+          logs={logs.slice(0, 6)}
+          loading={loadingLog}
+          footer={isOperator() ? <AksiCepat /> : undefined}
+        />
       </div>
     </AppShell>
   )

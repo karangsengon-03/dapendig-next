@@ -1,20 +1,26 @@
 import { type LucideIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface PageHeaderProps {
-  icon: LucideIcon
   title: string
+  /** Deskripsi singkat di bawah judul (gaya prototype). */
+  description?: string
+  /** Tidak dipakai lagi (prototype tanpa ikon di judul); dipertahankan agar pemanggil lama tidak patah. */
+  icon?: LucideIcon
+  /** Tombol aksi di kanan judul */
   action?: React.ReactNode
+  className?: string
 }
 
-// Sub-header konsisten: icon + nama menu saja, tanpa deskripsi
-export function PageHeader({ icon: Icon, title, action }: PageHeaderProps) {
+// Header halaman gaya prototype (`.a-ph`): judul display + deskripsi + tombol aksi.
+export function PageHeader({ title, description, action, className }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-3 mb-1">
-      <div className="flex items-center gap-2.5">
-        <Icon size={18} className="text-sky-400 shrink-0" />
-        <h1 className="text-base font-semibold text-slate-100">{title}</h1>
+    <div className={cn('a-ph', className)}>
+      <div className="min-w-0">
+        <h1>{title}</h1>
+        {description && <p>{description}</p>}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="acts">{action}</div>}
     </div>
   )
 }

@@ -3,15 +3,14 @@ import { cn } from '@/lib/utils'
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement>
 
+// Tampilan = kolom isian prototype (`.a-input` di app/globals.css): tinggi 44, radius 11, cincin fokus biru.
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
     return (
       <input
         type={type}
         className={cn(
-          'flex h-10 w-full rounded-xl border border-white/10 bg-[#0d1424] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 transition-colors',
-          'focus:outline-none focus:border-sky-500/60 focus:ring-2 focus:ring-sky-500/20',
-          'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[#0d1424]',
+          'a-input',
           'file:border-0 file:bg-transparent file:text-sm file:font-medium',
           className
         )}

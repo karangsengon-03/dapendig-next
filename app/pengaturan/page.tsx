@@ -1,11 +1,37 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Shield, Users, MapPin, Wrench, ChevronDown } from 'lucide-react'
+import { Suspense, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { useTheme } from 'next-themes'
+import {
+  BadgeCheck,
+  Check,
+  ChevronDown,
+  FileSpreadsheet,
+  Info,
+  Landmark,
+  MapPinned,
+  Moon,
+  Palette,
+  Save,
+  Sun,
+  TriangleAlert,
+  Upload,
+  Wrench,
+  Zap,
+  DatabaseZap,
+  UserCog,
+} from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { AksesDitolakAdmin } from '@/components/ui/akses-ditolak'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { ROLE_LABEL } from '@/components/layout/nav'
+import { Avatar } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { ConfirmModal } from '@/components/ui/dialog'
+import { Field, InBox } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   useUserList,
@@ -17,13 +43,26 @@ import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/components/ui/toast'
 import { EksporSection } from '@/components/pengaturan/EksporSection'
 import { ImportSection } from '@/components/pengaturan/ImportSection'
-import type { UserRole, ConfigWilayah, AppUser } from '@/types'
+import { DusunRtSection } from '@/components/pengaturan/DusunRtSection'
+import type { ConfigWilayah, AppUser } from '@/types'
 
+// ── Seksi (navigasi kiri; di HP jadi baris yang bisa digeser) ────────────────
 
-const ROLE_LABEL: Record<UserRole, string> = {
-  admin: 'Admin',
-  operator: 'Operator',
-  viewer: 'Viewer',
+type SecKey = 'wilayah' | 'kades' | 'dusun' | 'pengguna' | 'tampilan' | 'ekspor' | 'impor' | 'pemeliharaan'
+
+const SECTIONS: { key: SecKey; ikon: React.ReactNode; label: string }[] = [
+  { key: 'wilayah', ikon: <Landmark size={17} />, label: 'Informasi wilayah' },
+  { key: 'kades', ikon: <BadgeCheck size={17} />, label: 'Kepala desa' },
+  { key: 'dusun', ikon: <MapPinned size={17} />, label: 'Dusun, RT, dan RW' },
+  { key: 'pengguna', ikon: <UserCog size={17} />, label: 'Pengguna' },
+  { key: 'tampilan', ikon: <Palette size={17} />, label: 'Tampilan' },
+  { key: 'ekspor', ikon: <FileSpreadsheet size={17} />, label: 'Ekspor data' },
+  { key: 'impor', ikon: <Upload size={17} />, label: 'Impor data' },
+  { key: 'pemeliharaan', ikon: <Wrench size={17} />, label: 'Pemeliharaan data' },
+]
+
+function adalahSeksi(v: string | null): v is SecKey {
+  return SECTIONS.some((s) => s.key === v)
 }
 
 // ── Halaman utama ─────────────────────────────────────────────────────────────
@@ -34,148 +73,166 @@ export default function PengaturanPage() {
   if (!isAdmin()) {
     return (
       <AppShell title="Pengaturan">
-        <div className="p-4 flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Shield className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400 font-medium">Halaman ini hanya untuk Admin</p>
-            <p className="text-slate-600 text-sm mt-1">Hubungi admin untuk mengubah pengaturan</p>
-          </div>
-        </div>
+        <AksesDitolakAdmin />
       </AppShell>
     )
   }
 
   return (
     <AppShell title="Pengaturan">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2.5">
-          <Shield className="w-[18px] h-[18px] text-sky-400 shrink-0" />
-          <h1 className="text-base font-semibold text-slate-100">Pengaturan</h1>
-        </div>
-        <UserManagement currentUid={currentUser?.uid ?? ''} />
-        <WilayahForm />
-        <NormalisasiSection />
-        <EksporSection />
-        <ImportSection />
-
-        {/* Migrasi data — collapsible */}
-        {isAdmin && isAdmin() && (
-          <MigrasiDataSection />
-        )}
-      </div>
+      <Suspense fallback={null}>
+        <PengaturanIsi currentUid={currentUser?.uid ?? ''} />
+      </Suspense>
     </AppShell>
   )
 }
 
-// ── Migrasi Data Section (collapsible) ────────────────────────────────────────
+function PengaturanIsi({ currentUid }: { currentUid: string }) {
+  const params = useSearchParams()
+  const bagianParam = params.get('bagian')
+  // Seksi awal dari param URL (?bagian=ekspor); pilihan manual menimpa. Diturunkan, bukan disalin ke state.
+  const [manual, setManual] = useState<SecKey | null>(null)
+  const sec: SecKey = manual ?? (adalahSeksi(bagianParam) ? bagianParam : 'wilayah')
+
+  function pilih(k: SecKey, el: HTMLElement) {
+    setManual(k)
+    // geser baris navigasi (HP) agar seksi terpilih ada di tengah
+    el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  }
+
+  return (
+    <>
+      <PageHeader title="Pengaturan" description="Konfigurasi aplikasi dan data desa" />
+      <div className="a-set">
+        <nav className="a-setnav" aria-label="Seksi pengaturan">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              className={`i${sec === s.key ? ' on' : ''}`}
+              aria-current={sec === s.key ? 'page' : undefined}
+              onClick={(e) => pilih(s.key, e.currentTarget)}
+            >
+              {s.ikon}
+              {s.label}
+              {s.key === 'pemeliharaan' && <span className="cn">{MIGRASI_ITEMS.length + 1}</span>}
+            </button>
+          ))}
+        </nav>
+
+        <div className="a-card p setc">
+          {/* Wilayah + Kepala desa = satu form, satu tombol Simpan; selalu terpasang agar isian tidak hilang saat ganti seksi */}
+          <WilayahKadesForm tampil={sec === 'wilayah' || sec === 'kades' ? sec : null} />
+          {sec === 'dusun' && <DusunRtSection />}
+          {sec === 'pengguna' && <UserManagement currentUid={currentUid} />}
+          {sec === 'tampilan' && <TampilanSection />}
+          {sec === 'ekspor' && <EksporSection />}
+          {sec === 'impor' && <ImportSection />}
+          {sec === 'pemeliharaan' && <PemeliharaanSection />}
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ── Pemeliharaan: utilitas migrasi + Normalisasi ─────────────────────────────
 
 const MIGRASI_ITEMS = [
   {
     label: 'Migrasi Alamat Penduduk',
     desc: 'Isi alamat KARANG SENGON untuk semua penduduk yang belum punya alamat',
     href: '/pengaturan/migrate-alamat',
-    color: 'sky' as const,
+    tone: 'warn' as const,
   },
   {
     label: 'Migrasi Pendidikan',
     desc: 'Ganti SLTP → SMP dan SLTA → SMA untuk semua data penduduk',
     href: '/pengaturan/migrate-pendidikan',
-    color: 'sky' as const,
+    tone: 'warn' as const,
   },
   {
     label: 'Migrasi Format Tanggal',
     desc: 'Konversi DD/MM/YYYY → YYYY-MM-DD di semua koleksi Firestore',
     href: '/pengaturan/migrate-tanggal',
-    color: 'sky' as const,
+    tone: 'warn' as const,
   },
   {
     label: 'Standarisasi Pendidikan & Pekerjaan',
     desc: 'Sesuai Permendagri 6/2026 — PNS→ASN (PNS), Ibu RT→Mengurus RT, dll',
     href: '/pengaturan/migrate-standarisasi',
-    color: 'sky' as const,
+    tone: 'warn' as const,
   },
   {
     label: 'Fix Duplikat Dokumen',
     desc: 'Hapus dokumen lama yang ID-nya masih random jika NIK sudah ada',
     href: '/pengaturan/fix-duplikat',
-    color: 'rose' as const,
+    tone: 'bad' as const,
   },
   {
     label: 'Standarisasi ID Dokumen',
     desc: 'Seragamkan semua ID dokumen penduduk menggunakan NIK',
     href: '/pengaturan/migrate-docid',
-    color: 'sky' as const,
+    tone: 'warn' as const,
   },
   {
     label: 'Fix Tanggal Lahir (Timezone Bug)',
     desc: 'Koreksi tanggal yang bergeser -1/-2/-3 hari akibat bug konversi UTC',
     href: '/pengaturan/fix-tanggal-lahir',
-    color: 'amber' as const,
+    tone: 'warn' as const,
   },
   {
     label: 'Sinkronisasi Tanggal Lahir dari Excel',
     desc: 'Update tanggal_lahir dari file Semua.xls Dispenduk — field lain tidak disentuh',
     href: '/pengaturan/fix-tanggal-excel',
-    color: 'emerald' as const,
+    tone: 'warn' as const,
   },
 ]
 
-const MIGRASI_COLOR = {
-  sky:     'bg-sky-500/10 border-sky-500/20 text-sky-400 hover:bg-sky-500/20',
-  rose:    'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20',
-  amber:   'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20',
-  emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20',
-}
-
-function MigrasiDataSection() {
-  const [open, setOpen] = useState(false)
+function IkonUtil({ tone }: { tone: 'warn' | 'bad' }) {
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <Wrench className="w-4 h-4 text-amber-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-100 text-sm">Migrasi Data</p>
-          <p className="text-sm text-slate-500 mt-0.5">Utilitas migrasi &amp; perbaikan data (admin only)</p>
-        </div>
-        <ChevronDown
-          size={15}
-          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-        <div className="px-5 pb-5 border-t border-white/[0.04] flex flex-col gap-0 pt-3">
-          {MIGRASI_ITEMS.map((item, i) => (
-            <div key={item.href}>
-              <div className="flex items-center justify-between gap-3 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-200">{item.label}</p>
-                  <p className="text-sm text-slate-500 mt-0.5">{item.desc}</p>
-                </div>
-                <a
-                  href={item.href}
-                  className={`shrink-0 px-3 py-2 rounded-xl border text-sm font-medium transition-colors ${MIGRASI_COLOR[item.color]}`}
-                >
-                  Jalankan
-                </a>
-              </div>
-              {i < MIGRASI_ITEMS.length - 1 && (
-                <div className="border-t border-white/[0.06]" />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+    <div
+      className="a-avatar"
+      style={{ width: 42, height: 42, borderRadius: 12, background: `var(--${tone}-bg)`, color: `var(--${tone})` }}
+    >
+      <DatabaseZap className="i" style={{ fontSize: 19 }} />
     </div>
   )
 }
 
+function PemeliharaanSection() {
+  return (
+    <div className="a-fs">
+      <div className="fh">
+        <h4>Pemeliharaan data</h4>
+        <p>Utilitas migrasi dan perbaikan data. Jalankan hanya bila diperlukan.</p>
+      </div>
+      <div className="a-alert warn" style={{ marginBottom: 8 }}>
+        <TriangleAlert className="i" />
+        <div>
+          <b>Khusus admin</b>
+          Tindakan ini mengubah banyak data sekaligus. Buat cadangan lebih dulu.
+        </div>
+      </div>
+      {MIGRASI_ITEMS.map((item) => (
+        <div className="a-mig" key={item.href}>
+          <IkonUtil tone={item.tone} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <b>{item.label}</b>
+            <span className="mt">{item.desc}</span>
+          </div>
+          <Button asChild size="sm" variant="secondary">
+            <Link href={item.href}><Zap className="i" />Jalankan</Link>
+          </Button>
+        </div>
+      ))}
+      <NormalisasiRow />
+    </div>
+  )
+}
 
-// ── Normalisasi Data ──────────────────────────────────────────────────────────
+// ── Normalisasi Data (hook & alur tetap dari kode asli) ──────────────────────
 
-function NormalisasiSection() {
+function NormalisasiRow() {
   const { toast } = useToast()
   const mutation = useNormalisasiData()
   const [confirm, setConfirm] = useState(false)
@@ -193,135 +250,142 @@ function NormalisasiSection() {
     }
   }
 
-  const [open, setOpen] = useState(false)
-
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <Wrench className="w-4 h-4 text-amber-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-100 text-sm">Pemeliharaan Data</p>
-          <p className="text-sm text-slate-500 mt-0.5">Normalisasi Pekerjaan &amp; Hubungan Keluarga</p>
+    <>
+      <div className="a-mig">
+        <IkonUtil tone="warn" />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <b>Normalisasi Pekerjaan &amp; Hub. Keluarga</b>
+          <span className="mt">
+            Perbaiki inkonsistensi penulisan nilai di kolom Pekerjaan dan Hubungan Keluarga agar sesuai dengan standar sistem.
+          </span>
         </div>
-        <ChevronDown
-          size={15}
-          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4 space-y-3">
-        <p className="text-sm text-slate-500">
-          Perbaiki inkonsistensi penulisan nilai di kolom Pekerjaan dan Hubungan Keluarga agar sesuai dengan standar sistem.
-        </p>
-      {confirm ? (
-        <div className="flex items-center gap-2.5">
-          <span className="text-sm text-slate-400">Yakin menjalankan normalisasi?</span>
-          <Button
-            size="sm"
-            className="bg-amber-600 hover:bg-amber-700"
-            onClick={handleNormalisasi}
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? 'Memproses...' : 'Ya, Jalankan'}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setConfirm(false)}>
-            Batal
-          </Button>
-        </div>
-      ) : (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setConfirm(true)}
-          className="border-amber-600/40 text-amber-400 hover:bg-amber-500/10 w-full justify-start"
-        >
-          <Wrench className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-          <span className="truncate">Normalisasi Ulang Data Pekerjaan &amp; Hub. Keluarga</span>
+        <Button size="sm" variant="secondary" onClick={() => setConfirm(true)} disabled={mutation.isPending}>
+          <Zap className="i" />
+          {mutation.isPending ? 'Memproses...' : 'Jalankan'}
         </Button>
-      )}
       </div>
+
+      {mutation.isPending && (
+        <div className="a-alert info" role="status" aria-live="polite" style={{ marginTop: 10 }}>
+          <Info className="i" />
+          <div>Memproses… jangan tutup halaman ini</div>
+        </div>
       )}
-    </div>
+
+      {confirm && (
+        <ConfirmModal
+          icon={<Zap className="i" style={{ fontSize: 24 }} />}
+          tone="warn"
+          title="Jalankan normalisasi?"
+          okLabel="Ya, Jalankan"
+          okVariant="default"
+          loading={mutation.isPending}
+          onConfirm={handleNormalisasi}
+          onCancel={() => setConfirm(false)}
+        >
+          Yakin menjalankan normalisasi? Pekerjaan &amp; Hubungan Keluarga semua penduduk akan dirapikan. Pastikan sudah ada cadangan.
+        </ConfirmModal>
+      )}
+    </>
   )
 }
 
-// ── Manajemen Pengguna ───────────────────────────────────────────────────────
+// ── Pengguna ──────────────────────────────────────────────────────────────────
 
 function UserManagement({ currentUid }: { currentUid: string }) {
   const { data: users, isLoading } = useUserList()
-  const [open, setOpen] = useState(false)
 
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <Users className="w-4 h-4 text-sky-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-100 text-sm">Manajemen Pengguna</p>
-          <p className="text-sm text-slate-500 mt-0.5">Tambah atau ubah via Firebase Console</p>
-        </div>
-        <ChevronDown
-          size={15}
-          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4">
+    <div className="a-fs">
+      <div className="fh">
+        <h4>Manajemen pengguna</h4>
+        <p>Akun dan peran yang dapat mengakses aplikasi</p>
+      </div>
 
       {isLoading ? (
-        <div className="space-y-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
         </div>
       ) : !users?.length ? (
-        <p className="text-slate-500 text-sm">Belum ada pengguna terdaftar</p>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-3)' }}>Belum ada pengguna terdaftar</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/[0.06]">
-                <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u: AppUser) => {
-                const isSelf = u.uid === currentUid
-                return (
-                  <tr key={u.uid} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-3 py-3 text-slate-200 text-sm">
-                      {u.email}
-                      {isSelf && (
-                        <span className="ml-2 text-xs bg-sky-500/15 text-sky-400 px-1.5 py-0.5 rounded border border-sky-500/20">Anda</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 text-slate-400 text-sm">{u.nama ?? '—'}</td>
-                    <td className="px-3 py-3">
-                      <span className="text-xs font-semibold uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20 rounded px-2 py-0.5">
-                        {ROLE_LABEL[u.role]}
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        users.map((u: AppUser) => {
+          const isSelf = u.uid === currentUid
+          const judul = u.nama || u.email
+          return (
+            <div className="a-mig" key={u.uid}>
+              <Avatar nama={judul} size={42} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <b style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{judul}</span>
+                  {isSelf && <Badge variant="gold">Anda</Badge>}
+                </b>
+                {u.nama && <span className="mt" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</span>}
+              </div>
+              <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>{ROLE_LABEL[u.role] ?? u.role}</Badge>
+            </div>
+          )
+        })
       )}
+
+      <div className="a-alert info" style={{ marginTop: 14 }}>
+        <Info className="i" />
+        <div>Tambah atau ubah pengguna melalui Firebase Console.</div>
       </div>
-      )}
     </div>
   )
 }
 
-// ── Informasi Wilayah ────────────────────────────────────────────────────────
+// ── Tampilan (tema; pilihan tersimpan di perangkat lewat next-themes) ────────
 
-function WilayahForm() {
+function TampilanSection() {
+  const { resolvedTheme, setTheme } = useTheme()
+  const pilihan: { v: 'light' | 'dark'; ikon: React.ReactNode; t: string; d: string }[] = [
+    { v: 'light', ikon: <Sun className="i" style={{ fontSize: 16 }} />, t: 'Terang', d: 'Bawaan · nyaman dibaca siang hari di kantor desa' },
+    { v: 'dark', ikon: <Moon className="i" style={{ fontSize: 16 }} />, t: 'Gelap', d: 'Redup dan hemat baterai untuk malam hari' },
+  ]
+  return (
+    <div className="a-fs">
+      <div className="fh">
+        <h4>Tampilan</h4>
+        <p>Pilih tema yang nyaman di mata. Pilihan tersimpan di perangkat ini.</p>
+      </div>
+      <div className="themes">
+        {pilihan.map((p) => {
+          const aktif = (resolvedTheme === 'dark' ? 'dark' : 'light') === p.v
+          return (
+            <button
+              key={p.v}
+              type="button"
+              className={`thc ${p.v}${aktif ? ' on' : ''}`}
+              style={{ textAlign: 'left', font: 'inherit', color: 'inherit' }}
+              aria-pressed={aktif}
+              onClick={() => setTheme(p.v)}
+            >
+              <div className="pv"><i /><i /><i /></div>
+              <div className="tx">
+                <b>{p.ikon}{p.t}</b>
+                <span>{p.d}</span>
+              </div>
+              <span className="rd"><Check className="i" style={{ fontSize: 11 }} /></span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Informasi Wilayah + Data Kepala Desa (satu form, satu Simpan) ────────────
+
+const JABATAN_OPSI: { value: NonNullable<ConfigWilayah['jabatan_kades']>; label: string }[] = [
+  { value: 'Kepala Desa', label: 'Kepala Desa — Definitif (tidak perlu NIP)' },
+  { value: 'Pj. Kepala Desa', label: 'Pj. Kepala Desa — Penjabat (PNS/ASN, wajib NIP)' },
+  { value: 'Plt. Kepala Desa', label: 'Plt. Kepala Desa — Pelaksana Tugas (PNS/ASN, wajib NIP)' },
+]
+
+function WilayahKadesForm({ tampil }: { tampil: 'wilayah' | 'kades' | null }) {
   const { data, isLoading } = useWilayahConfig()
   const { mutate: save, isPending } = useSaveWilayah()
   const { toast } = useToast()
@@ -367,115 +431,126 @@ function WilayahForm() {
     })
   }
 
-  const [open, setOpen] = useState(false)
+  if (!tampil) return null
+
+  const penjabat = form.jabatan_kades === 'Pj. Kepala Desa' || form.jabatan_kades === 'Plt. Kepala Desa'
 
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-100 text-sm">Informasi Wilayah</p>
-          <p className="text-sm text-slate-500 mt-0.5">Nama desa, kecamatan, kabupaten, provinsi</p>
+    <form
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault()
+        handleSave()
+      }}
+    >
+      {isLoading ? (
+        <div className="a-fs">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-11 w-full" />)}
+          </div>
         </div>
-        <ChevronDown
-          size={15}
-          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-        <div className="px-5 pb-5 border-t border-white/[0.04] pt-4">
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label>Desa</Label>
-                  <Input value={form.desa} onChange={(e) => set('desa', e.target.value)} placeholder="Nama desa" />
-                </div>
-                <div>
-                  <Label>Kecamatan</Label>
-                  <Input value={form.kecamatan} onChange={(e) => set('kecamatan', e.target.value)} placeholder="Nama kecamatan" />
-                </div>
-                <div>
-                  <Label>Kabupaten</Label>
-                  <Input value={form.kabupaten} onChange={(e) => set('kabupaten', e.target.value)} placeholder="Nama kabupaten" />
-                </div>
-                <div>
-                  <Label>Provinsi</Label>
-                  <Input value={form.provinsi} onChange={(e) => set('provinsi', e.target.value)} placeholder="Nama provinsi" />
-                </div>
-                <div>
-                  <Label>Kode Pos</Label>
-                  <Input
-                    value={form.kode_pos ?? ''}
-                    onChange={(e) => set('kode_pos', e.target.value)}
-                    placeholder="68284"
-                    maxLength={5}
-                    inputMode="numeric"
-                  />
-                </div>
-                <div>
-                  <Label>Tahun</Label>
-                  <Input value={form.tahun} onChange={(e) => set('tahun', e.target.value)} placeholder="2026" />
-                </div>
+      ) : (
+        <>
+          {tampil === 'wilayah' && (
+            <div className="a-fs">
+              <div className="fh">
+                <h4>Informasi wilayah</h4>
+                <p>Nama desa, kecamatan, kabupaten, provinsi. Dipakai pada kop dokumen dan cetak KK.</p>
               </div>
-
-              {/* Data Kepala Desa */}
-              <div className="border-t border-white/[0.06] pt-4 mt-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Data Kepala Desa</p>
-                <p className="text-xs text-slate-600 mb-3">Digunakan untuk dokumen cetak resmi desa (KK Sementara, surat, dll).</p>
-                <div className="flex flex-col gap-3">
-                  <div>
-                    <Label>Jabatan</Label>
-                    <select
-                      value={form.jabatan_kades ?? 'Kepala Desa'}
-                      onChange={(e) => set('jabatan_kades', e.target.value)}
-                      className="w-full bg-[#0d1424] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 cursor-pointer"
-                    >
-                      <option value="Kepala Desa">Kepala Desa — Definitif (tidak perlu NIP)</option>
-                      <option value="Pj. Kepala Desa">Pj. Kepala Desa — Penjabat (PNS/ASN, wajib NIP)</option>
-                      <option value="Plt. Kepala Desa">Plt. Kepala Desa — Pelaksana Tugas (PNS/ASN, wajib NIP)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label>Nama Kepala Desa</Label>
-                    <Input
-                      value={form.nama_kades ?? ''}
-                      onChange={(e) => set('nama_kades', e.target.value)}
-                      placeholder="Nama lengkap kepala desa"
+              <div className="a-fg6">
+                <Field label="Desa" htmlFor="w-desa" className="s3">
+                  <InBox><input placeholder="Nama desa" id="w-desa" value={form.desa} onChange={(e) => set('desa', e.target.value)} /></InBox>
+                </Field>
+                <Field label="Kecamatan" htmlFor="w-kec" className="s3">
+                  <InBox><input placeholder="Nama kecamatan" id="w-kec" value={form.kecamatan} onChange={(e) => set('kecamatan', e.target.value)} /></InBox>
+                </Field>
+                <Field label="Kabupaten" htmlFor="w-kab" className="s3">
+                  <InBox><input placeholder="Nama kabupaten" id="w-kab" value={form.kabupaten} onChange={(e) => set('kabupaten', e.target.value)} /></InBox>
+                </Field>
+                <Field label="Provinsi" htmlFor="w-prov" className="s3">
+                  <InBox><input placeholder="Nama provinsi" id="w-prov" value={form.provinsi} onChange={(e) => set('provinsi', e.target.value)} /></InBox>
+                </Field>
+                <Field label="Kode Pos" htmlFor="w-pos" className="s3">
+                  <InBox>
+                    <input
+                      placeholder="68284"
+                      id="w-pos"
+                      value={form.kode_pos ?? ''}
+                      onChange={(e) => set('kode_pos', e.target.value)}
+                      maxLength={5}
+                      inputMode="numeric"
                     />
-                  </div>
-                  {(form.jabatan_kades === 'Pj. Kepala Desa' || form.jabatan_kades === 'Plt. Kepala Desa') && (
-                    <div>
-                      <Label>NIP</Label>
-                      <Input
-                        value={form.nip_kades ?? ''}
-                        onChange={(e) => set('nip_kades', e.target.value)}
-                        placeholder="Nomor Induk Pegawai (18 digit)"
-                      />
-                      <p className="text-xs text-amber-400 mt-1.5">
-                        Wajib diisi — {form.jabatan_kades} adalah jabatan PNS/ASN
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 pt-1">
-                <Button onClick={handleSave} disabled={isPending} size="sm">
-                  {isPending ? 'Menyimpan...' : 'Simpan'}
-                </Button>
+                  </InBox>
+                </Field>
+                <Field label="Tahun" htmlFor="w-thn" className="s3">
+                  <InBox><input placeholder="2026" id="w-thn" value={form.tahun} onChange={(e) => set('tahun', e.target.value)} /></InBox>
+                </Field>
               </div>
             </div>
           )}
-        </div>
+
+          {tampil === 'kades' && (
+            <div className="a-fs">
+              <div className="fh">
+                <h4>Data kepala desa</h4>
+                <p>Digunakan untuk dokumen cetak resmi desa (KK Sementara, surat, dll).</p>
+              </div>
+              <div className="a-fg6">
+                <Field label="Jabatan" htmlFor="w-jab" className="s3 nikkk">
+                  <InBox>
+                    <select
+                      id="w-jab"
+                      value={form.jabatan_kades ?? 'Kepala Desa'}
+                      onChange={(e) => set('jabatan_kades', e.target.value)}
+                    >
+                      {JABATAN_OPSI.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="i chev" />
+                  </InBox>
+                </Field>
+                <Field label="Nama Kepala Desa" htmlFor="w-kades" className="s3 nikkk">
+                  <InBox>
+                    <input
+                      placeholder="Nama lengkap kepala desa"
+                      id="w-kades"
+                      value={form.nama_kades ?? ''}
+                      onChange={(e) => set('nama_kades', e.target.value)}
+                    />
+                  </InBox>
+                </Field>
+                {penjabat && (
+                  <Field
+                    label="NIP"
+                    htmlFor="w-nip"
+                    className="s6"
+                    hint={<span className="warn">Wajib diisi — {form.jabatan_kades} adalah jabatan PNS/ASN</span>}
+                  >
+                    <InBox>
+                      <input
+                        placeholder="Nomor Induk Pegawai (18 digit)"
+                        id="w-nip"
+                        className="mono"
+                        value={form.nip_kades ?? ''}
+                        onChange={(e) => set('nip_kades', e.target.value)}
+                      />
+                    </InBox>
+                  </Field>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="set-ft">
+            <Button type="submit" disabled={isPending}>
+              <Save className="i" />
+              {isPending ? 'Menyimpan...' : 'Simpan'}
+            </Button>
+            <small>Informasi wilayah dan data kepala desa disimpan bersama.</small>
+          </div>
+        </>
       )}
-    </div>
+    </form>
   )
 }

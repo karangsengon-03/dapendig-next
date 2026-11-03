@@ -14,6 +14,9 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
+import { useAppStore } from '@/store/appStore'
+import { DUSUN_BAWAAN, RW_BAWAAN, normalisasiDusun, normalisasiRw, validasiDusun, validasiRw, type DusunItem } from '@/lib/dusun'
+import { GalatTolak } from '@/lib/galat-tolak'
 import type { AppUser, ConfigWilayah, UserRole } from '@/types'
 import { PEKERJAAN, HUBUNGAN_KELUARGA } from '@/lib/penduduk-constants'
 
@@ -121,6 +124,51 @@ export function useSaveWilayah() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['wilayah'], exact: false })
+    },
+  })
+}
+
+// ── Dusun dan RT (path: config/dusun; dokumen di koleksi `config` yang sudah ada, aturan Firestore tidak berubah) ──
+
+export interface DusunTersimpan {
+  dusun: DusunItem[]
+  rw: string[]
+  /** false = belum pernah disimpan (menampilkan bawaan). */
+  tersimpan: boolean
+}
+
+async function fetchDusunConfig(): Promise<DusunTersimpan> {
+  const snap = await getDoc(doc(db, 'config', 'dusun'))
+  const data = snap.exists() ? (snap.data() as { dusun?: unknown; rw?: unknown }) : null
+  const d = data ? normalisasiDusun(data.dusun) : null
+  // Dokumen lama tanpa field rw → RW bawaan
+  const rw = (data ? normalisasiRw(data.rw) : null) ?? RW_BAWAAN
+  return d ? { dusun: d, rw, tersimpan: true } : { dusun: DUSUN_BAWAAN, rw, tersimpan: false }
+}
+
+export function useDusunConfig() {
+  return useQuery({ queryKey: ['dusun', 'config'], queryFn: fetchDusunConfig, staleTime: 300_000 })
+}
+
+export function useSaveDusun() {
+  const qc = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+  return useMutation({
+    mutationFn: async (masukan: { dusun: DusunItem[]; rw: string[] }): Promise<{ dusun: DusunItem[]; rw: string[] }> => {
+      const rapi = normalisasiDusun(masukan.dusun)
+      const rw = normalisasiRw(masukan.rw)
+      if (!rapi || validasiDusun(rapi).ada) throw new GalatTolak('Pengaturan dusun belum valid. Periksa nama dusun dan RT.')
+      if (!rw || validasiRw(rw)) throw new GalatTolak('Pengaturan RW belum valid. Periksa daftar RW.')
+      const email = user?.email ?? 'unknown'
+      await setDoc(doc(db, 'config', 'dusun'), { dusun: rapi, rw, updated_at: serverTimestamp(), updated_by: email })
+      await writeLog('edit_wilayah', `Dusun, RT, dan RW diperbarui: ${rapi.map((d) => `${d.nama} (${d.rt.length} RT)`).join(', ')}; RW ${rw.join(', ')}`, email)
+      return { dusun: rapi, rw }
+    },
+    onSuccess: (hasil) => {
+      useAppStore.getState().setDusun(hasil.dusun)
+      useAppStore.getState().setRw(hasil.rw)
+      qc.invalidateQueries({ queryKey: ['dusun'], exact: false })
+      qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
     },
   })
 }

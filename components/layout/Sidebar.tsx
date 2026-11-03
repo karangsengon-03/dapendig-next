@@ -1,187 +1,181 @@
 'use client'
 
-import Image from 'next/image'
+import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import {
-  LayoutDashboard, Users, BarChart3, ArrowLeftRight,
-  Heart, Settings, LogOut, X, ClipboardList, UserCircle, Trash2
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { AppLogoFull } from './AppLogo'
+import { useTheme } from 'next-themes'
+import { ChevronsLeft, ChevronsRight, LogOut, Moon, Sun, X } from 'lucide-react'
+import { cn, APP_VERSION } from '@/lib/utils'
 import { useAppStore } from '@/store/appStore'
+import { useAuthStore } from '@/store/authStore'
 import { logout } from '@/hooks/useAuth'
-import { APP_VERSION } from '@/lib/utils'
 import { usePendudukBaruBulanIni } from '@/hooks/useDashboard'
+import { getInisial } from '@/components/ui/avatar'
+import { AppLogo } from './AppLogo'
+import { NAV_FOOT, NAV_GROUPS, ROLE_LABEL, isNavActive, type NavItem } from './nav'
+import { useIsDesktop } from './useIsDesktop'
 
-const navItems = [
-  { href: '/dashboard', label: 'Beranda', icon: LayoutDashboard, badgeKey: null },
-  { href: '/penduduk', label: 'Penduduk', icon: Users, badgeKey: 'pendudukBaru' },
-  { href: '/monografi', label: 'Monografi', icon: BarChart3, badgeKey: null },
-  { href: '/mutasi', label: 'Mutasi', icon: ArrowLeftRight, badgeKey: null },
-  { href: '/vital', label: 'Vital', icon: Heart, badgeKey: null },
-  { href: '/log', label: 'Log Aktivitas', icon: ClipboardList, badgeKey: null },
-  { href: '/recycle-bin', label: 'Tempat Sampah', icon: Trash2, badgeKey: null },
-]
+// Pilihan sidebar ciut disimpan di perangkat (hanya berlaku di layar lebar).
+const KUNCI_CIUT = 'dpd_sidebar_ciut'
 
-const bottomItems = [
-  { href: '/profil', label: 'Profil Saya', icon: UserCircle },
-  { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
-]
+function NavLink({ item, active, badge, onNavigate }: {
+  item: NavItem
+  active: boolean
+  badge: number
+  onNavigate: () => void
+}) {
+  const Icon = item.icon
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      title={item.label}
+      aria-current={active ? 'page' : undefined}
+      className={cn('it', active && 'on')}
+    >
+      <Icon className="i" />
+      <span className="t">{item.label}</span>
+      {badge > 0 && <span className="cn">{badge > 99 ? '99+' : badge}</span>}
+    </Link>
+  )
+}
 
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { sidebarOpen, setSidebarOpen } = useAppStore()
+  const user = useAuthStore((s) => s.user)
+  const { resolvedTheme, setTheme } = useTheme()
   const { data: pendudukBaru = 0 } = usePendudukBaruBulanIni()
+  const desktop = useIsDesktop()
+  const [ciut, setCiut] = useState(() => {
+    try {
+      return window.localStorage.getItem(KUNCI_CIUT) === '1'
+    } catch {
+      return false
+    }
+  })
 
-  const badges: Record<string, number> = {
-    pendudukBaru,
-  }
+  // Mode rail (ikon saja) hanya di layar lebar; di HP sidebar selalu drawer penuh.
+  const rail = ciut && desktop
+  const gelap = resolvedTheme === 'dark'
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  // Esc menutup drawer di HP
+  useEffect(() => {
+    if (!sidebarOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSidebarOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [sidebarOpen, setSidebarOpen])
 
   const handleNav = () => setSidebarOpen(false)
+
+  function toggleCiut() {
+    const next = !ciut
+    setCiut(next)
+    try {
+      window.localStorage.setItem(KUNCI_CIUT, next ? '1' : '0')
+    } catch {
+      // penyimpanan lokal tidak tersedia: pilihan hanya berlaku selama halaman terbuka
+    }
+  }
 
   const handleLogout = async () => {
     setSidebarOpen(false)
     await logout(router)
   }
 
+  const badgeUntuk = (item: NavItem) => (item.badgeKey === 'pendudukBaru' ? pendudukBaru : 0)
+  const namaUser = user ? user.nama || user.email : ''
+
   return (
     <>
-      {/* Overlay mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Latar gelap di belakang drawer (HP). Tampil lewat kelas drawer-on pada .a-app */}
+      <div className="a-ov" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
 
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          'fixed top-0 left-0 bottom-0 z-50 w-64 flex flex-col overflow-hidden',
-          'bg-[#070c18] border-r border-white/[0.06]',
-          'transition-transform duration-300 ease-in-out',
-          // Mobile: drawer
-          'md:translate-x-0',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-          // Desktop: icon-only
-          'md:w-14 md:translate-x-0',
-        )}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 py-4 border-b border-white/[0.06] md:justify-center md:px-0">
-          <div className="md:hidden">
-            <AppLogoFull />
-          </div>
-          {/* Desktop: logo icon only */}
-          <div className="hidden md:flex items-center justify-center w-full py-1">
-            <div className="w-9 h-9 rounded-xl overflow-hidden border border-white/10">
-              <Image src="/icons/icon-192.png" alt="DaPenDig" width={36} height={36} className="w-full h-full object-cover" unoptimized />
+      <aside className={cn('a-side', rail && 'rail', sidebarOpen && 'open')}>
+        <div className="brand">
+          <AppLogo size={40} />
+          {!rail && (
+            <div>
+              <b>DaPenDig</b>
+              <span>Desa Karang Sengon</span>
             </div>
-          </div>
-          {/* Mobile close button */}
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          )}
+          {desktop ? (
+            <button
+              type="button"
+              className="colbtn"
+              onClick={toggleCiut}
+              aria-label={rail ? 'Lebarkan sidebar' : 'Lipat sidebar'}
+              title={rail ? 'Lebarkan sidebar' : 'Lipat sidebar'}
+            >
+              {rail ? <ChevronsRight className="i" /> : <ChevronsLeft className="i" />}
+            </button>
+          ) : (
+            <button type="button" className="colbtn" onClick={handleNav} aria-label="Tutup menu">
+              <X className="i" />
+            </button>
+          )}
         </div>
 
-        {/* Nav utama */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon, badgeKey }) => {
-            const active = isActive(href)
-            const badgeCount = badgeKey ? (badges[badgeKey] ?? 0) : 0
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={handleNav}
-                title={label}
-                className={cn(
-                  'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                  'relative overflow-hidden',
-                  active
-                    ? 'bg-sky-500/15 text-sky-400'
-                    : 'text-slate-500 hover:text-slate-200 hover:bg-white/5',
-                  // Desktop: center icons
-                  'md:justify-center md:px-0 md:w-10 md:mx-auto',
-                )}
-              >
-                {active && (
-                  <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-sky-400 rounded-full md:hidden" />
-                )}
-                {/* Icon + desktop badge */}
-                <span className="relative shrink-0">
-                  <Icon className={cn(
-                    'h-[18px] w-[18px] transition-colors',
-                    active ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'
-                  )} />
-                  {badgeCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] rounded-full bg-rose-500 text-xs font-bold text-white flex items-center justify-center px-0.5 leading-none">
-                      {badgeCount > 99 ? '99+' : badgeCount}
-                    </span>
-                  )}
-                </span>
-                {/* Label + mobile badge */}
-                <span className="truncate md:hidden flex-1">{label}</span>
-                {badgeCount > 0 && (
-                  <span className="md:hidden ml-auto min-w-[20px] h-5 rounded-full bg-rose-500/20 text-rose-400 text-xs font-bold flex items-center justify-center px-1.5 border border-rose-500/30">
-                    {badgeCount > 99 ? '99+' : badgeCount}
-                  </span>
-                )}
-              </Link>
-            )
-          })}
+        <nav aria-label="Menu utama">
+          {NAV_GROUPS.map((grup) => (
+            <Fragment key={grup.label}>
+              <div className="grp">{grup.label}</div>
+              {grup.items.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  active={isNavActive(pathname, item.href)}
+                  badge={badgeUntuk(item)}
+                  onNavigate={handleNav}
+                />
+              ))}
+            </Fragment>
+          ))}
         </nav>
 
-        {/* Bottom section */}
-        <div className="border-t border-white/[0.06] py-3 px-2 space-y-0.5">
-          {bottomItems.map(({ href, label, icon: Icon }) => {
-            const active = isActive(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={handleNav}
-                title={label}
-                className={cn(
-                  'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                  active
-                    ? 'bg-sky-500/15 text-sky-400'
-                    : 'text-slate-500 hover:text-slate-200 hover:bg-white/5',
-                  'md:justify-center md:px-0 md:w-10 md:mx-auto',
-                )}
-              >
-                <Icon className={cn(
-                  'h-[18px] w-[18px] shrink-0',
-                  active ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'
-                )} />
-                <span className="truncate md:hidden">{label}</span>
+        <div className="foot">
+          {NAV_FOOT.map((item) => (
+            <NavLink
+              key={item.href}
+              item={item}
+              active={isNavActive(pathname, item.href)}
+              badge={0}
+              onNavigate={handleNav}
+            />
+          ))}
+
+          <div className="thm" role="group" aria-label="Tema tampilan">
+            <button type="button" className={cn(!gelap && 'on')} aria-pressed={!gelap} onClick={() => setTheme('light')}>
+              <Sun className="i" style={{ fontSize: 14 }} />
+              Terang
+            </button>
+            <button type="button" className={cn(gelap && 'on')} aria-pressed={gelap} onClick={() => setTheme('dark')}>
+              <Moon className="i" style={{ fontSize: 14 }} />
+              Gelap
+            </button>
+          </div>
+
+          {user && (
+            <div className="me">
+              <Link href="/profil" onClick={handleNav} className="melink" title="Profil Saya">
+                <div className="av">{getInisial(namaUser)}</div>
+                <div className="who">
+                  <b>{namaUser}</b>
+                  <span>{ROLE_LABEL[user.role] ?? user.role}</span>
+                </div>
               </Link>
-            )
-          })}
+              <button type="button" className="lo" onClick={handleLogout} title="Keluar" aria-label="Keluar">
+                <LogOut className="i" />
+              </button>
+            </div>
+          )}
 
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            title="Keluar"
-            className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-              'text-slate-500 hover:text-red-400 hover:bg-red-500/10',
-              'md:justify-center md:px-0 md:w-10 md:mx-auto',
-            )}
-          >
-            <LogOut className="h-[18px] w-[18px] shrink-0" />
-            <span className="md:hidden">Keluar</span>
-          </button>
-
-          {/* Versi — mobile only */}
-          <p className="md:hidden text-center text-xs text-slate-600 pt-1">{APP_VERSION}</p>
+          <p className="ver">{APP_VERSION}</p>
         </div>
       </aside>
     </>

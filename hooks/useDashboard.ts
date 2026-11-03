@@ -1,6 +1,9 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { rt3 } from '@/lib/rt-rw'
+import { useAppStore } from '@/store/appStore'
+import { daftarRt, dusunDariRt, type DusunItem } from '@/lib/dusun'
 import {
   collection,
   getDocs,
@@ -38,7 +41,7 @@ function inBulanIni(dateVal: unknown): boolean {
 }
 
 // ── Fetch semua penduduk aktif ──────────────────────────────────────────────
-async function fetchPendudukStats() {
+async function fetchPendudukStats(petaDusun: DusunItem[]) {
   const snap = await getDocs(
     query(collection(db, 'penduduk'), where('status', '==', 'aktif'))
   )
@@ -54,14 +57,14 @@ async function fetchPendudukStats() {
   // Per RT dengan L dan P
   const byRT: Record<string, { laki: number; perempuan: number }> = {}
   for (const r of rows) {
-    const key = r.rt ?? '000'
+    const key = rt3(r.rt) || '000'
     if (!byRT[key]) byRT[key] = { laki: 0, perempuan: 0 }
     if (r.jenis_kelamin === 'Laki-laki') byRT[key].laki++
     else byRT[key].perempuan++
   }
 
-  // RT_LIST resmi
-  const RT_VALID = ['001','002','003','004','005','006','007','008','009','010','011']
+  // RT resmi = gabungan RT semua dusun (Pengaturan → Dusun dan RT)
+  const RT_VALID = daftarRt(petaDusun)
 
   const rtData = RT_VALID.map(rt => ({
     rt,
@@ -77,18 +80,12 @@ async function fetchPendudukStats() {
     rtData.push({ rt: 'Lain-lain', laki: lainLaki, perempuan: lainPerempuan, jumlah: lainLaki + lainPerempuan })
   }
 
-  // Dusun — peta RT ke Dusun
-  const DUSUN_MAP: Record<string, string> = {
-    '001': 'Pesanggrahan', '002': 'Pesanggrahan', '003': 'Pesanggrahan', '007': 'Pesanggrahan',
-    '004': 'Paleran', '005': 'Paleran', '006': 'Paleran',
-    '008': 'Sumber', '009': 'Sumber',
-    '010': 'Blangguan', '011': 'Blangguan',
-  }
-  const DUSUN_ORDER = ['Pesanggrahan', 'Paleran', 'Sumber', 'Blangguan']
+  // Dusun — dari pemetaan RT → Dusun di Pengaturan
+  const DUSUN_ORDER = petaDusun.map((d) => d.nama)
   const byDusun: Record<string, { laki: number; perempuan: number }> = {}
   for (const r of rows) {
-    const rt = r.rt ?? ''
-    const dusun = DUSUN_MAP[rt] ?? 'Lain-lain'
+    const rt = rt3(r.rt)
+    const dusun = dusunDariRt(rt, petaDusun) || 'Lain-lain'
     if (!byDusun[dusun]) byDusun[dusun] = { laki: 0, perempuan: 0 }
     if (r.jenis_kelamin === 'Laki-laki') byDusun[dusun].laki++
     else byDusun[dusun].perempuan++
@@ -145,9 +142,10 @@ async function fetchRecentLog() {
 
 // ── Exported hooks ──────────────────────────────────────────────────────────
 export function usePendudukStats() {
+  const petaDusun = useAppStore((s) => s.dusun)
   return useQuery({
-    queryKey: ['dashboard', 'penduduk-stats'],
-    queryFn: fetchPendudukStats,
+    queryKey: ['dashboard', 'penduduk-stats', petaDusun],
+    queryFn: () => fetchPendudukStats(petaDusun),
   })
 }
 
@@ -202,17 +200,7 @@ export function usePendudukBaruBulanIni() {
 
 // ── Distribusi umur ─────────────────────────────────────────────────────────
 import type { UmurData } from '@/components/dashboard/UmurChart'
-import { KATEGORI_UMUR } from '@/components/dashboard/UmurChart'
-
-function hitungUmur(tanggalLahir: string): number {
-  const now = new Date()
-  const lahir = new Date(tanggalLahir + 'T00:00:00')
-  if (isNaN(lahir.getTime())) return 0
-  let age = now.getFullYear() - lahir.getFullYear()
-  const m = now.getMonth() - lahir.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < lahir.getDate())) age--
-  return Math.max(0, age)
-}
+import { KATEGORI_UMUR, umurDari } from '@/lib/umur'
 
 async function fetchUmurStats(): Promise<UmurData[]> {
   const snap = await getDocs(
@@ -224,8 +212,8 @@ async function fetchUmurStats(): Promise<UmurData[]> {
     label,
     color,
     jumlah: rows.filter((r) => {
-      if (!r.tanggal_lahir) return false
-      const umur = hitungUmur(r.tanggal_lahir)
+      // Umur dari lib/umur (sama dengan Daftar Penduduk); tanggal kosong/rusak = -1, tidak masuk kategori mana pun
+      const umur = umurDari(r.tanggal_lahir)
       return umur >= min && umur <= max
     }).length,
   }))

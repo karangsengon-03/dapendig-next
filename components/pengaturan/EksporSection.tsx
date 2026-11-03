@@ -1,8 +1,19 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Download, FileSpreadsheet, Loader2, CheckCircle2, BarChart3, ChevronDown } from 'lucide-react'
+import {
+  Download,
+  Loader2,
+  CircleCheck,
+  BarChart3,
+  Users,
+  ChevronDown,
+  type LucideIcon,
+} from 'lucide-react'
+import { PERISTIWA } from '@/lib/visual'
 import { Button } from '@/components/ui/button'
+import { hariIni } from '@/lib/tanggal-lokal'
+import { InBox } from '@/components/ui/field'
 import { useEksporData, type EksporKoleksi } from '@/hooks/useEkspor'
 import { exportToExcel, exportBulanan, type ExportColumn } from '@/lib/exportExcel'
 import { usePendudukList } from '@/hooks/usePenduduk'
@@ -143,6 +154,16 @@ const EKSPOR_LIST: EksporItem[] = [
   },
 ]
 
+// ── Ikon per koleksi (tampilan saja) ─────────────────────────────────────────
+
+const IKON: Record<EksporKoleksi, LucideIcon> = {
+  penduduk: Users,
+  lahir: PERISTIWA.kelahiran.Icon,
+  meninggal: PERISTIWA.kematian.Icon,
+  mutasi_keluar: PERISTIWA.pindah_keluar.Icon,
+  mutasi_masuk: PERISTIWA.pindah_masuk.Icon,
+}
+
 // ── Tombol ekspor satu koleksi ────────────────────────────────────────────────
 
 function EksporButton({ item }: { item: EksporItem }) {
@@ -159,7 +180,7 @@ function EksporButton({ item }: { item: EksporItem }) {
   useEffect(() => {
     if (triggered && data && !isFetching) {
       const { kolom, filename, sheetName } = itemRef.current
-      const today = new Date().toISOString().slice(0, 10)
+      const today = hariIni()
       exportToExcel(data, kolom, `${filename}-${today}`, sheetName).catch((err) => {
         console.error('Ekspor Excel gagal:', err)
       })
@@ -174,7 +195,7 @@ function EksporButton({ item }: { item: EksporItem }) {
     setDone(false)
     if (data && !isFetching) {
       // Data sudah di-cache — ekspor langsung tanpa fetch ulang
-      const today = new Date().toISOString().slice(0, 10)
+      const today = hariIni()
       exportToExcel(data, item.kolom, `${item.filename}-${today}`, item.sheetName).catch((err) => {
         console.error('Ekspor Excel gagal:', err)
       })
@@ -186,37 +207,38 @@ function EksporButton({ item }: { item: EksporItem }) {
   }
 
   const loading = isFetching && triggered
+  const Ikon = IKON[item.koleksi]
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-white/[0.06] last:border-0">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-200">{item.label}</p>
-        <p className="text-sm text-slate-500 mt-0.5">{item.deskripsi}</p>
+    <div className="a-mig">
+      <div
+        className="a-avatar"
+        style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--navy-100)', color: 'var(--navy-700)' }}
+      >
+        <Ikon className="i" style={{ fontSize: 19 }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <b>{item.label}</b>
+        <span className="mt">{item.deskripsi}</span>
         {isError && (
-          <p className="text-sm text-red-400 mt-0.5">Gagal mengambil data. Coba lagi.</p>
+          <span className="mt" style={{ color: 'var(--bad)' }}>Gagal mengambil data. Coba lagi.</span>
         )}
       </div>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={handleClick}
-        disabled={loading}
-        className="ml-4 shrink-0 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100"
-      >
+      <Button size="sm" variant="secondary" onClick={handleClick} disabled={loading}>
         {loading ? (
           <>
-            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+            <Loader2 className="i animate-spin" />
             Memuat...
           </>
         ) : done ? (
           <>
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-green-400" />
+            <CircleCheck className="i" style={{ color: 'var(--ok)' }} />
             Terunduh
           </>
         ) : (
           <>
-            <Download className="w-3.5 h-3.5 mr-1.5" />
-            Ekspor
+            <Download className="i" />
+            Ekspor Excel
           </>
         )}
       </Button>
@@ -255,33 +277,30 @@ function LaporanBulananSection() {
   }
 
   return (
-    <div className="mt-5 pt-4 border-t border-white/[0.06]">
-      <div className="flex items-center gap-2 mb-3">
-        <BarChart3 className="w-4 h-4 text-sky-400" />
-        <p className="text-sm font-semibold text-slate-200">Laporan Bulanan</p>
+    <div className="a-fs">
+      <div className="fh">
+        <h4>Laporan bulanan</h4>
+        <p>Ekspor laporan multi-sheet: rekap, mutasi, kelahiran, dan kematian untuk bulan tertentu.</p>
       </div>
-      <p className="text-sm text-slate-500 mb-3">Ekspor laporan multi-sheet: rekap, mutasi, kelahiran, dan kematian untuk bulan tertentu.</p>
-      <div className="flex items-center gap-2 flex-wrap">
-        <select
-          value={bulan}
-          onChange={(e) => setBulan(e.target.value)}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"
-        >
-          {BULAN_OPTS.map(([val, label]) => (
-            <option key={val} value={val}>{label}</option>
-          ))}
-        </select>
-        <select
-          value={tahun}
-          onChange={(e) => setTahun(e.target.value)}
-          className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50"
-        >
-          {tahunOptions.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-        <Button size="sm" variant="outline" onClick={handleEkspor} className="border-sky-600/40 text-sky-400 hover:bg-sky-500/10">
-          <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <InBox className="lap-sel">
+          <select aria-label="Bulan laporan" value={bulan} onChange={(e) => setBulan(e.target.value)}>
+            {BULAN_OPTS.map(([val, label]) => (
+              <option key={val} value={val}>{label}</option>
+            ))}
+          </select>
+          <ChevronDown className="i chev" />
+        </InBox>
+        <InBox className="lap-sel lap-th">
+          <select aria-label="Tahun laporan" value={tahun} onChange={(e) => setTahun(e.target.value)}>
+            {tahunOptions.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+          <ChevronDown className="i chev" />
+        </InBox>
+        <Button variant="secondary" onClick={handleEkspor}>
+          <BarChart3 className="i" />
           Ekspor Laporan
         </Button>
       </div>
@@ -289,37 +308,21 @@ function LaporanBulananSection() {
   )
 }
 
-// ── Komponen utama ────────────────────────────────────────────────────────────
+// ── Komponen utama (isi seksi "Ekspor data" di Pengaturan) ───────────────────
 
 export function EksporSection() {
-  const [open, setOpen] = useState(false)
-
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-100 text-sm">Ekspor Data</p>
-          <p className="text-sm text-slate-500 mt-0.5">Unduh data ke Excel (.xlsx)</p>
+    <>
+      <div className="a-fs">
+        <div className="fh">
+          <h4>Ekspor data</h4>
+          <p>Unduh data dalam format Excel (.xlsx)</p>
         </div>
-        <ChevronDown
-          size={15}
-          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-        <div className="px-5 pb-5 border-t border-white/[0.04]">
-          <div className="pt-3">
-            {EKSPOR_LIST.map((item) => (
-              <EksporButton key={item.koleksi} item={item} />
-            ))}
-          </div>
-          <LaporanBulananSection />
-        </div>
-      )}
-    </div>
+        {EKSPOR_LIST.map((item) => (
+          <EksporButton key={item.koleksi} item={item} />
+        ))}
+      </div>
+      <LaporanBulananSection />
+    </>
   )
 }

@@ -1,97 +1,93 @@
 'use client'
 
-import { Skeleton } from '@/components/ui/skeleton'
+import Link from 'next/link'
+import { Activity, ArchiveRestore, Pencil, Plus, Trash2, Undo2, type LucideIcon } from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { LogEntry } from '@/types'
 
 interface RecentActivityProps {
   logs: LogEntry[]
   loading?: boolean
+  /** Konten tambahan di bawah daftar (mis. aksi cepat Beranda). */
+  footer?: React.ReactNode
 }
 
-function formatRelative(ts: unknown): string {
-  if (!ts) return '—'
-  let d: Date
-  if (ts instanceof Timestamp) {
-    d = ts.toDate()
-  } else if (typeof ts === 'object' && ts !== null && 'seconds' in ts) {
-    d = new Date((ts as { seconds: number }).seconds * 1000)
-  } else {
-    return '—'
+const BLN3 = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+
+function keTanggal(ts: unknown): Date | null {
+  if (!ts) return null
+  if (ts instanceof Timestamp) return ts.toDate()
+  if (typeof ts === 'object' && ts !== null && 'seconds' in ts) {
+    return new Date((ts as { seconds: number }).seconds * 1000)
   }
+  return null
+}
 
-  const diff = Date.now() - d.getTime()
-  const mins = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-
+function formatWaktu(ts: unknown): string {
+  const d = keTanggal(ts)
+  if (!d) return '—'
+  const mins = Math.floor((Date.now() - d.getTime()) / 60000)
   if (mins < 1) return 'Baru saja'
   if (mins < 60) return `${mins} menit lalu`
+  const hours = Math.floor(mins / 60)
   if (hours < 24) return `${hours} jam lalu`
+  const days = Math.floor(hours / 24)
   if (days < 7) return `${days} hari lalu`
-
-  return d.toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+  return `${String(d.getDate()).padStart(2, '0')} ${BLN3[d.getMonth()]} ${d.getFullYear()}`
 }
 
-function aksiColor(aksi: string): string {
-  if (aksi.includes('Tambah') || aksi.includes('Catat') || aksi.includes('Masuk')) {
-    return 'bg-emerald-500/20 text-emerald-400'
-  }
-  if (aksi.includes('Edit') || aksi.includes('Update')) {
-    return 'bg-sky-500/20 text-sky-400'
-  }
-  if (aksi.includes('Hapus') || aksi.includes('Keluar') || aksi.includes('Meninggal')) {
-    return 'bg-rose-500/20 text-rose-400'
-  }
-  return 'bg-slate-500/20 text-slate-400'
+// Ikon + warna token per jenis aksi (padanan logIcon prototype; nilai aksi zip beragam, jadi dicocokkan longgar).
+function ikonAksi(aksi: string): [LucideIcon, 'ok' | 'info' | 'bad' | 'warn'] {
+  const a = (aksi ?? '').toLowerCase()
+  if (a.includes('pulih')) return [ArchiveRestore, 'ok']
+  if (a.includes('batal')) return [Undo2, 'warn']
+  if (a.includes('hapus') || a.includes('keluar') || a.includes('meninggal')) return [Trash2, 'bad']
+  if (a.includes('tambah') || a.includes('catat') || a.includes('masuk') || a.includes('lahir')) return [Plus, 'ok']
+  if (a.includes('edit') || a.includes('update') || a.includes('ubah')) return [Pencil, 'info']
+  return [Activity, 'info']
 }
 
-export function RecentActivity({ logs, loading }: RecentActivityProps) {
+export function RecentActivity({ logs, loading, footer }: RecentActivityProps) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4 flex flex-col gap-3">
-      <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
-        Aktivitas Terbaru
-      </p>
+    <div className="a-card p">
+      <div className="ch2">
+        <h3>Aktivitas terbaru</h3>
+        <Link href="/log" className="lnk2">Lihat semua</Link>
+      </div>
 
-      <div className="flex flex-col divide-y divide-white/[0.04]">
+      <div className="feed">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="py-3 flex items-start gap-3">
-              <Skeleton className="w-16 h-5 rounded-full flex-shrink-0" />
-              <div className="flex-1 flex flex-col gap-1.5">
-                <Skeleton className="h-3.5 w-3/4 rounded" />
-                <Skeleton className="h-3 w-1/3 rounded" />
+            <div key={i} className="fd">
+              <Skeleton style={{ width: 32, height: 32, borderRadius: 10, flex: 'none' }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <Skeleton style={{ height: 13, width: '75%' }} />
+                <Skeleton style={{ height: 11, width: '45%' }} />
               </div>
             </div>
           ))
         ) : logs.length === 0 ? (
-          <div className="py-8 text-center text-slate-600 text-sm">
-            Belum ada aktivitas
-          </div>
+          <p className="kosong">Belum ada aktivitas</p>
         ) : (
-          logs.map((log) => (
-            <div key={log.id} className="py-3 flex items-start gap-3">
-              <span
-                className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5 ${aksiColor(log.aksi)}`}
-              >
-                {log.aksi}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-300 leading-snug truncate">
-                  {log.keterangan || `NIK ${log.nik_target}`}
-                </p>
-                <p className="text-xs text-slate-600 mt-0.5">
-                  {log.oleh} · {formatRelative(log.ts)}
-                </p>
+          logs.map(log => {
+            const [Ikon, warna] = ikonAksi(log.aksi)
+            return (
+              <div key={log.id} className="fd">
+                <span className="fi" style={{ background: `var(--${warna}-bg)`, color: `var(--${warna})` }}>
+                  <Ikon className="i" style={{ fontSize: 15 }} />
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <b>{log.keterangan || `NIK ${log.nik_target}`}</b>
+                  <span>{log.aksi} · {formatWaktu(log.ts)} · {log.oleh}</span>
+                </div>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
+
+      {footer}
     </div>
   )
 }

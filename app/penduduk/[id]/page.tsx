@@ -1,36 +1,64 @@
 'use client'
 
+import { useState } from 'react'
+import { rt3 } from '@/lib/rt-rw'
+import { useDusunAktif } from '@/hooks/useDusunAktif'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Pencil, Trash2, User, LogOut, HeartCrack, History } from 'lucide-react'
+import {
+  Activity,
+  ArchiveRestore,
+  ArrowLeft,
+  Copy,
+  History,
+  Pencil,
+  Plus,
+  Printer,
+  Trash2,
+  Undo2,
+  User,
+  type LucideIcon,
+} from 'lucide-react'
+import { PERISTIWA } from '@/lib/visual'
+import { JkIkon } from '@/components/ui/jk-ikon'
 import { AppShell } from '@/components/layout/AppShell'
 import { DeleteDialog } from '@/components/penduduk/DeleteDialog'
 import { CatatPindahKeluarModal } from '@/components/penduduk/CatatPindahKeluarModal'
 import { CatatMeninggalModal } from '@/components/penduduk/CatatMeninggalModal'
 import { KKModal } from '@/components/penduduk/KKModal'
+import { CetakKKModal } from '@/components/penduduk/CetakKKModal'
 import { usePendudukDetail, useDeletePenduduk, usePendudukList } from '@/hooks/usePenduduk'
 import { useLogByNik } from '@/hooks/useLog'
 import { useAuthStore } from '@/store/authStore'
+import { useAppStore } from '@/store/appStore'
 import { useToast } from '@/components/ui/toast'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getInisial } from '@/components/ui/avatar'
 import { Timestamp } from 'firebase/firestore'
-import { useState } from 'react'
 
-function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
+// Kartu data berpasangan label–nilai (gaya prototype: .a-card.lift + .a-kvm)
+function KvCard({ title, items }: { title: string; items: { k: string; v: React.ReactNode; lebar?: boolean; mono?: boolean }[] }) {
   return (
-    <div className="flex flex-col gap-0.5 py-2.5 border-b border-white/[0.04] last:border-0">
-      <span className="text-sm font-semibold uppercase tracking-wider text-slate-600">{label}</span>
-      <span className="text-sm text-slate-200">{children}</span>
+    <div className="a-card lift">
+      <div className="ch"><div><h3>{title}</h3></div></div>
+      <div className="a-kvm" style={{ padding: '6px 20px 10px' }}>
+        {items.map(({ k, v, lebar, mono }) => (
+          <div key={k} className={`a-kv${lebar ? ' w' : ''}`}>
+            <p className="k">{k}</p>
+            <p className={`v${mono ? ' mn' : ''}`}>{v}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  'aktif': 'Aktif', 'tidak aktif': 'Tidak Aktif',
-  'meninggal': 'Meninggal', 'mutasi-keluar': 'Mutasi Keluar',
-}
-const STATUS_COLOR: Record<string, string> = {
-  'aktif': 'text-emerald-400', 'tidak aktif': 'text-slate-400',
-  'meninggal': 'text-rose-400', 'mutasi-keluar': 'text-orange-400',
+const STATUS_BADGE: Record<string, { label: string; kelas: string }> = {
+  'aktif': { label: 'Aktif', kelas: 'ok' },
+  'tidak aktif': { label: 'Tidak aktif', kelas: 'mute' },
+  'meninggal': { label: 'Meninggal', kelas: 'bad' },
+  'mutasi-keluar': { label: 'Pindah keluar', kelas: 'warn' },
 }
 
 function toProper(s: string) {
@@ -53,20 +81,32 @@ function formatWaktuRiwayat(ts: unknown): string {
   const d = tsToDate(ts)
   if (!d) return '—'
   return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) +
-    ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    ' · ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
 }
 
-function aksiColorRiwayat(aksi: string): string {
-  const a = aksi.toLowerCase()
-  if (a.includes('tambah') || a.includes('catat') || a.includes('masuk') || a.includes('lahir'))
-    return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
-  if (a.includes('edit') || a.includes('update') || a.includes('rollback'))
-    return 'bg-sky-500/15 text-sky-400 border-sky-500/20'
-  if (a.includes('hapus') || a.includes('meninggal') || a.includes('keluar'))
-    return 'bg-rose-500/15 text-rose-400 border-rose-500/20'
-  if (a.includes('pindah') || a.includes('mutasi'))
-    return 'bg-amber-500/15 text-amber-400 border-amber-500/20'
-  return 'bg-slate-500/15 text-slate-400 border-slate-500/20'
+// Aksi nyata yang ditulis hook ke koleksi `log` (huruf kecil). Label hanya untuk tiga aksi yang punya padanan di prototype
+// (Ditambahkan / Data diubah / Dihapus); aksi lain tampil apa adanya (garis bawah menjadi spasi).
+type Nada = 'ok' | 'info' | 'bad' | 'warn' | 'mute'
+const AKSI_META: Record<string, { label?: string; Icon: LucideIcon; nada: Nada }> = {
+  tambah: { label: 'Ditambahkan', Icon: Plus, nada: 'ok' },
+  edit: { label: 'Data diubah', Icon: Pencil, nada: 'info' },
+  hapus: { label: 'Dihapus', Icon: Trash2, nada: 'bad' },
+  hapus_permanen: { Icon: Trash2, nada: 'bad' },
+  restore: { Icon: ArchiveRestore, nada: 'ok' },
+  rollback: { Icon: Undo2, nada: 'warn' },
+  meninggal: { Icon: PERISTIWA.kematian.Icon, nada: PERISTIWA.kematian.nada },
+  mutasi_keluar: { Icon: PERISTIWA.pindah_keluar.Icon, nada: PERISTIWA.pindah_keluar.nada },
+}
+
+function metaAksi(aksi: string) {
+  const m = AKSI_META[aksi.toLowerCase()]
+  if (m) return { label: m.label ?? humanAksi(aksi), Icon: m.Icon, nada: m.nada }
+  return { label: humanAksi(aksi), Icon: Activity, nada: 'info' as Nada }
+}
+
+function humanAksi(aksi: string) {
+  const t = aksi.replace(/_/g, ' ').trim()
+  return t.charAt(0).toUpperCase() + t.slice(1)
 }
 
 function hitungUmur(tanggalLahir: string): string {
@@ -76,6 +116,7 @@ function hitungUmur(tanggalLahir: string): string {
 }
 
 export default function DetailPendudukPage() {
+  const { dusunDariRt } = useDusunAktif()
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
@@ -84,6 +125,7 @@ export default function DetailPendudukPage() {
   const { data: allPenduduk = [] } = usePendudukList()
   const deleteMutation = useDeletePenduduk()
   const { isAdmin, isOperator } = useAuthStore()
+  const { wilayah } = useAppStore()
   const { toast } = useToast()
   const { data: riwayat = [], isLoading: loadingRiwayat } = useLogByNik(data?.nik ?? '')
 
@@ -91,10 +133,14 @@ export default function DetailPendudukPage() {
   const [showCatatPindah, setShowCatatPindah] = useState(false)
   const [showCatatMeninggal, setShowCatatMeninggal] = useState(false)
   const [showKKModal, setShowKKModal] = useState(false)
+  const [showCetak, setShowCetak] = useState(false)
 
   const canEdit = isOperator()
   const canDelete = isAdmin()
   const isAktif = data?.status === 'aktif'
+
+  const anggotaKK = data ? allPenduduk.filter((p) => p.no_kk === data.no_kk) : []
+  const anggotaAktif = anggotaKK.filter((p) => p.status === 'aktif')
 
   async function handleDelete() {
     if (!data) return
@@ -107,207 +153,267 @@ export default function DetailPendudukPage() {
     }
   }
 
+  async function salin(nilai: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(nilai)
+      toast(`${label} tersalin`, 'success')
+    } catch {
+      toast(`Gagal menyalin ${label}`, 'error')
+    }
+  }
+
+  const tombolKembali = (
+    <Button type="button" variant="ghost" size="sm" className="back" onClick={() => router.back()}>
+      <ArrowLeft className="i" />
+      Kembali
+    </Button>
+  )
+
   return (
     <AppShell title="Detail Penduduk">
-      <div className="flex flex-col gap-4">
-        {/* Sub-header */}
-        <div className="flex items-center gap-2.5">
-          <button onClick={() => router.back()}
-            className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 shrink-0">
-            <ArrowLeft size={15} />
-          </button>
-          <h1 className="text-base font-semibold text-slate-100">
-            {isLoading ? <Skeleton className="h-5 w-40 rounded" /> : (data?.nama_lengkap ?? 'Detail Penduduk')}
-          </h1>
-        </div>
+      <>
+        {tombolKembali}
 
         {isLoading ? (
-          <div className="flex flex-col gap-2">
-            {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
-          </div>
-        ) : !data ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#0d1424] border border-white/[0.06] flex items-center justify-center">
-              <User size={24} className="text-slate-600" />
+          <>
+            <div className="a-hero2" aria-busy="true">
+              <div className="top">
+                <Skeleton className="av" style={{ width: 88, height: 88, borderRadius: 24, flex: 'none' }} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <Skeleton style={{ height: 28, width: '55%' }} />
+                  <Skeleton style={{ height: 22, width: '40%' }} />
+                  <Skeleton style={{ height: 18, width: '70%' }} />
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-slate-500">Data tidak ditemukan</p>
+            <div className="twocol">
+              <div className="col">
+                <Skeleton style={{ height: 260, borderRadius: 16 }} />
+                <Skeleton style={{ height: 200, borderRadius: 16 }} />
+              </div>
+              <div className="col">
+                <Skeleton style={{ height: 240, borderRadius: 16 }} />
+              </div>
+            </div>
+          </>
+        ) : !data ? (
+          <div className="a-card">
+            <div className="a-empty" style={{ padding: '70px 24px' }}>
+              <div className="em"><User className="i" style={{ fontSize: 30 }} /></div>
+              <h3>Data penduduk tidak ditemukan</h3>
+              <p>Data ini mungkin sudah dihapus atau dipindahkan ke Tempat Sampah.</p>
+              <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Button asChild variant="outline" style={{ marginTop: 0 }}>
+                  <Link href="/penduduk">Ke daftar penduduk</Link>
+                </Button>
+                <Button asChild style={{ marginTop: 0 }}>
+                  <Link href="/recycle-bin"><Trash2 className="i" />Buka Tempat Sampah</Link>
+                </Button>
+              </div>
+            </div>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Identitas */}
-              <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] px-4 py-1">
-                <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Identitas</p>
-                <DetailRow label="NIK">{data.nik || '—'}</DetailRow>
-                <DetailRow label="No. KK">
-                  {isAktif ? (
-                    <button onClick={() => setShowKKModal(true)}
-                      className="text-sky-400 underline underline-offset-2 hover:text-sky-300 transition-colors text-sm text-left">
-                      {data.no_kk || '—'}
-                    </button>
-                  ) : <>{data.no_kk || '—'}</>}
-                </DetailRow>
-                <DetailRow label="Nama Lengkap">{data.nama_lengkap}</DetailRow>
-                <DetailRow label="Hubungan Keluarga">{data.hubungan_keluarga}</DetailRow>
-                <DetailRow label="Nama Ayah">{data.nama_ayah || '—'}</DetailRow>
-                <DetailRow label="Nama Ibu">{data.nama_ibu || '—'}</DetailRow>
-                <DetailRow label="Status">
-                  <span className={STATUS_COLOR[data.status] ?? 'text-slate-200'}>
-                    {STATUS_LABEL[data.status] ?? data.status}
-                  </span>
-                </DetailRow>
-              </div>
-
-              {/* Data Diri */}
-              <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] px-4 py-1">
-                <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Data Diri</p>
-                <DetailRow label="Jenis Kelamin">{data.jenis_kelamin}</DetailRow>
-                <DetailRow label="Tempat, Tanggal Lahir">
-                  {`${toProper(data.tempat_lahir)}, ${formatTanggalLahir(data.tanggal_lahir)}`}
-                </DetailRow>
-                <DetailRow label="Umur">{hitungUmur(data.tanggal_lahir)}</DetailRow>
-                <DetailRow label="Agama">{data.agama}</DetailRow>
-                <DetailRow label="Pendidikan">{data.pendidikan}</DetailRow>
-                <DetailRow label="Pekerjaan">{data.pekerjaan}</DetailRow>
-                <DetailRow label="Status Perkawinan">{data.status_perkawinan}</DetailRow>
-              </div>
-
-              {/* Domisili */}
-              <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] px-4 py-1 md:col-span-2">
-                <p className="text-sm font-semibold uppercase tracking-wider text-sky-400/70 pt-3 pb-1">Domisili</p>
-                <div className="grid grid-cols-2">
-                  <DetailRow label="RT">{data.rt}</DetailRow>
-                  <DetailRow label="RW">{data.rw}</DetailRow>
+            {/* Hero: avatar, nama, status, NIK/No. KK, bar aksi */}
+            <div className="a-hero2">
+              <div className="top">
+                <div className={`a-avatar ${data.jenis_kelamin === 'Laki-laki' ? 'lk' : 'pr'} av`} aria-hidden="true">
+                  {getInisial(data.nama_lengkap)}
                 </div>
-                {data.alamat && (
-                  <DetailRow label="Alamat">{data.alamat}</DetailRow>
-                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <h2>{data.nama_lengkap}</h2>
+                    <span className={`a-badge ${STATUS_BADGE[data.status]?.kelas ?? 'mute'}`}>
+                      {STATUS_BADGE[data.status]?.label ?? data.status}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 9, flexWrap: 'wrap' }}>
+                    <span className={`a-badge nd ${data.hubungan_keluarga === 'Kepala Keluarga' ? 'info' : 'mute'}`}>
+                      {data.hubungan_keluarga}
+                    </span>
+                    <span className="a-badge nd mute">
+                      <JkIkon jk={data.jenis_kelamin} size={13} /> {data.jenis_kelamin}
+                      {hitungUmur(data.tanggal_lahir) !== '—' ? ` · ${hitungUmur(data.tanggal_lahir)}` : ''}
+                    </span>
+                    <span className="a-badge nd mute">RT {rt3(data.rt)}/RW {rt3(data.rw)}</span>
+                  </div>
+                  <div className="idr">
+                    <div>
+                      <span>NIK</span>
+                      <b>{data.nik || '—'}</b>
+                      {data.nik && (
+                        <button type="button" className="a-copy" aria-label="Salin NIK" onClick={() => salin(data.nik, 'NIK')}>
+                          <Copy className="i" />
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <span>No. KK</span>
+                      {isAktif ? (
+                        <>
+                          <button type="button" className="lkk lkk-btn" onClick={() => setShowKKModal(true)}>
+                            <b>{data.no_kk || '—'}</b>
+                          </button>
+                          <button type="button" className="lkk2 lkk-btn" onClick={() => setShowKKModal(true)}>
+                            Lihat {anggotaKK.length || ''} anggota →
+                          </button>
+                        </>
+                      ) : (
+                        <b>{data.no_kk || '—'}</b>
+                      )}
+                      {data.no_kk && (
+                        <button type="button" className="a-copy" aria-label="Salin No. KK" onClick={() => salin(data.no_kk, 'No. KK')}>
+                          <Copy className="i" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {(canEdit || canDelete || isAktif) && (
+                <div className="bar">
+                  {canEdit && (
+                    <Button asChild>
+                      <Link href={`/penduduk/${id}/edit`}><Pencil className="i" />Edit data</Link>
+                    </Button>
+                  )}
+                  {canEdit && isAktif && (
+                    <>
+                      <Button type="button" variant="outline" onClick={() => setShowCatatPindah(true)}>
+                        <PERISTIWA.pindah_keluar.Icon className="i" />Catat pindah
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => setShowCatatMeninggal(true)}>
+                        <PERISTIWA.kematian.Icon className="i" />Catat meninggal
+                      </Button>
+                    </>
+                  )}
+                  {isAktif && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setShowCetak(true)}
+                      disabled={anggotaAktif.length === 0}
+                    >
+                      <Printer className="i" />Cetak KK Sementara
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      style={{ marginLeft: 'auto' }}
+                      aria-label="Hapus data"
+                      onClick={() => setShowDelete(true)}
+                    >
+                      <Trash2 className="i" /><span className="hm">Hapus</span>
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Tombol aksi — Baris 1: Edit | Hapus, Baris 2: Catat Pindah | Catat Meninggal */}
-            {(canEdit || canDelete) && (
-              <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
-                <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Aksi</p>
-                <div className="flex flex-col gap-2">
-                  {/* Baris 1: Edit & Hapus */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {canEdit && (
-                      <button onClick={() => router.push(`/penduduk/${id}/edit`)}
-                        className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-colors">
-                        <Pencil size={14} className="shrink-0" />
-                        <span className="text-sm font-medium">Edit Data</span>
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button onClick={() => setShowDelete(true)}
-                        className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-colors">
-                        <Trash2 size={14} className="shrink-0" />
-                        <span className="text-sm font-medium">Hapus Data</span>
-                      </button>
-                    )}
+            <div className="twocol">
+              <div className="col">
+                <KvCard
+                  title="Data diri"
+                  items={[
+                    { k: 'Jenis kelamin', v: data.jenis_kelamin },
+                    { k: 'Umur', v: hitungUmur(data.tanggal_lahir) },
+                    { k: 'Tempat, tanggal lahir', v: `${toProper(data.tempat_lahir)}, ${formatTanggalLahir(data.tanggal_lahir)}`, lebar: true },
+                    { k: 'Agama', v: data.agama || '—' },
+                    { k: 'Status perkawinan', v: data.status_perkawinan || '—' },
+                    { k: 'Pendidikan', v: data.pendidikan || '—' },
+                    { k: 'Pekerjaan', v: data.pekerjaan || '—' },
+                  ]}
+                />
+                <KvCard
+                  title="Keluarga"
+                  items={[
+                    { k: 'Hubungan keluarga', v: data.hubungan_keluarga || '—' },
+                    { k: 'No. KK', v: <span style={{ color: 'var(--lk)' }}>{data.no_kk || '—'}</span>, mono: true },
+                    { k: 'Nama ayah', v: data.nama_ayah || '—' },
+                    { k: 'Nama ibu', v: data.nama_ibu || '—' },
+                  ]}
+                />
+                <KvCard
+                  title="Domisili"
+                  items={[
+                    { k: 'RT', v: rt3(data.rt) },
+                    { k: 'RW', v: rt3(data.rw) },
+                    { k: 'Dusun', v: dusunDariRt(data.rt) || '—' },
+                    { k: 'Alamat', v: data.alamat || '—', lebar: true },
+                  ]}
+                />
+              </div>
+
+              {/* ── Riwayat Perubahan Data ── */}
+              <div className="col">
+                <div className="a-card lift">
+                  <div className="ch">
+                    <div>
+                      <h3>Riwayat Perubahan Data</h3>
+                      <p>Aktivitas yang tercatat sejak sistem log aktif</p>
+                    </div>
+                    {!loadingRiwayat && <span className="a-badge nd mute sm">{riwayat.length} entri</span>}
                   </div>
-                  {/* Baris 2: Catat Pindah & Catat Meninggal */}
-                  {canEdit && isAktif && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <button onClick={() => setShowCatatPindah(true)}
-                        className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500/20 transition-colors">
-                        <LogOut size={14} className="shrink-0" />
-                        <span className="text-sm font-medium">Catat Pindah</span>
-                      </button>
-                      <button onClick={() => setShowCatatMeninggal(true)}
-                        className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-slate-500/10 border border-slate-500/20 text-slate-400 hover:bg-slate-500/20 transition-colors">
-                        <HeartCrack size={14} className="shrink-0" />
-                        <span className="text-sm font-medium">Catat Meninggal</span>
-                      </button>
+
+                  {loadingRiwayat ? (
+                    <div style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {[0, 1, 2].map((i) => <Skeleton key={i} style={{ height: 52 }} />)}
+                    </div>
+                  ) : riwayat.length === 0 ? (
+                    <div className="a-empty" style={{ padding: '36px 20px' }}>
+                      <div className="em" style={{ width: 56, height: 56, borderRadius: 18 }}>
+                        <History className="i" style={{ fontSize: 24 }} />
+                      </div>
+                      <h3 style={{ fontSize: 15.5 }}>Belum ada riwayat tercatat</h3>
+                      <p>Riwayat hanya tersedia untuk aktivitas setelah sistem log aktif</p>
+                    </div>
+                  ) : (
+                    <div className="a-tl" style={{ padding: '18px 20px 20px' }}>
+                      {riwayat.map((log) => {
+                        const { label, Icon, nada } = metaAksi(log.aksi)
+                        return (
+                          <div key={log.id} className="a-tli">
+                            <div className={`pt ${nada}`}><Icon className="i" style={{ fontSize: 11 }} /></div>
+                            <div className="tx">
+                              <b>{label}</b>
+                              {log.keterangan && <p>{log.keterangan}</p>}
+                              <span>{formatWaktuRiwayat(log.ts)} · oleh {log.oleh}</span>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
               </div>
-            )}
-            {/* ── Riwayat Perubahan Data ── */}
-            <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
-                  <History size={14} className="text-sky-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-200">Riwayat Perubahan Data</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Aktivitas yang tercatat sejak sistem log aktif</p>
-                </div>
-                {!loadingRiwayat && (
-                  <span className="text-xs text-slate-500 bg-white/[0.04] border border-white/[0.06] rounded-lg px-2 py-1 shrink-0">
-                    {riwayat.length} entri
-                  </span>
-                )}
-              </div>
-
-              {loadingRiwayat ? (
-                <div className="space-y-2">
-                  {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
-                </div>
-              ) : riwayat.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
-                    <History size={18} className="text-slate-600" />
-                  </div>
-                  <p className="text-sm text-slate-500 text-center">Belum ada riwayat tercatat</p>
-                  <p className="text-xs text-slate-600 text-center max-w-[220px]">
-                    Riwayat hanya tersedia untuk aktivitas setelah sistem log aktif
-                  </p>
-                </div>
-              ) : (
-                <div className="relative">
-                  {/* Garis timeline vertikal */}
-                  <div className="absolute left-[15px] top-2 bottom-2 w-px bg-white/[0.06]" />
-                  <div className="space-y-3">
-                    {riwayat.map((log, idx) => (
-                      <div key={log.id} className="flex gap-3">
-                        {/* Titik timeline */}
-                        <div className="shrink-0 w-8 flex justify-center">
-                          <div className={`w-2 h-2 rounded-full mt-2 border ${
-                            idx === 0 ? 'bg-sky-400 border-sky-400' : 'bg-slate-600 border-slate-600'
-                          }`} />
-                        </div>
-                        {/* Konten */}
-                        <div className="flex-1 min-w-0 bg-white/[0.02] border border-white/[0.05] rounded-xl px-3 py-2.5">
-                          <div className="flex items-start justify-between gap-2 flex-wrap">
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${aksiColorRiwayat(log.aksi)}`}>
-                              {log.aksi}
-                            </span>
-                            <span className="text-xs text-slate-600 shrink-0">{formatWaktuRiwayat(log.ts)}</span>
-                          </div>
-                          {log.keterangan && (
-                            <p className="text-sm text-slate-300 mt-1.5 leading-snug">{log.keterangan}</p>
-                          )}
-                          <p className="text-xs text-slate-600 mt-1">oleh {log.oleh}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </>
         )}
-      </div>
 
-      <DeleteDialog open={showDelete} nama={data?.nama_lengkap ?? ''} loading={deleteMutation.isPending}
-        onConfirm={handleDelete} onCancel={() => setShowDelete(false)} />
-      {showCatatPindah && data && (
-        <CatatPindahKeluarModal penduduk={data} allPenduduk={allPenduduk} onClose={() => setShowCatatPindah(false)}
-          onSuccess={() => { setShowCatatPindah(false); router.refresh() }} />
-      )}
-      {showCatatMeninggal && data && (
-        <CatatMeninggalModal penduduk={data} allPenduduk={allPenduduk}
-          onClose={() => setShowCatatMeninggal(false)}
-          onSuccess={() => { setShowCatatMeninggal(false); router.refresh() }} />
-      )}
-      {showKKModal && data && (
-        <KKModal noKk={data.no_kk} allPenduduk={allPenduduk}
-          onClose={() => setShowKKModal(false)}
-          onNavigate={(targetId) => router.push(`/penduduk/${targetId}`)} />
-      )}
+        <DeleteDialog open={showDelete} nama={data?.nama_lengkap ?? ''} loading={deleteMutation.isPending}
+          onConfirm={handleDelete} onCancel={() => setShowDelete(false)} />
+        {showCatatPindah && data && (
+          <CatatPindahKeluarModal penduduk={data} allPenduduk={allPenduduk} onClose={() => setShowCatatPindah(false)}
+            onSuccess={() => { setShowCatatPindah(false); router.refresh() }} />
+        )}
+        {showCatatMeninggal && data && (
+          <CatatMeninggalModal penduduk={data} allPenduduk={allPenduduk}
+            onClose={() => setShowCatatMeninggal(false)}
+            onSuccess={() => { setShowCatatMeninggal(false); router.refresh() }} />
+        )}
+        {showKKModal && data && (
+          <KKModal noKk={data.no_kk} allPenduduk={allPenduduk}
+            onClose={() => setShowKKModal(false)}
+            onNavigate={(targetId) => router.push(`/penduduk/${targetId}`)} />
+        )}
+        {showCetak && data && (
+          <CetakKKModal noKk={data.no_kk} anggota={anggotaAktif} wilayah={wilayah}
+            onClose={() => setShowCetak(false)} />
+        )}
+      </>
     </AppShell>
   )
 }

@@ -13,6 +13,7 @@
  */
 
 import ExcelJS from 'exceljs'
+import { rt3 } from '@/lib/rt-rw'
 
 export interface ExportColumn {
   key: string
@@ -103,7 +104,7 @@ export async function exportToExcel(
   sheetName = 'Data'
 ): Promise<void> {
   const header = columns.map((c) => c.header)
-  const body = rows.map((row) => columns.map((c) => formatCellValue(row[c.key])))
+  const body = rows.map((row) => columns.map((c) => formatCellValue(c.key === 'rt' || c.key === 'rw' ? rt3(row[c.key] as string) : row[c.key])))
 
   const wb = new ExcelJS.Workbook()
   addAoaSheet(wb, sheetName, header, body)
@@ -175,7 +176,7 @@ export async function exportBulanan(data: DataBulanan, bulan: string, tahun: str
   if (lh.length > 0) {
     addAoaSheet(wb, 'Kelahiran',
       ['Nama Bayi', 'JK', 'Tgl Lahir', 'Nama Ibu', 'Nama Ayah', 'RT', 'RW'],
-      lh.map((r) => [r.nama_lengkap, r.jenis_kelamin, toDisplayDate(r.tanggal_lahir), r.nama_ibu, r.nama_ayah, r.rt, r.rw])
+      lh.map((r) => [r.nama_lengkap, r.jenis_kelamin, toDisplayDate(r.tanggal_lahir), r.nama_ibu, r.nama_ayah, rt3(r.rt), rt3(r.rw)])
     )
   }
 

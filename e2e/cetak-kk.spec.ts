@@ -15,14 +15,17 @@ test.describe('Cetak KK Sementara — Tanggal Cetak bisa diubah (fitur v2.7.2)',
 
   test('input tanggal cetak default ke hari ini dan bisa diubah manual', async ({ page }) => {
     await page.goto('/penduduk')
-    // Buka detail penduduk pertama di tabel, lalu buka modal Cetak KK
+    // Buka detail penduduk pertama di tabel, buka modal KK lewat No. KK, lalu klik "Cetak KK Sementara"
     await page.locator('table tbody tr').first().click()
+    await page.locator('button.lkk-btn').first().click()
     await page.getByRole('button', { name: /cetak kk sementara/i }).click()
 
     const inputTanggal = page.locator('#tgl-cetak-kk')
     await expect(inputTanggal).toBeVisible()
 
-    const hariIni = new Date().toISOString().slice(0, 10)
+    // Tanggal LOKAL (aplikasi memakai zona waktu perangkat), bukan toISOString() yang UTC
+    const d = new Date()
+    const hariIni = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     await expect(inputTanggal).toHaveValue(hariIni)
 
     // Ubah ke tanggal lain — verifikasi input menerima perubahan
@@ -33,6 +36,7 @@ test.describe('Cetak KK Sementara — Tanggal Cetak bisa diubah (fitur v2.7.2)',
   test('klik Unduh PDF A4 memicu event download sungguhan', async ({ page }) => {
     await page.goto('/penduduk')
     await page.locator('table tbody tr').first().click()
+    await page.locator('button.lkk-btn').first().click()
     await page.getByRole('button', { name: /cetak kk sementara/i }).click()
 
     // Playwright waitForEvent('download') menangkap download NYATA dari

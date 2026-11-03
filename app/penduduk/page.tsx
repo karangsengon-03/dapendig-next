@@ -1,26 +1,41 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
+import { rt3 } from '@/lib/rt-rw'
+import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Users } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Download, Upload } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Button } from '@/components/ui/button'
 import { PendudukTable } from '@/components/penduduk/PendudukTable'
-import { PendudukFilter, type FilterState } from '@/components/penduduk/PendudukFilter'
+import { PendudukFilter, adaFilterAktif, FILTER_AWAL, type FilterState } from '@/components/penduduk/PendudukFilter'
 import { usePendudukList } from '@/hooks/usePenduduk'
+import { useDusunAktif } from '@/hooks/useDusunAktif'
+import { PENDIDIKAN } from '@/lib/penduduk-constants'
+import { cocokRentangUmur, kunciRentangSah } from '@/lib/umur'
+import { useAuthStore } from '@/store/authStore'
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const
 
-const DEFAULT_FILTER: FilterState = {
-  search: '',
-  rt: '',
-  jenisKelamin: '',
-  agama: '',
-  statusPerkawinan: '',
-  pekerjaan: '',
-  pendidikan: '',
-  sortBy: 'rt_kk',
-  sortDir: 'asc',
-  status: 'aktif',
+// Satu sumber nilai awal filter (FILTER_AWAL di PendudukFilter) supaya penambahan filter tidak perlu diubah di dua tempat.
+const DEFAULT_FILTER: FilterState = FILTER_AWAL
+
+// Param URL (dari klik di Beranda dan Monografi): ?rt= &dusun= &umur=0-4 &agama= &pekerjaan= &pendidikan= &statusPerkawinan= &status=
+const PARAM_FILTER = ['rt', 'dusun', 'umur', 'agama', 'pekerjaan', 'pendidikan', 'statusPerkawinan', 'status'] as const
+
+function filterDariUrl(sp: { get: (k: string) => string | null }): FilterState {
+  return {
+    ...DEFAULT_FILTER,
+    rt: sp.get('rt') ?? '',
+    dusun: sp.get('dusun') ?? '',
+    umur: kunciRentangSah(sp.get('umur')),
+    agama: sp.get('agama') ?? '',
+    pekerjaan: sp.get('pekerjaan') ?? '',
+    pendidikan: sp.get('pendidikan') ?? '',
+    statusPerkawinan: sp.get('statusPerkawinan') ?? '',
+    status: sp.get('status') ?? 'aktif',
+  }
 }
 
 // Urutan hubungan keluarga yang benar untuk sorting dalam 1 KK
@@ -41,13 +56,12 @@ function PendudukContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { data: allData = [], isLoading } = usePendudukList()
+  const { dusunDariRt } = useDusunAktif()
 
   // Tandai apakah filter berasal dari URL params (navigasi dari monografi)
   // Jika iya, JANGAN simpan ke sessionStorage agar tidak ter-restore saat kembali ke
   // halaman ini tanpa URL params (pindah menu lain lalu kembali)
-  const hasUrlParams = ['agama','pekerjaan','pendidikan','statusPerkawinan','status'].some(
-    (k) => searchParams.get(k) !== null
-  )
+  const hasUrlParams = PARAM_FILTER.some((k) => searchParams.get(k) !== null)
 
   // Ref untuk track apakah filter ini berasal dari monografi (URL params)
   // sehingga kita tidak menyimpannya ke sessionStorage
@@ -56,14 +70,7 @@ function PendudukContent() {
   const [filter, setFilter] = useState<FilterState>(() => {
     if (hasUrlParams) {
       // Filter dari monografi — terapkan langsung, tidak dari sessionStorage
-      return {
-        ...DEFAULT_FILTER,
-        agama: searchParams.get('agama') ?? '',
-        pekerjaan: searchParams.get('pekerjaan') ?? '',
-        pendidikan: searchParams.get('pendidikan') ?? '',
-        statusPerkawinan: searchParams.get('statusPerkawinan') ?? '',
-        status: searchParams.get('status') ?? 'aktif',
-      }
+      return filterDariUrl(searchParams)
     }
     // Restore dari sessionStorage hanya jika tidak ada URL params
     if (typeof window !== 'undefined') {
@@ -101,14 +108,7 @@ function PendudukContent() {
   useEffect(() => {
     if (!hasUrlParams) return
     isFromMonografiRef.current = true
-    setFilter({ // eslint-disable-line react-hooks/set-state-in-effect
-      ...DEFAULT_FILTER,
-      agama: searchParams.get('agama') ?? '',
-      pekerjaan: searchParams.get('pekerjaan') ?? '',
-      pendidikan: searchParams.get('pendidikan') ?? '',
-      statusPerkawinan: searchParams.get('statusPerkawinan') ?? '',
-      status: searchParams.get('status') ?? 'aktif',
-    })
+    setFilter(filterDariUrl(searchParams)) // eslint-disable-line react-hooks/set-state-in-effect
     setPage(1)
     // Hapus URL params tanpa reload — agar filter tidak sticky di URL
     router.replace('/penduduk', { scroll: false })
@@ -148,6 +148,11 @@ function PendudukContent() {
 
   const agamaOptions = useMemo(() => ([...new Set((baseData.map(r => r.agama) as string[]).filter(Boolean))]).sort(), [baseData])
   const pekerjaanOptions = useMemo(() => ([...new Set((baseData.map(r => r.pekerjaan) as string[]).filter(Boolean))]).sort(), [baseData])
+  // Pendidikan: urutan jenjang (bukan abjad); nilai lama di luar daftar baku ditaruh di akhir
+  const pendidikanOptions = useMemo(() => {
+    const ada = new Set((baseData.map(r => r.pendidikan) as string[]).filter(Boolean))
+    return [...PENDIDIKAN, ...[...ada].filter(p => !(PENDIDIKAN as readonly string[]).includes(p)).sort()]
+  }, [baseData])
 
   // Total untuk counter — hanya data yang statusnya sesuai filter aktif (bukan semua allData)
   const totalForCounter = useMemo(() => {
@@ -158,8 +163,10 @@ function PendudukContent() {
   const filtered = useMemo(() => {
     let rows = [...allData]
     if (filter.status) rows = rows.filter((r) => r.status === filter.status)
-    if (filter.rt) rows = rows.filter((r) => r.rt === filter.rt)
+    if (filter.rt) rows = rows.filter((r) => rt3(r.rt) === rt3(filter.rt))
+    if (filter.dusun) rows = rows.filter((r) => dusunDariRt(r.rt) === filter.dusun)
     if (filter.jenisKelamin) rows = rows.filter((r) => r.jenis_kelamin === filter.jenisKelamin)
+    if (filter.umur) rows = rows.filter((r) => cocokRentangUmur(r.tanggal_lahir, filter.umur))
     if (filter.agama) rows = rows.filter((r) => r.agama === filter.agama)
     if (filter.statusPerkawinan) rows = rows.filter((r) => r.status_perkawinan === filter.statusPerkawinan)
     if (filter.pekerjaan) rows = rows.filter((r) => r.pekerjaan === filter.pekerjaan)
@@ -199,9 +206,16 @@ function PendudukContent() {
       })
     }
     return rows
-  }, [allData, filter])
+  }, [allData, filter, dusunDariRt])
 
   const totalPages = Math.ceil(filtered.length / pageSize) || 1
+  const { isAdmin } = useAuthStore()
+
+  // Ringkasan header (dari data yang sudah dimuat): penduduk aktif dan jumlah KK-nya
+  const ringkasan = useMemo(() => {
+    const aktif = allData.filter(r => r.status === 'aktif')
+    return { jiwa: aktif.length, kk: new Set(aktif.map(r => r.no_kk).filter(Boolean)).size }
+  }, [allData])
 
   function handleFilter(f: FilterState) {
     // User mengubah filter secara manual — ini bukan lagi filter dari monografi
@@ -211,12 +225,39 @@ function PendudukContent() {
     setPage(1)
   }
 
+  const dari = filtered.length ? (page - 1) * pageSize + 1 : 0
+  const sampai = Math.min(filtered.length, page * pageSize)
+  const nomor = nomorHalaman(page, totalPages)
+
+  const pilihUkuran = (
+    <div className="a-in sm perp">
+      <select
+        aria-label="Jumlah per halaman"
+        value={pageSize}
+        onChange={e => { setPageSize(Number(e.target.value) as 25 | 50 | 100); setPage(1) }}
+      >
+        {PAGE_SIZE_OPTIONS.map(s => <option key={s} value={s}>{s} per halaman</option>)}
+      </select>
+      <ChevronDown className="i chev" />
+    </div>
+  )
+
   return (
-    <div className="h-full flex flex-col gap-3">
-      <div className="flex items-center gap-2.5">
-        <Users size={18} className="text-sky-400 shrink-0" />
-        <h1 className="text-base font-semibold text-slate-100">Data Penduduk</h1>
-      </div>
+    <div className="flex-1 min-h-0 flex flex-col">
+      <PageHeader
+        title="Data penduduk"
+        description={isLoading ? 'Memuat data penduduk…' : `${ringkasan.jiwa.toLocaleString('id-ID')} penduduk aktif di ${ringkasan.kk.toLocaleString('id-ID')} kepala keluarga`}
+        action={isAdmin() ? (
+          <>
+            <Button asChild variant="outline">
+              <Link href="/pengaturan?bagian=impor" title="Impor Excel ada di Pengaturan"><Upload className="i" /><span className="hm">Impor</span></Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/pengaturan?bagian=ekspor" title="Ekspor Excel ada di Pengaturan"><Download className="i" /><span className="hm">Ekspor Excel</span></Link>
+            </Button>
+          </>
+        ) : undefined}
+      />
 
       <PendudukFilter
         filter={filter}
@@ -225,47 +266,86 @@ function PendudukContent() {
         filtered={filtered.length}
         agamaOptions={agamaOptions}
         pekerjaanOptions={pekerjaanOptions}
+        pendidikanOptions={pendidikanOptions}
       />
 
-      <div className="flex-1 min-h-0 rounded-2xl border border-white/[0.06] bg-[#0d1424] overflow-hidden">
-        <PendudukTable data={filtered} loading={isLoading} page={page} pageSize={pageSize} />
+      {/* Desktop: tabel */}
+      <div className="a-tw only-d" style={{ marginTop: 12, flex: 1, minHeight: 0 }}>
+        <div style={{ overflow: 'auto', flex: 1, minHeight: 0 }}>
+          <PendudukTable
+            data={filtered} loading={isLoading} page={page} pageSize={pageSize}
+            tampilan="tabel" onReset={adaFilterAktif(filter) ? () => handleFilter({ ...DEFAULT_FILTER }) : undefined}
+          />
+        </div>
+        {!isLoading && filtered.length > 0 && (
+          <div className="a-pg">
+            <span>
+              Menampilkan <b style={{ color: 'var(--ink)' }}>{dari.toLocaleString('id-ID')}–{sampai.toLocaleString('id-ID')}</b> dari{' '}
+              <b style={{ color: 'var(--ink)' }}>{filtered.length.toLocaleString('id-ID')}</b> penduduk
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              {pilihUkuran}
+              <span>Hal {page} / {totalPages}</span>
+              <div className="pgs">
+                <button type="button" className="ar" aria-label="Halaman sebelumnya"
+                  onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+                  <ChevronLeft className="i" style={{ fontSize: 15 }} />
+                </button>
+                {nomor.map((n, i) => n === '…'
+                  ? <button key={`e${i}`} type="button" style={{ color: 'var(--ink-3)', pointerEvents: 'none' }} tabIndex={-1}>…</button>
+                  : <button key={n} type="button" className={n === page ? 'on' : ''} aria-current={n === page ? 'page' : undefined}
+                      onClick={() => setPage(n)}>{n}</button>)}
+                <button type="button" className="ar" aria-label="Halaman berikutnya"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                  <ChevronRight className="i" style={{ fontSize: 15 }} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {!isLoading && filtered.length > 0 && (
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs text-slate-500">Tampil</span>
-            {PAGE_SIZE_OPTIONS.map((s) => (
-              <button key={s} onClick={() => { setPageSize(s); setPage(1) }}
-                className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
-                  pageSize === s
-                    ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                    : 'bg-white/[0.04] text-slate-500 border border-white/[0.06] hover:text-slate-300'
-                }`}
-              >{s}</button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs text-slate-500">Hal {page} / {totalPages}</span>
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-              className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors">
-              <ChevronLeft size={14} />
-            </button>
-            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-400 hover:text-slate-200 disabled:opacity-30 transition-colors">
-              <ChevronRight size={14} />
-            </button>
-          </div>
-        </div>
-      )}
+      {/* HP: kartu */}
+      <div className="only-m" style={{ marginTop: 12, flex: 1, minHeight: 0, overflow: 'auto' }}>
+        <PendudukTable
+          data={filtered} loading={isLoading} page={page} pageSize={pageSize}
+          tampilan="kartu" onReset={adaFilterAktif(filter) ? () => handleFilter({ ...DEFAULT_FILTER }) : undefined}
+        />
+        {!isLoading && filtered.length > 0 && (
+          <>
+            <div className="mpg">
+              <Button type="button" variant="outline" size="sm" disabled={page === 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}>
+                <ChevronLeft className="i" />Sebelumnya
+              </Button>
+              <span>Hal {page} / {totalPages}</span>
+              <Button type="button" variant="outline" size="sm" disabled={page === totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
+                Berikutnya<ChevronRight className="i" />
+              </Button>
+            </div>
+            <div className="mpg" style={{ justifyContent: 'center' }}>{pilihUkuran}</div>
+          </>
+        )}
+      </div>
     </div>
   )
+}
+
+// Nomor halaman ringkas: 1 … (sekarang-1) sekarang (sekarang+1) … terakhir
+function nomorHalaman(page: number, total: number): (number | '…')[] {
+  const hasil: (number | '…')[] = []
+  for (let p = 1; p <= total; p++) {
+    if (p === 1 || p === total || Math.abs(p - page) <= 1) hasil.push(p)
+    else if (hasil[hasil.length - 1] !== '…') hasil.push('…')
+  }
+  return hasil
 }
 
 export default function PendudukPage() {
   return (
     <AppShell title="Data Penduduk" fullHeight>
-      <Suspense fallback={<div className="text-slate-500 text-sm">Memuat...</div>}>
+      <Suspense fallback={<div style={{ color: 'var(--ink-3)', fontSize: 14 }}>Memuat...</div>}>
         <PendudukContent />
       </Suspense>
     </AppShell>

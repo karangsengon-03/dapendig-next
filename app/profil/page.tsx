@@ -1,261 +1,240 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { User, Lock, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react'
+import { useState } from 'react'
+import { Eye, EyeOff, KeyRound, Lock, Save, ShieldCheck, User, CircleAlert, CircleCheck } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { ROLE_LABEL } from '@/components/layout/nav'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Field, InBox } from '@/components/ui/field'
 import { useAuthStore } from '@/store/authStore'
 import { useUpdateNama, useGantiPassword } from '@/hooks/useProfile'
 import { getInisial } from '@/lib/utils'
 
-// ── Status kecil: sukses / error ─────────────────────────────────────────────
+type Status = { ok: boolean; msg: string }
 
-function StatusMsg({ ok, msg }: { ok: boolean; msg: string }) {
+// ── Status kecil: sukses / galat (pesan persis zip) ───────────────────────────
+function StatusMsg({ ok, msg }: Status) {
   return (
-    <div
-      className={`flex items-center gap-2.5 text-sm rounded-lg px-3 py-2 ${
-        ok
-          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-          : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
-      }`}
-    >
-      {ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
-      <span>{msg}</span>
+    <div className={`a-alert ${ok ? 'ok' : 'bad'}`} role={ok ? 'status' : 'alert'}>
+      {ok ? <CircleCheck className="i" /> : <CircleAlert className="i" />}
+      <div>{msg}</div>
     </div>
   )
 }
 
-// ── Form Edit Nama ────────────────────────────────────────────────────────────
+// ── Isian kata sandi dengan tombol tampil/sembunyi ────────────────────────────
+function SandiField({
+  id, label, ikon, value, onChange, autoComplete, hint, salah,
+}: {
+  id: string; label: string; ikon: React.ReactNode
+  value: string; onChange: (v: string) => void
+  autoComplete: string; hint?: string; salah?: boolean
+}) {
+  const [lihat, setLihat] = useState(false)
+  return (
+    <Field label={label} htmlFor={id} req hint={hint}>
+      <InBox icon={ikon} error={salah}>
+        <input
+          placeholder="••••••••"
+          id={id}
+          type={lihat ? 'text' : 'password'}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+        />
+        <button
+          type="button"
+          className="pwt"
+          onClick={() => setLihat((v) => !v)}
+          aria-label={lihat ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+        >
+          {lihat ? <EyeOff className="i" /> : <Eye className="i" />}
+        </button>
+      </InBox>
+    </Field>
+  )
+}
 
+// ── Form Informasi Akun (ubah nama) ───────────────────────────────────────────
 function EditNamaForm() {
-  const { user } = useAuthStore()
-  const [nama, setNama] = useState(user?.nama ?? '')
-  const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(null)
+  const { user, isAdmin } = useAuthStore()
+  // Rules: users/{uid} hanya boleh ditulis admin → peran lain tidak ditawari aksi yang pasti ditolak
+  const bisaUbah = isAdmin()
+  // Nilai ketikan; null = ikut nama tersimpan di sesi.
+  const [ketik, setKetik] = useState<string | null>(null)
+  const nama = ketik ?? user?.nama ?? ''
+  const [status, setStatus] = useState<Status | null>(null)
   const { mutate, isPending } = useUpdateNama()
 
-  useEffect(() => {
-    const nama = user?.nama ?? ''
-    setTimeout(() => setNama(nama), 0)
-  }, [user?.nama])
-
   function handleSave() {
-    if (!nama.trim()) return
+    if (!bisaUbah || !nama.trim()) return
     setStatus(null)
     mutate(nama.trim(), {
-      onSuccess: () => setStatus({ ok: true, msg: 'Nama berhasil diperbarui.' }),
+      onSuccess: () => { setKetik(null); setStatus({ ok: true, msg: 'Nama berhasil diperbarui.' }) },
       onError: () => setStatus({ ok: false, msg: 'Gagal menyimpan. Coba lagi.' }),
     })
   }
 
-  const [open, setOpen] = useState(false)
-
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <User className="w-4 h-4 text-sky-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-100 text-sm">Informasi Akun</p>
-          <p className="text-xs text-slate-500 mt-0.5">Email, role, dan nama lengkap</p>
-        </div>
-        <ChevronDown
-          size={15}
-          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4 space-y-4">
-      <div className="space-y-3">
-        {/* Email — read only */}
+    <form className="a-card" noValidate onSubmit={(e) => { e.preventDefault(); handleSave() }}>
+      <div className="ch">
         <div>
-          <Label>Email</Label>
-          <Input value={user?.email ?? ''} readOnly disabled className="opacity-60 cursor-not-allowed" />
-          <p className="text-xs text-slate-600 mt-1">Email tidak dapat diubah.</p>
-        </div>
-
-        {/* Role — read only */}
-        <div>
-          <Label>Role</Label>
-          <Input
-            value={user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
-            readOnly
-            disabled
-            className="opacity-60 cursor-not-allowed"
-          />
-        </div>
-
-        {/* Nama */}
-        <div>
-          <Label>Nama Lengkap</Label>
-          <Input
-            value={nama}
-            onChange={(e) => { setNama(e.target.value); setStatus(null) }}
-            placeholder="Masukkan nama lengkap"
-            maxLength={80}
-          />
+          <h3>Informasi akun</h3>
+          <p>Email, peran, dan nama lengkap · nama tampil di log aktivitas</p>
         </div>
       </div>
-
-      {status && <StatusMsg ok={status.ok} msg={status.msg} />}
-
-      <div className="flex justify-end">
-        <Button size="sm" onClick={handleSave} disabled={isPending || !nama.trim()}>
-          {isPending ? 'Menyimpan...' : 'Simpan Nama'}
+      <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <Field label="Nama lengkap" htmlFor="pf-nama" req hint={bisaUbah ? undefined : 'Nama hanya dapat diubah oleh admin.'}>
+          <InBox icon={<User className="i" />} className={bisaUbah ? undefined : 'ph'}>
+            <input
+              placeholder="Masukkan nama lengkap"
+              id="pf-nama"
+              type="text"
+              value={nama}
+              maxLength={80}
+              onChange={(e) => { setKetik(e.target.value); setStatus(null) }}
+              autoComplete="off"
+              readOnly={!bisaUbah}
+              disabled={!bisaUbah}
+            />
+          </InBox>
+        </Field>
+        <Field label="Email" htmlFor="pf-email" hint="Email tidak dapat diubah.">
+          <InBox icon={<Lock className="i" />} className="ph">
+            <input id="pf-email" type="text" value={user?.email ?? ''} readOnly disabled />
+          </InBox>
+        </Field>
+        <div className="a-field">
+          <label>Peran</label>
+          <div>
+            <span className="a-badge info">{user?.role ? ROLE_LABEL[user.role] ?? user.role : '—'}</span>
+          </div>
+        </div>
+        {status && <StatusMsg ok={status.ok} msg={status.msg} />}
+        <Button type="submit" disabled={isPending || !nama.trim() || !bisaUbah} style={{ alignSelf: 'flex-start' }}>
+          <Save className="i" />{isPending ? 'Menyimpan...' : 'Simpan nama'}
         </Button>
       </div>
-      </div>
-      )}
-    </div>
+    </form>
   )
 }
 
-// ── Form Ganti Password ───────────────────────────────────────────────────────
+// ── Form Ganti Kata Sandi ─────────────────────────────────────────────────────
+type KolomSandi = 'lama' | 'baru' | 'konfirmasi'
 
 function GantiPasswordForm() {
   const [form, setForm] = useState({ lama: '', baru: '', konfirmasi: '' })
-  const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [status, setStatus] = useState<Status | null>(null)
+  // Kolom yang diberi tanda galat (pesan tetap satu, persis zip)
+  const [kolom, setKolom] = useState<KolomSandi | null>(null)
   const { mutate, isPending } = useGantiPassword()
 
-  function set(field: string, value: string) {
+  function set(field: KolomSandi, value: string) {
     setForm((p) => ({ ...p, [field]: value }))
     setStatus(null)
+    setKolom(null)
+  }
+
+  function gagal(msg: string, k: KolomSandi | null = null) {
+    setStatus({ ok: false, msg })
+    setKolom(k)
   }
 
   function handleSave() {
     if (!form.lama || !form.baru || !form.konfirmasi) {
-      setStatus({ ok: false, msg: 'Semua field wajib diisi.' })
+      gagal('Semua field wajib diisi.')
       return
     }
     if (form.baru.length < 6) {
-      setStatus({ ok: false, msg: 'Password baru minimal 6 karakter.' })
+      gagal('Kata sandi baru minimal 6 karakter.', 'baru')
       return
     }
     if (form.baru !== form.konfirmasi) {
-      setStatus({ ok: false, msg: 'Konfirmasi password tidak cocok.' })
+      gagal('Konfirmasi kata sandi tidak cocok.', 'konfirmasi')
       return
+    }
+
+    function berhasil() {
+      setStatus({ ok: true, msg: 'Kata sandi berhasil diubah.' })
+      setKolom(null)
+      setForm({ lama: '', baru: '', konfirmasi: '' })
     }
 
     mutate(
       { passwordLama: form.lama, passwordBaru: form.baru },
       {
-        onSuccess: () => {
-          setStatus({ ok: true, msg: 'Password berhasil diubah.' })
-          setForm({ lama: '', baru: '', konfirmasi: '' })
-        },
+        onSuccess: berhasil,
         onError: (err: unknown) => {
           const code = (err as { code?: string })?.code
-          if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-            setStatus({ ok: false, msg: 'Password lama salah.' })
+          if (code === 'permission-denied') {
+            // Langkah terakhir hook hanya mencatat log, yang ditolak rules untuk peran lihat-saja.
+            // Kata sandi SUDAH berubah (langkah sebelumnya berhasil), jadi jangan tampilkan gagal.
+            berhasil()
+          } else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+            gagal('Kata sandi lama salah.', 'lama')
           } else if (code === 'auth/too-many-requests') {
-            setStatus({ ok: false, msg: 'Terlalu banyak percobaan. Coba lagi nanti.' })
+            gagal('Terlalu banyak percobaan. Coba lagi nanti.')
           } else {
-            setStatus({ ok: false, msg: 'Gagal mengganti password. Coba lagi.' })
+            gagal('Gagal mengganti kata sandi. Coba lagi.')
           }
         },
       }
     )
   }
 
-  const [open, setOpen] = useState(false)
-
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <Lock className="w-4 h-4 text-sky-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-100 text-sm">Ganti Password</p>
-          <p className="text-xs text-slate-500 mt-0.5">Ubah kata sandi akun Anda</p>
-        </div>
-        <ChevronDown
-          size={15}
-          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4 space-y-4">
-      <div className="space-y-3">
+    <form className="a-card" noValidate onSubmit={(e) => { e.preventDefault(); handleSave() }}>
+      <div className="ch">
         <div>
-          <Label>Password Lama</Label>
-          <Input
-            type="password"
-            value={form.lama}
-            onChange={(e) => set('lama', e.target.value)}
-            placeholder="••••••••"
-            autoComplete="current-password"
-          />
-        </div>
-        <div>
-          <Label>Password Baru</Label>
-          <Input
-            type="password"
-            value={form.baru}
-            onChange={(e) => set('baru', e.target.value)}
-            placeholder="••••••••"
-            autoComplete="new-password"
-          />
-          <p className="text-xs text-slate-600 mt-1">Minimal 6 karakter.</p>
-        </div>
-        <div>
-          <Label>Konfirmasi Password Baru</Label>
-          <Input
-            type="password"
-            value={form.konfirmasi}
-            onChange={(e) => set('konfirmasi', e.target.value)}
-            placeholder="••••••••"
-            autoComplete="new-password"
-          />
+          <h3>Ganti kata sandi</h3>
+          <p>Gunakan minimal 6 karakter</p>
         </div>
       </div>
-
-      {status && <StatusMsg ok={status.ok} msg={status.msg} />}
-
-      <div className="flex justify-end">
-        <Button size="sm" onClick={handleSave} disabled={isPending}>
-          {isPending ? 'Menyimpan...' : 'Ganti Password'}
+      <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <SandiField id="pw-lama" label="Kata sandi lama" ikon={<Lock className="i" />}
+          value={form.lama} onChange={(v) => set('lama', v)} autoComplete="current-password" salah={kolom === 'lama'} />
+        <SandiField id="pw-baru" label="Kata sandi baru" ikon={<KeyRound className="i" />}
+          value={form.baru} onChange={(v) => set('baru', v)} autoComplete="new-password" hint="Minimal 6 karakter." salah={kolom === 'baru'} />
+        <SandiField id="pw-konf" label="Konfirmasi kata sandi baru" ikon={<ShieldCheck className="i" />}
+          value={form.konfirmasi} onChange={(v) => set('konfirmasi', v)} autoComplete="new-password" salah={kolom === 'konfirmasi'} />
+        {status && <StatusMsg ok={status.ok} msg={status.msg} />}
+        <Button type="submit" disabled={isPending} style={{ alignSelf: 'flex-start' }}>
+          <KeyRound className="i" />{isPending ? 'Menyimpan...' : 'Ganti kata sandi'}
         </Button>
       </div>
-      </div>
-      )}
-    </div>
+    </form>
   )
 }
 
 // ── Halaman utama ─────────────────────────────────────────────────────────────
-
 export default function ProfilPage() {
   const { user } = useAuthStore()
 
   return (
     <AppShell title="Profil Saya">
-      <div className="flex flex-col gap-4">
-        {/* Sub-header */}
-        <div className="flex items-center gap-2.5">
-          <User className="w-[18px] h-[18px] text-sky-400 shrink-0" />
-          <h1 className="text-base font-semibold text-slate-100">Profil Saya</h1>
-        </div>
-        {/* Avatar card */}
-        <div className="flex items-center gap-4 bg-[#0d1424] border border-white/[0.06] rounded-2xl px-5 py-4">
-          <div className="w-14 h-14 rounded-2xl bg-sky-500 flex items-center justify-center text-xl font-bold text-white shrink-0 select-none">
-            {getInisial(user?.nama || user?.email || '')}
-          </div>
-          <div>
-            <p className="font-semibold text-slate-100 text-base">{user?.nama || '(nama belum diisi)'}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{user?.email}</p>
-            <span className="inline-block mt-1.5 text-xs font-semibold uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/25 rounded px-2 py-0.5">
-              {user?.role}
-            </span>
+      <div className="pg-narrow">
+        <PageHeader title="Profil saya" description="Kelola informasi akun dan keamanan" />
+
+        <div className="a-card" style={{ marginBottom: 16 }}>
+          <div className="a-hero2" style={{ border: 0, boxShadow: 'none', borderRadius: '16px 16px 0 0' }}>
+            <div className="top" style={{ padding: '26px 24px 20px' }}>
+              <div className="a-avatar lk av" style={{ width: 72, height: 72, fontSize: 26, borderRadius: 20 }}>
+                {getInisial(user?.nama || user?.email || '')}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <h2 style={{ fontSize: 22 }}>{user?.nama || '(nama belum diisi)'}</h2>
+                <p style={{ margin: '4px 0 8px', color: 'var(--ink-3)', fontSize: 13.5, overflowWrap: 'anywhere' }}>{user?.email}</p>
+                <span className="a-badge gold">{user?.role ? ROLE_LABEL[user.role] ?? user.role : '—'}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <EditNamaForm />
-        <GantiPasswordForm />
+        <div className="g2 eq">
+          <EditNamaForm />
+          <GantiPasswordForm />
+        </div>
       </div>
     </AppShell>
   )

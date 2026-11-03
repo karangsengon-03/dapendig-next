@@ -1,17 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { collection, getDocs, setDoc, deleteDoc, doc } from 'firebase/firestore'
+import { collection, getDocs, runTransaction, doc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { AppShell } from '@/components/layout/AppShell'
+import { AksesDitolakAdmin } from '@/components/ui/akses-ditolak'
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
 import { MigrasiProgress } from '@/components/ui/migrasi-progress'
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft, AlertTriangle, Check } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/toast'
+import { pindahDokumenAtomik } from '@/lib/pindah-dokumen'
+import { CircleCheck, Search, TriangleAlert } from 'lucide-react'
+import { MigLayout, MigTable, MigRowBtn, MigDone, MigResultBox, MigError, MigPrimary } from '@/components/pengaturan/migrasi-parts'
 
 export default function MigrateDocIdPage() {
   const { isAdmin } = useAuthStore()
   const router = useRouter()
+  const { toast } = useToast()
   const [status, setStatus] = useState<'idle' | 'preview' | 'loading' | 'done' | 'error'>('idle')
   const [preview, setPreview] = useState<{ sudahBenar: number; perluMigrasi: number; tanpaNik: number }>({ sudahBenar: 0, perluMigrasi: 0, tanpaNik: 0 })
   const [result, setResult] = useState<{ dipindah: number; dilewati: number; gagal: number }>({ dipindah: 0, dilewati: 0, gagal: 0 })
@@ -21,6 +27,7 @@ export default function MigrateDocIdPage() {
   const [progressTotal, setProgressTotal] = useState(0)
 
   async function handlePreview() {
+    if (!isAdmin()) return
     setStatus('loading')
     try {
       const snap = await getDocs(collection(db, 'penduduk'))
@@ -47,6 +54,7 @@ export default function MigrateDocIdPage() {
   }
 
   async function handleMigrate() {
+    if (!isAdmin()) return
     setStatus('loading')
     try {
       const snap = await getDocs(collection(db, 'penduduk'))
@@ -64,11 +72,13 @@ export default function MigrateDocIdPage() {
         if (d.id === nik) { dilewati++; continue }
 
         try {
-          // 1. Buat dokumen baru dengan ID = NIK (copy semua data)
-          await setDoc(doc(db, 'penduduk', nik), d.data())
-          // 2. Hapus dokumen lama
-          await deleteDoc(doc(db, 'penduduk', d.id))
-          dipindah++
+          // Atomik: salin ke ID = NIK + hapus dokumen lama dalam satu transaksi.
+          // Bila dokumen ber-ID NIK sudah ada → DITOLAK (tidak menimpa; selesaikan lewat Fix Duplikat) dan dihitung gagal.
+          const hasil = await runTransaction(db, (tx) =>
+            pindahDokumenAtomik(tx, doc(db, 'penduduk', d.id), doc(db, 'penduduk', nik)))
+          if (hasil === 'ok') dipindah++
+          else if (hasil === 'hilang') dilewati++
+          else gagal++
         } catch {
           gagal++
         }
@@ -83,171 +93,118 @@ export default function MigrateDocIdPage() {
   }
 
   async function handleOneItem(id: string, nik: string) {
+    if (!isAdmin()) return
     setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, loading: true } : x))
     try {
-      const snapDoc = await import('firebase/firestore').then(m => m.getDoc(m.doc(db, 'penduduk', id)))
-      if (!snapDoc.exists()) { setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, loading: false } : x)); return }
-      await setDoc(doc(db, 'penduduk', nik), snapDoc.data())
-      await deleteDoc(doc(db, 'penduduk', id))
-      setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, done: true, loading: false } : x))
-      setPreview(prev => ({ ...prev, perluMigrasi: prev.perluMigrasi - 1, sudahBenar: prev.sudahBenar + 1 }))
-    } catch { setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, loading: false } : x)) }
+      const hasil = await runTransaction(db, (tx) =>
+        pindahDokumenAtomik(tx, doc(db, 'penduduk', id), doc(db, 'penduduk', nik)))
+      if (hasil === 'ok') {
+        setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, done: true, loading: false } : x))
+        setPreview(prev => ({ ...prev, perluMigrasi: prev.perluMigrasi - 1, sudahBenar: prev.sudahBenar + 1 }))
+        return
+      }
+      setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, loading: false } : x))
+      if (hasil === 'bentrok') toast('Gagal memigrasi: NIK sudah dipakai dokumen lain. Jalankan Fix Duplikat dulu.', 'error')
+    } catch {
+      setPreviewItems(prev => prev.map(x => x.id === id ? { ...x, loading: false } : x))
+      toast('Gagal memigrasi dokumen', 'error')
+    }
+  }
+
+  // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
+  if (!isAdmin()) {
+    return (
+      <AppShell title="Migrasi Document ID">
+        <AksesDitolakAdmin />
+      </AppShell>
+    )
   }
 
   return (
     <AppShell title="Migrasi Document ID">
-      <div className="max-w-md mx-auto flex flex-col gap-4">
-        <div className="flex items-center gap-2.5">
-          <button onClick={() => router.back()}
-            className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 shrink-0">
-            <ArrowLeft size={15} />
-          </button>
-          <h1 className="text-base font-semibold text-slate-100">Migrasi ID Dokumen → NIK</h1>
+      <MigLayout title="Migrasi ID Dokumen → NIK" desc="Seragamkan semua ID dokumen penduduk menggunakan NIK">
+        <div>
+          <h3 style={{ margin: 0, fontSize: 15 }}>Seragamkan ID dokumen penduduk</h3>
+          <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.55 }}>
+            Proses ini memindahkan semua dokumen penduduk yang ID-nya masih acak ke format baru
+            menggunakan <strong>NIK</strong> sebagai ID dokumen.
+            Data tidak akan hilang — hanya ID dokumen yang diperbarui.
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-5 flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-slate-300">Seragamkan ID dokumen penduduk</p>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Proses ini memindahkan semua dokumen penduduk yang ID-nya masih acak ke format baru
-              menggunakan <span className="font-semibold text-slate-300">NIK</span> sebagai ID dokumen.
-              Data tidak akan hilang — hanya ID dokumen yang diperbarui.
-            </p>
+        <div className="a-alert warn">
+          <TriangleAlert className="i" />
+          <div>
+            Lakukan <strong>ekspor data</strong> terlebih dahulu sebelum migrasi sebagai backup.
+            Proses ini tidak dapat dibatalkan.
           </div>
+        </div>
 
-          {/* Warning */}
-          <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 flex gap-2.5">
-            <AlertTriangle size={15} className="text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-400 leading-relaxed">
-              Lakukan <span className="font-semibold">ekspor data</span> terlebih dahulu sebelum migrasi sebagai backup.
-              Proses ini tidak dapat dibatalkan.
-            </p>
-          </div>
+        {status === 'idle' && (
+          <MigPrimary onClick={handlePreview} disabled={!isAdmin()} icon={<Search className="i" />}>Cek Data Sebelum Migrasi</MigPrimary>
+        )}
 
-          {status === 'idle' && (
-            <button onClick={handlePreview} disabled={!isAdmin()}
-              className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-sm font-semibold text-white transition-colors disabled:opacity-40">
-              Cek Data Sebelum Migrasi
-            </button>
-          )}
+        {status === 'loading' && (
+          <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diperiksa" />
+        )}
 
-          {status === 'loading' && (
-            <MigrasiProgress current={progressCurrent} total={progressTotal} label="dokumen diperiksa" />
-          )}
-
-          {status === 'preview' && (
-            <div className="flex flex-col gap-3">
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 flex flex-col gap-2">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Hasil Pemeriksaan</p>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">Sudah pakai NIK sebagai ID</span>
-                  <span className="font-semibold text-emerald-400">{preview.sudahBenar} dokumen</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">Perlu dimigrasi</span>
-                  <span className="font-semibold text-amber-400">{preview.perluMigrasi} dokumen</span>
-                </div>
-                {preview.tanpaNik > 0 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">Tidak ada NIK (dilewati)</span>
-                    <span className="font-semibold text-rose-400">{preview.tanpaNik} dokumen</span>
-                  </div>
-                )}
-              </div>
-
-              {preview.perluMigrasi === 0 ? (
-                <div className="flex items-center gap-2 py-2">
-                  <CheckCircle size={16} className="text-emerald-400" />
-                  <p className="text-sm text-emerald-400">Semua dokumen sudah menggunakan NIK sebagai ID. Tidak perlu migrasi.</p>
-                </div>
-              ) : (
-                <>
-                  {previewItems.length > 0 && (
-                    <div className="rounded-xl border border-white/[0.06] overflow-hidden max-h-64 overflow-y-auto">
-                      <table className="w-full text-xs">
-                        <thead className="sticky top-0 bg-[#0d1424] z-10">
-                          <tr className="border-b border-white/[0.06]">
-                            <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama</th>
-                            <th className="px-3 py-2 text-left text-xs font-semibold text-rose-500 uppercase tracking-wider">ID Lama</th>
-                            <th className="px-3 py-2 text-left text-xs font-semibold text-emerald-500 uppercase tracking-wider">ID Baru (NIK)</th>
-                            <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {previewItems.map(item => (
-                            <tr key={item.id} className={`border-b border-white/[0.04] last:border-0 transition-colors ${item.done ? 'opacity-40' : 'hover:bg-white/[0.02]'}`}>
-                              <td className="px-3 py-2 text-slate-300 font-medium truncate max-w-[120px]">{item.nama || '—'}</td>
-                              <td className="px-3 py-2 text-rose-400 font-mono text-xs truncate max-w-[90px]">{item.id}</td>
-                              <td className="px-3 py-2 text-emerald-400 font-mono text-xs">{item.nik}</td>
-                              <td className="px-3 py-2 text-right">
-                                {item.done
-                                  ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><Check size={11} />Selesai</span>
-                                  : <button onClick={() => handleOneItem(item.id, item.nik)} disabled={item.loading} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-40">
-                                      {item.loading ? <Loader2 size={10} className="animate-spin" /> : null}
-                                      {item.loading ? 'Proses...' : 'Migrasi'}
-                                    </button>}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                  <div className="flex gap-2.5">
-                    <button onClick={() => setStatus('idle')} className="flex-1 py-2 rounded-xl border border-white/[0.08] bg-white/[0.03] text-sm text-slate-400 hover:bg-white/[0.06] transition-colors">Batal</button>
-                    <button onClick={handleMigrate} className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-sm font-semibold text-white transition-colors">
-                      Migrasi Semua ({preview.perluMigrasi})
-                    </button>
-                  </div>
-                </>
+        {status === 'preview' && (
+          <>
+            <div className="mig-box">
+              <span className="ttl">Hasil Pemeriksaan</span>
+              <div className="kv"><span>Sudah pakai NIK sebagai ID</span><b className="ok">{preview.sudahBenar} dokumen</b></div>
+              <div className="kv"><span>Perlu dimigrasi</span><b className="warn">{preview.perluMigrasi} dokumen</b></div>
+              {preview.tanpaNik > 0 && (
+                <div className="kv"><span>Tidak ada NIK (dilewati)</span><b className="bad">{preview.tanpaNik} dokumen</b></div>
               )}
-
-              <button onClick={() => setStatus('idle')} className="text-sm text-slate-500 hover:text-slate-300 text-center">
-                Kembali
-              </button>
             </div>
-          )}
 
-          {status === 'done' && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle size={18} className="text-emerald-400 shrink-0" />
-                <p className="text-sm font-medium text-emerald-400">Migrasi selesai!</p>
+            {preview.perluMigrasi === 0 ? (
+              <div className="a-alert ok" role="status">
+                <CircleCheck className="i" />
+                <div>Semua dokumen sudah menggunakan NIK sebagai ID. Tidak perlu migrasi.</div>
               </div>
-              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 flex flex-col gap-1.5">
-                <p className="text-sm text-slate-300">
-                  <span className="font-bold text-emerald-400">{result.dipindah}</span> dokumen berhasil dimigrasi ke ID = NIK
-                </p>
-                <p className="text-sm text-slate-500">
-                  <span className="font-medium">{result.dilewati}</span> dokumen dilewati (sudah benar atau tanpa NIK)
-                </p>
-                {result.gagal > 0 && (
-                  <p className="text-sm text-rose-400">
-                    <span className="font-medium">{result.gagal}</span> dokumen gagal
-                  </p>
+            ) : (
+              <>
+                {previewItems.length > 0 && (
+                  <MigTable tinggi={256} head={<><th>Nama</th><th className="cx">ID Lama</th><th className="cy">ID Baru (NIK)</th><th className="r">Aksi</th></>}>
+                    {previewItems.map(item => (
+                      <tr key={item.id} className={item.done ? 'fin' : undefined}>
+                        <td className="nmx">{item.nama || '—'}</td>
+                        <td className="x">{item.id}</td>
+                        <td className="y">{item.nik}</td>
+                        <td className="r">
+                          <MigRowBtn done={item.done} loading={item.loading} onClick={() => handleOneItem(item.id, item.nik)} label="Migrasi" />
+                        </td>
+                      </tr>
+                    ))}
+                  </MigTable>
                 )}
-              </div>
-              <button onClick={() => router.push('/penduduk')}
-                className="w-full py-2.5 rounded-xl bg-slate-700/60 border border-white/[0.08] text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-                Lihat Data Penduduk
-              </button>
-            </div>
-          )}
+                <div className="mig-ft">
+                  <Button variant="outline" onClick={() => setStatus('idle')}>Batal</Button>
+                  <Button variant="gold" onClick={handleMigrate}>Migrasi Semua ({preview.perluMigrasi})</Button>
+                </div>
+              </>
+            )}
 
-          {status === 'error' && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2.5">
-                <AlertCircle size={18} className="text-rose-400 shrink-0" />
-                <p className="text-sm font-medium text-rose-400">Terjadi kesalahan</p>
-              </div>
-              <p className="text-sm text-slate-500 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">{errorMsg}</p>
-              <button onClick={() => setStatus('idle')} className="text-sm text-sky-400 hover:text-sky-300">Coba lagi</button>
-            </div>
-          )}
-        </div>
+            <Button variant="ghost" onClick={() => setStatus('idle')}>Kembali</Button>
+          </>
+        )}
 
-        <p className="text-xs text-slate-600 text-center">Hanya dapat diakses oleh admin.</p>
-      </div>
+        {status === 'done' && (
+          <MigDone title="Migrasi selesai!" onBack={() => router.push('/penduduk')} backLabel="Lihat Data Penduduk">
+            <MigResultBox>
+              <p><b>{result.dipindah}</b> dokumen berhasil dimigrasi ke ID = NIK</p>
+              <p style={{ color: 'var(--ink-3)' }}><b>{result.dilewati}</b> dokumen dilewati (sudah benar atau tanpa NIK)</p>
+              {result.gagal > 0 && (
+                <p style={{ color: 'var(--bad)' }}><b>{result.gagal}</b> dokumen gagal (mis. NIK-nya sudah dipakai dokumen lain: jalankan Fix Duplikat dulu)</p>
+              )}
+            </MigResultBox>
+          </MigDone>
+        )}
+
+        {status === 'error' && <MigError title="Terjadi kesalahan" msg={errorMsg} onRetry={() => setStatus('idle')} />}
+      </MigLayout>
     </AppShell>
   )
 }

@@ -1,11 +1,17 @@
 'use client'
 
+import Link from 'next/link'
+import { rt3 } from '@/lib/rt-rw'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, User } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { PendudukForm } from '@/components/penduduk/PendudukForm'
 import { usePendudukDetail, useUpdatePenduduk } from '@/hooks/usePenduduk'
 import { useToast } from '@/components/ui/toast'
+import { useAuthStore } from '@/store/authStore'
+import { AksesDitolak } from '@/components/ui/akses-ditolak'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { PendudukFormData } from '@/types'
 
@@ -17,6 +23,7 @@ export default function EditPendudukPage() {
   const { data, isLoading } = usePendudukDetail(id)
   const updateMutation = useUpdatePenduduk(id)
   const { toast } = useToast()
+  const { isOperator } = useAuthStore()
 
   async function handleSubmit(formData: PendudukFormData) {
     try {
@@ -26,6 +33,20 @@ export default function EditPendudukPage() {
     } catch {
       toast('Gagal memperbarui data penduduk', 'error')
     }
+  }
+
+  // Rules: ubah penduduk = operator atau admin. Peran lihat-saja tidak melihat form (bisa dibuka lewat URL langsung).
+  if (!isOperator()) {
+    return (
+      <AppShell title="Edit Penduduk">
+        <AksesDitolak
+          judul="Halaman ini hanya untuk Operator atau Admin"
+          keterangan="Peran Anda hanya dapat melihat data penduduk"
+          href={`/penduduk/${id}`}
+          label="Kembali ke detail"
+        />
+      </AppShell>
+    )
   }
 
   const initial: Partial<PendudukFormData> | undefined = data
@@ -43,8 +64,9 @@ export default function EditPendudukPage() {
         pendidikan: data.pendidikan,
         pekerjaan: data.pekerjaan,
         status_perkawinan: data.status_perkawinan,
-        rt: data.rt,
-        rw: data.rw,
+        golongan_darah: data.golongan_darah ?? '',
+        rt: rt3(data.rt) || '001',
+        rw: rt3(data.rw) || '001',
         alamat: data.alamat ?? '',
         status: data.status,
       }
@@ -52,45 +74,51 @@ export default function EditPendudukPage() {
 
   return (
     <AppShell title="Edit Penduduk">
-      <div className="flex flex-col gap-4">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-slate-400 hover:text-slate-200 flex-shrink-0"
-          >
-            <ArrowLeft size={15} />
-          </button>
-          <div>
-            <h1 className="text-base font-semibold text-slate-100">Edit Penduduk</h1>
-            <p className="text-xs text-slate-500">
-              {isLoading ? 'Memuat...' : (data?.nama_lengkap ?? '')}
-            </p>
-          </div>
-        </div>
+      <>
+        <PageHeader
+          title="Edit data penduduk"
+          description={isLoading ? 'Memuat...' : data ? `${data.nama_lengkap} · NIK ${data.nik || '—'}` : undefined}
+          action={
+            <Button asChild variant="outline">
+              <Link href={`/penduduk/${id}`} aria-label="Kembali ke detail">
+                <ArrowLeft className="i" /><span className="hm">Kembali ke detail</span>
+              </Link>
+            </Button>
+          }
+        />
 
-        {/* Form */}
-        <div className="rounded-2xl border border-white/[0.06] bg-[#0d1424] p-4">
-          {isLoading ? (
-            <div className="flex flex-col gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-11 w-full rounded-xl" />
+        {isLoading ? (
+          <div className="editgrid" aria-busy="true">
+            <div className="col" style={{ gap: 16 }}>
+              {[260, 330, 150].map((h, i) => (
+                <Skeleton key={i} style={{ height: h, borderRadius: 16 }} />
               ))}
             </div>
-          ) : !data ? (
-            <p className="text-sm text-slate-500 text-center py-8">
-              Data tidak ditemukan
-            </p>
-          ) : (
-            <PendudukForm
-              mode="edit"
-              initial={initial}
-              editId={id}
-              onSubmit={handleSubmit}
-            />
-          )}
-        </div>
-      </div>
+            <div className="col side">
+              <Skeleton style={{ height: 150, borderRadius: 16 }} />
+              <Skeleton style={{ height: 110, borderRadius: 16 }} />
+            </div>
+          </div>
+        ) : !data ? (
+          <div className="a-card">
+            <div className="a-empty" style={{ padding: '70px 24px' }}>
+              <div className="em"><User className="i" style={{ fontSize: 30 }} /></div>
+              <h3>Data penduduk tidak ditemukan</h3>
+              <p>Data ini mungkin sudah dihapus atau dipindahkan ke Tempat Sampah.</p>
+              <Button asChild>
+                <Link href="/penduduk">Ke daftar penduduk</Link>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <PendudukForm
+            mode="edit"
+            initial={initial}
+            editId={id}
+            onSubmit={handleSubmit}
+          />
+        )}
+      </>
     </AppShell>
   )
 }

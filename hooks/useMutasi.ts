@@ -1,21 +1,25 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { rt3 } from '@/lib/rt-rw'
 import {
   collection,
   getDocs,
   getDoc,
   addDoc,
-  setDoc,
   deleteDoc,
   doc,
   orderBy,
   query,
   updateDoc,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
+import { GalatTolak } from '@/lib/galat-tolak'
+import { KOLOM_PENDUDUK_DARI_MASUK } from '@/lib/sinkron-catatan'
+import { editCatatanDanPenduduk } from '@/lib/sinkron-catatan-tulis'
 import type { MutasiKeluar, MutasiMasuk } from '@/types'
 
 const LOG_COL = 'log'
@@ -60,7 +64,15 @@ async function addMutasiKeluar(
   return ref.id
 }
 
-async function deleteMutasiKeluar(id: string, nama: string, email: string): Promise<void> {
+export const PESAN_HAPUS_MASIH_PINDAH = 'Penduduk masih berstatus pindah keluar. Gunakan Batalkan untuk mengembalikan penduduk.'
+
+async function deleteMutasiKeluar(id: string, nama: string, email: string, nikTarget?: string): Promise<void> {
+  // Hapus HANYA menghapus catatan: status penduduk dan suksesi KK tidak dibalik (itu tugas Batalkan).
+  // Catatan yang penduduknya masih 'mutasi-keluar' tidak boleh dihapus; hanya catatan yatim yang boleh.
+  if (nikTarget) {
+    const snap = await getDoc(doc(db, 'penduduk', nikTarget))
+    if (snap.exists() && snap.data()?.status === 'mutasi-keluar') throw new GalatTolak(PESAN_HAPUS_MASIH_PINDAH)
+  }
   await deleteDoc(doc(db, 'mutasi_keluar', id))
   await writeLog('hapus', `Hapus pindah keluar: ${nama}`, email)
 }
@@ -85,19 +97,13 @@ async function fetchMutasiMasuk(): Promise<MutasiMasuk[]> {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MutasiMasuk))
 }
 
-async function addMutasiMasuk(
-  data: Omit<MutasiMasuk, 'id' | 'created_at' | 'updated_at' | 'created_by'>,
-  email: string
-): Promise<string> {
-  const ref = await addDoc(collection(db, 'mutasi_masuk'), {
-    ...data,
-    created_at: serverTimestamp(),
-    created_by: email,
-  })
-  // Otomatis tambah ke penduduk — gunakan NIK sebagai document ID
-  const nik = data.nik?.trim()
-  if (!nik) throw new Error('NIK wajib diisi untuk pindah masuk')
-  await setDoc(doc(db, 'penduduk', nik), {
+type DataMasuk = Omit<MutasiMasuk, 'id' | 'created_at' | 'updated_at' | 'created_by'>
+
+const PESAN_NIK_WAJIB = 'NIK wajib diisi untuk pindah masuk'
+
+/** Isi dokumen penduduk dari satu catatan pindah masuk (satu sumber untuk jalur 1 orang dan 1 keluarga). */
+function dataPendudukDariMasuk(data: DataMasuk, nik: string, email: string) {
+  return {
     nama_lengkap: data.nama_lengkap,
     nik,
     no_kk: data.no_kk,
@@ -108,8 +114,8 @@ async function addMutasiMasuk(
     nama_ibu: data.nama_ibu,
     pendidikan: data.pendidikan,
     pekerjaan: data.pekerjaan,
-    rt: data.rt,
-    rw: data.rw,
+    rt: rt3(data.rt),
+    rw: rt3(data.rw),
     status_perkawinan: data.status_perkawinan,
     tanggal_lahir: data.tanggal_lahir,
     tempat_lahir: data.tempat_lahir,
@@ -119,18 +125,71 @@ async function addMutasiMasuk(
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
     created_by: email,
-  })
-  await writeLog('tambah', `Pindah masuk: ${data.nama_lengkap}`, email, data.nik)
-  return ref.id
+  }
 }
 
-async function addMutasiMasukBatch(
-  anggotaList: Omit<MutasiMasuk, 'id' | 'created_at' | 'updated_at' | 'created_by'>[],
-  email: string
-): Promise<void> {
-  for (const data of anggotaList) {
-    await addMutasiMasuk(data, email)
-  }
+/** Status penduduk yang BOLEH ditimpa oleh pindah masuk: warga yang pernah pindah keluar lalu kembali. */
+const STATUS_BOLEH_MASUK_LAGI = ['mutasi-keluar', 'tidak aktif']
+
+/**
+ * Catat pindah masuk 1 atau BANYAK orang (1 keluarga) dalam SATU transaksi atomik: catatan pindah masuk +
+ * penduduk (ID dokumen = NIK) + log tiap orang tersimpan semuanya atau tidak sama sekali.
+ *  - Dulu keluarga ditulis satu per satu: bila anggota ke-2 gagal, anggota ke-1 sudah tersimpan, sisanya tidak, dan
+ *    mengulang "Simpan Semua" menggandakan catatan pindah masuk anggota yang sudah masuk.
+ *  - Seluruh daftar diperiksa dulu SEBELUM ada yang ditulis: NIK kosong, NIK kembar di daftar, dan NIK yang sudah
+ *    terdaftar sebagai penduduk aktif/meninggal (prinsip "tolak, jangan timpa" seperti addPenduduk). Penduduk
+ *    berstatus pindah keluar boleh ditimpa (warga kembali).
+ * Mengembalikan ID catatan pindah masuk sesuai urutan daftar.
+ */
+async function simpanPindahMasuk(daftar: DataMasuk[], email: string): Promise<string[]> {
+  if (daftar.length === 0) throw new GalatTolak('Minimal 1 anggota harus ditambahkan')
+  const nikList = daftar.map((d) => (d.nik ?? '').trim())
+  if (nikList.some((n) => !n)) throw new GalatTolak(PESAN_NIK_WAJIB)
+  const kembar = nikList.find((n, i) => nikList.indexOf(n) !== i)
+  if (kembar) throw new GalatTolak(`NIK ${kembar} muncul lebih dari sekali dalam daftar`)
+
+  // Ref dibuat sekali di luar transaksi: bila transaksi diulang otomatis, ID catatan tetap sama.
+  const catatanRefs = daftar.map(() => doc(collection(db, 'mutasi_masuk')))
+  const logRefs = daftar.map(() => doc(collection(db, LOG_COL)))
+  const pendudukRefs = nikList.map((nik) => doc(db, 'penduduk', nik))
+
+  await runTransaction(db, async (tx) => {
+    // Semua baca dulu, baru tulis (aturan transaksi Firestore)
+    const ada = await Promise.all(pendudukRefs.map((r) => tx.get(r)))
+    const bentrok = ada.flatMap((snap, i) => {
+      if (!snap.exists()) return []
+      const lama = snap.data() as { nama_lengkap?: string; status?: string } | undefined
+      if (STATUS_BOLEH_MASUK_LAGI.includes(lama?.status ?? '')) return []
+      return [`${nikList[i]} (${lama?.nama_lengkap ?? 'penduduk lain'}, ${lama?.status ?? 'aktif'})`]
+    })
+    if (bentrok.length > 0) {
+      throw new GalatTolak(
+        `NIK ${bentrok.join('; ')} sudah terdaftar. Tidak ada data yang disimpan, supaya data yang sudah ada tidak tertimpa.`,
+      )
+    }
+    daftar.forEach((data, i) => {
+      tx.set(catatanRefs[i], { ...data, created_at: serverTimestamp(), created_by: email })
+      // Otomatis tambah ke penduduk — gunakan NIK sebagai document ID
+      tx.set(pendudukRefs[i], dataPendudukDariMasuk(data, nikList[i], email))
+      tx.set(logRefs[i], {
+        aksi: 'tambah',
+        keterangan: `Pindah masuk: ${data.nama_lengkap}`,
+        nik_target: nikList[i],
+        oleh: email,
+        ts: serverTimestamp(),
+      })
+    })
+  })
+  return catatanRefs.map((r) => r.id)
+}
+
+async function addMutasiMasuk(data: DataMasuk, email: string): Promise<string> {
+  const [id] = await simpanPindahMasuk([data], email)
+  return id
+}
+
+async function addMutasiMasukBatch(anggotaList: DataMasuk[], email: string): Promise<void> {
+  await simpanPindahMasuk(anggotaList, email)
 }
 
 async function deleteMutasiMasuk(id: string, nama: string, email: string): Promise<void> {
@@ -204,8 +263,8 @@ export function useDeleteMutasiKeluar() {
   const qc = useQueryClient()
   const user = useAuthStore((s) => s.user)
   return useMutation({
-    mutationFn: ({ id, nama }: { id: string; nama: string }) =>
-      deleteMutasiKeluar(id, nama, user?.email ?? 'unknown'),
+    mutationFn: ({ id, nama, nik_target }: { id: string; nama: string; nik_target?: string }) =>
+      deleteMutasiKeluar(id, nama, user?.email ?? 'unknown', nik_target),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
       qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
@@ -262,13 +321,17 @@ export function useEditMutasiMasuk() {
   const qc = useQueryClient()
   const user = useAuthStore((s) => s.user)
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<MutasiMasuk> }) => {
-      await updateDoc(doc(db, 'mutasi_masuk', id), { ...data, updated_at: serverTimestamp() })
-      await addDoc(collection(db, 'log'), {
-        aksi: 'edit', keterangan: `Edit mutasi masuk: ${data.nama_lengkap ?? ''}`,
-        nik_target: data.nik ?? '', oleh: user?.email ?? 'unknown', ts: serverTimestamp(),
-      })
+    // Catatan + penduduk (hanya kolom yang berubah) + log dalam satu transaksi: lihat lib/sinkron-catatan.ts
+    mutationFn: ({ id, data }: { id: string; data: Partial<MutasiMasuk> }) =>
+      editCatatanDanPenduduk({
+        koleksi: 'mutasi_masuk', id, data: data as Record<string, unknown>, kolom: KOLOM_PENDUDUK_DARI_MASUK,
+        label: 'pindah masuk', nama: data.nama_lengkap ?? '', email: user?.email ?? 'unknown',
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mutasi'], exact: false })
+      qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
+      qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
+      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['mutasi'], exact: false }) },
   })
 }

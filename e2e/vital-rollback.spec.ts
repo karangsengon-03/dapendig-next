@@ -41,6 +41,8 @@ test.describe('Alur: Catat kematian via menu Vital → suksesi KK → rollback',
     await page.getByPlaceholder('16 digit').first().fill(nikUnik)
     await page.locator('input[placeholder="16 digit"]').nth(1).fill(noKkUnik)
     // hub_asli sudah default 'Kepala Keluarga', tidak perlu diubah
+    // Sebab kematian WAJIB diisi (validasi form Kematian)
+    await page.getByPlaceholder('Sakit, Kecelakaan, dll').fill('Sakit')
     await page.getByRole('button', { name: 'Simpan' }).click()
 
     // Verifikasi record baru muncul di daftar

@@ -9,6 +9,7 @@ import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
 import { AGAMA, PENDIDIKAN, PEKERJAAN, HUBUNGAN_KELUARGA } from '@/lib/penduduk-constants'
 import { toISODate } from '@/lib/utils'
+import { rt3 } from '@/lib/rt-rw'
 
 function normImportVal(key: string, rawValue: unknown): unknown {
   const v = String(rawValue ?? '').trim()
@@ -122,6 +123,9 @@ function normImportVal(key: string, rawValue: unknown): unknown {
     if (up === 'CERAI MATI') return 'Cerai Mati'
     return v
   }
+
+  // RT/RW selalu 3 digit (Excel sering berisi 1, 01, atau 001)
+  if (key === 'rt' || key === 'rw') return rt3(v)
 
   if (key === 'status') return v || 'aktif'
   if (key === 'id') return v  // referensi saja, tidak disimpan sebagai field

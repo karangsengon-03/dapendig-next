@@ -2,74 +2,19 @@
 
 import { useState, useRef } from 'react'
 import ExcelJS from 'exceljs'
-import { Upload, FileSpreadsheet, Download, CheckCircle2, ArrowLeft, ChevronDown } from 'lucide-react'
+import { Upload, Download, CircleCheck, ArrowLeft, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useImportPenduduk } from '@/hooks/useImport'
 import { MigrasiProgress } from '@/components/ui/migrasi-progress'
-
-const KDPD = [
-  { k: 'id', l: 'ID Dokumen' },
-  { k: 'no_kk', l: 'No. KK' },
-  { k: 'nik', l: 'NIK' },
-  { k: 'nama_lengkap', l: 'Nama Lengkap' },
-  { k: 'jenis_kelamin', l: 'Jenis Kelamin' },
-  { k: 'hubungan_keluarga', l: 'Hubungan Keluarga' },
-  { k: 'status_perkawinan', l: 'Status Perkawinan' },
-  { k: 'pendidikan', l: 'Pendidikan' },
-  { k: 'pekerjaan', l: 'Pekerjaan' },
-  { k: 'golongan_darah', l: 'Golongan Darah' },
-  { k: 'agama', l: 'Agama' },
-  { k: 'tempat_lahir', l: 'Tempat Lahir' },
-  { k: 'tanggal_lahir', l: 'Tanggal Lahir' },
-  { k: 'nama_ibu', l: 'Nama Ibu' },
-  { k: 'nama_ayah', l: 'Nama Ayah' },
-  { k: 'rt', l: 'RT' },
-  { k: 'rw', l: 'RW' },
-  { k: 'alamat', l: 'Alamat' },
-  { k: 'status', l: 'Status' },
-]
-
-const TEMPLATE_HEADERS = ['No.KK', 'NIK', 'Nama', 'JK', 'Hub.KK', 'Kawin', 'Pendidikan', 'Pekerjaan', 'Gol.Darah', 'Agama', 'Tmp.Lahir', 'Tgl.Lahir', 'Nama Ibu', 'Nama Ayah', 'RT', 'RW', 'Status']
-
-function normalize(s: string) {
-  return s.toLowerCase().replace(/[\s._-]/g, '')
-}
-
-function autoMap(excelCol: string): string {
-  const n = normalize(excelCol)
-  for (const { k, l } of KDPD) {
-    if (normalize(k) === n || normalize(l) === n) return k
-  }
-  // Partial match heuristics
-  if (n === 'id' || n === 'iddokumen' || n === 'docid') return 'id'
-  if (n.includes('kk')) return 'no_kk'
-  if (n.includes('nik')) return 'nik'
-  if (n.includes('nama') && n.includes('ibu')) return 'nama_ibu'
-  if (n.includes('nama') && n.includes('ayah')) return 'nama_ayah'
-  if (n.includes('nama')) return 'nama_lengkap'
-  if (n.includes('jk') || n.includes('kelamin') || n.includes('gender')) return 'jenis_kelamin'
-  if (n.includes('hub')) return 'hubungan_keluarga'
-  if (n.includes('kawin') || n.includes('nikah') || n.includes('perkawinan')) return 'status_perkawinan'
-  if (n.includes('didik') || n.includes('pendidikan')) return 'pendidikan'
-  if (n.includes('kerja') || n.includes('pekerjaan')) return 'pekerjaan'
-  if (n.includes('darah') || n.includes('gol')) return 'golongan_darah'
-  if (n.includes('agama')) return 'agama'
-  if (n.includes('tmp') || (n.includes('tempat') && n.includes('lahir'))) return 'tempat_lahir'
-  if (n.includes('tgl') || n.includes('tanggal') || n.includes('lahir')) return 'tanggal_lahir'
-  if (n.includes('alamat')) return 'alamat'
-  if (n === 'rt') return 'rt'
-  if (n === 'rw') return 'rw'
-  if (n.includes('status')) return 'status'
-  return ''
-}
+import { useToast } from '@/components/ui/toast'
+import { KDPD, TEMPLATE_HEADERS, petakanKolomExcel } from '@/lib/impor-peta'
 
 type Step = 'upload' | 'mapping' | 'importing' | 'done'
 
 export function ImportSection() {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
-  const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>('upload')
   const [rawRows, setRawRows] = useState<Record<string, unknown>[]>([])
   const [excelCols, setExcelCols] = useState<string[]>([])
@@ -79,11 +24,12 @@ export function ImportSection() {
   const [progressCurrent, setProgressCurrent] = useState(0)
   const [progressTotal, setProgressTotal] = useState(0)
   const importMutation = useImportPenduduk()
+  const { toast } = useToast()
 
   async function downloadTemplate() {
     const wb = new ExcelJS.Workbook()
     const ws = wb.addWorksheet('Template')
-    ws.addRow(TEMPLATE_HEADERS)
+    ws.addRow([...TEMPLATE_HEADERS])
     const buffer = await wb.xlsx.writeBuffer()
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -146,7 +92,7 @@ export function ImportSection() {
 
     if (!rows.length) return
     const initMap: Record<string, string> = {}
-    cols.forEach((c) => { initMap[c] = autoMap(c) })
+    cols.forEach((c) => { initMap[c] = petakanKolomExcel(c) })
     setRawRows(rows)
     setExcelCols(cols)
     setMapping(initMap)
@@ -156,7 +102,7 @@ export function ImportSection() {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (file) parseFile(file).catch(() => {
-      alert('Gagal membaca file Excel. Pastikan file tidak rusak dan berformat .xlsx.')
+      toast('Gagal membaca file Excel. Pastikan file tidak rusak dan berformat .xlsx.', 'error')
     })
   }
 
@@ -165,7 +111,7 @@ export function ImportSection() {
     setDragging(false)
     const file = e.dataTransfer.files?.[0]
     if (file) parseFile(file).catch(() => {
-      alert('Gagal membaca file Excel. Pastikan file tidak rusak dan berformat .xlsx.')
+      toast('Gagal membaca file Excel. Pastikan file tidak rusak dan berformat .xlsx.', 'error')
     })
   }
 
@@ -180,15 +126,21 @@ export function ImportSection() {
     setProgressCurrent(0)
     setProgressTotal(mapped.length)
     setStep('importing' as Step)
-    const res = await importMutation.mutateAsync({
-      rows: mapped,
-      onProgress: (current, total) => {
-        setProgressCurrent(current)
-        setProgressTotal(total)
-      },
-    })
-    setResult(res)
-    setStep('done')
+    try {
+      const res = await importMutation.mutateAsync({
+        rows: mapped,
+        onProgress: (current, total) => {
+          setProgressCurrent(current)
+          setProgressTotal(total)
+        },
+      })
+      setResult(res)
+      setStep('done')
+    } catch {
+      // Kembali ke langkah Periksa (pemetaan kolom tetap) alih-alih macet di layar progres
+      toast('Gagal mengimpor data', 'error')
+      setStep('mapping')
+    }
   }
 
   function reset() {
@@ -200,82 +152,100 @@ export function ImportSection() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  const langkah: { n: number; label: string; kunci: Step[] }[] = [
+    { n: 1, label: 'Pilih berkas', kunci: ['upload'] },
+    { n: 2, label: 'Periksa', kunci: ['mapping'] },
+    { n: 3, label: 'Impor', kunci: ['importing', 'done'] },
+  ]
+  const urut: Step[] = ['upload', 'mapping', 'importing', 'done']
+  const posisi = urut.indexOf(step)
+
   return (
-    <div className="bg-[#0d1424] border border-white/[0.06] rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2.5 p-5 text-left hover:bg-white/[0.02] transition-colors"
-      >
-        <Upload className="w-4 h-4 text-violet-400 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-100 text-sm">Import Data Excel</p>
-          <p className="text-sm text-slate-500 mt-0.5">Upload .xlsx/.csv ke Firestore</p>
-        </div>
-        <ChevronDown
-          size={15}
-          className={`text-slate-500 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {open && (
-      <div className="px-5 pb-5 border-t border-white/[0.04] pt-4">
+    <div className="a-fs">
+      <div className="fh">
+        <h4>Impor data</h4>
+        <p>Unggah berkas Excel untuk menambah atau memperbarui penduduk</p>
+      </div>
+
+      <div className="a-step" style={{ marginBottom: 18 }}>
+        {langkah.map((l, i) => {
+          const aktif = l.kunci.includes(step) && step !== 'done'
+          const selesai = step === 'done' || posisi > urut.indexOf(l.kunci[l.kunci.length - 1])
+          return (
+            <div key={l.n} style={{ display: 'contents' }}>
+              {i > 0 && <div className={`ln${posisi >= urut.indexOf(l.kunci[0]) ? ' dn' : ''}`} />}
+              <div className={`s${aktif ? ' on' : ''}${selesai ? ' dn' : ''}`}>
+                <span className="c">{selesai ? <Check className="i" style={{ fontSize: 13 }} /> : l.n}</span>
+                {l.label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
       {/* Step 1 — Upload */}
       {step === 'upload' && (
         <div className="flex flex-col gap-3">
           <div
+            role="button"
+            tabIndex={0}
+            className={`a-drop${dragging ? ' over' : ''}`}
             onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
             onClick={() => fileRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors ${dragging ? 'border-violet-500/60 bg-violet-500/5' : 'border-white/[0.15] hover:border-sky-500/40 hover:bg-sky-500/5'}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                fileRef.current?.click()
+              }
+            }}
           >
-            <FileSpreadsheet className="w-10 h-10 text-slate-500" />
-            <div className="text-center">
-              <p className="text-sm text-slate-300 font-medium">Klik atau drag file ke sini</p>
-              <p className="text-sm text-slate-500 mt-1">Format: .xlsx, .xls, .csv</p>
-            </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            <div className="di"><Upload className="i" style={{ fontSize: 24 }} /></div>
+            <b>Tarik berkas .xlsx ke sini</b>
+            <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>atau klik untuk memilih dari perangkat</span>
+            <span style={{ fontSize: 12.5, color: 'var(--ink-4)' }}>Format: .xlsx, .xls, .csv</span>
           </div>
-          <button
-            onClick={downloadTemplate}
-            className="flex items-center gap-2 text-sm text-sky-400 hover:text-sky-300 transition-colors self-start"
-          >
-            <Download className="w-3.5 h-3.5" />
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileChange}
+            className="hidden"
+            aria-label="Pilih berkas Excel"
+          />
+          <Button variant="ghost" size="sm" onClick={downloadTemplate} style={{ alignSelf: 'flex-start' }}>
+            <Download className="i" />
             Download Template Excel
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Step 2 — Mapping */}
       {step === 'mapping' && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-slate-400">
-            Terdeteksi <span className="font-semibold text-slate-200">{rawRows.length} baris data</span>. Petakan kolom Excel ke field DAPENDIG:
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-2)' }}>
+            Terdeteksi <b style={{ color: 'var(--ink)' }}>{rawRows.length} baris data</b>. Petakan kolom Excel ke field DAPENDIG:
           </p>
-          <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
-            <table className="w-full text-sm">
+          <div className="a-tw imp-tw">
+            <table className="a-t">
               <thead>
-                <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kolom di Excel</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">→ Field DAPENDIG</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Contoh Nilai</th>
+                <tr>
+                  <th>Kolom di Excel</th>
+                  <th>→ Field DAPENDIG</th>
+                  <th>Contoh Nilai</th>
                 </tr>
               </thead>
               <tbody>
                 {excelCols.map((col) => (
-                  <tr key={col} className="border-b border-white/[0.04] last:border-0">
-                    <td className="px-3 py-2 text-slate-300 font-mono">{col}</td>
-                    <td className="px-3 py-2">
+                  <tr key={col}>
+                    <td className="mn">{col}</td>
+                    <td>
                       <select
+                        className="mapsel"
+                        aria-label={`Field untuk kolom ${col}`}
                         value={mapping[col] ?? ''}
                         onChange={(e) => setMapping({ ...mapping, [col]: e.target.value })}
-                        className="bg-[#0d1424] border border-white/[0.08] rounded-lg px-2 py-1 text-sm text-slate-200 focus:outline-none focus:border-sky-500/50 w-full"
                       >
                         <option value="">— skip —</option>
                         {KDPD.map(({ k, l }) => (
@@ -283,7 +253,7 @@ export function ImportSection() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-3 py-2 text-slate-500 font-mono truncate max-w-[120px]">
+                    <td className="mn" style={{ color: 'var(--ink-3)' }}>
                       {String(rawRows[0]?.[col] ?? '')}
                     </td>
                   </tr>
@@ -291,63 +261,52 @@ export function ImportSection() {
               </tbody>
             </table>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={reset}>
-              <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+          <div className="set-ft">
+            <Button variant="outline" onClick={reset}>
+              <ArrowLeft className="i" />
               Kembali
             </Button>
-            <Button
-              size="sm"
-              onClick={handleImport}
-              disabled={importMutation.isPending}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
-            >
-              {importMutation.isPending ? 'Mengimport...' : (<><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />Import {rawRows.length} Data</>)}
+            <Button onClick={handleImport} disabled={importMutation.isPending}>
+              {importMutation.isPending ? 'Mengimport...' : (<><CircleCheck className="i" />Import {rawRows.length} Data</>)}
             </Button>
           </div>
         </div>
       )}
 
-      {/* Step 3 — Done */}
+      {/* Step 3 — Proses */}
       {step === 'importing' && (
-        <div className="flex flex-col gap-4 py-4">
-          <p className="text-sm font-medium text-slate-300 text-center">Mengimport data...</p>
+        <div className="flex flex-col gap-4 py-2">
+          <p style={{ margin: 0, textAlign: 'center', fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>Mengimport data...</p>
           <MigrasiProgress current={progressCurrent} total={progressTotal} label="data diproses" />
-          <p className="text-sm text-slate-600 text-center">Jangan tutup halaman ini</p>
+          <p style={{ margin: 0, textAlign: 'center', fontSize: 12.5, color: 'var(--ink-3)' }}>Jangan tutup halaman ini</p>
         </div>
       )}
 
       {step === 'done' && result && (
-        <div className="flex flex-col items-center gap-4 py-4">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 flex items-center justify-center">
-            <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-          </div>
-          <div className="text-center">
-            <p className="font-semibold text-slate-100">Import Selesai!</p>
-            <p className="text-sm text-slate-400 mt-1">
-              {result.diperbarui > 0 && (
-                <><span className="text-sky-400 font-semibold">{result.diperbarui}</span> data diperbarui<br /></>
-              )}
-              {result.berhasil > 0 && (
-                <><span className="text-emerald-400 font-semibold">{result.berhasil}</span> data baru ditambahkan<br /></>
-              )}
-              {result.gagal > 0 && (
-                <><span className="text-rose-400 font-semibold">{result.gagal}</span> gagal</>
-              )}
-            </p>
-          </div>
-          <p className="text-xs text-slate-600 text-center max-w-xs">
-            Data yang sudah ada diperbarui berdasarkan kolom ID. Data baru ditambahkan jika NIK belum terdaftar.
+        <div className="imp-hasil">
+          <div className="ok-ic"><CircleCheck className="i" /></div>
+          <p style={{ fontFamily: 'var(--f-display)', fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>Import Selesai!</p>
+          <p className="cnt-l">
+            {result.diperbarui > 0 && (
+              <><b className="i2">{result.diperbarui}</b> data diperbarui<br /></>
+            )}
+            {result.berhasil > 0 && (
+              <><b className="o">{result.berhasil}</b> data baru ditambahkan<br /></>
+            )}
+            {result.gagal > 0 && (
+              <><b className="b">{result.gagal}</b> gagal</>
+            )}
           </p>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={reset}>Import Lagi</Button>
-            <Button size="sm" onClick={() => router.push('/penduduk')}>
+          <small>
+            Data yang sudah ada diperbarui berdasarkan kolom ID. Data baru ditambahkan jika NIK belum terdaftar.
+          </small>
+          <div className="set-ft" style={{ justifyContent: 'center' }}>
+            <Button variant="outline" onClick={reset}>Import Lagi</Button>
+            <Button onClick={() => router.push('/penduduk')}>
               Lihat Data Penduduk →
             </Button>
           </div>
         </div>
-      )}
-      </div>
       )}
     </div>
   )

@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 interface AppLogoProps {
@@ -6,29 +5,25 @@ interface AppLogoProps {
   size?: number
 }
 
+/** Logo balai desa (ikon aplikasi), memakai kelas `.lgi` prototype. */
 export function AppLogo({ className, size = 32 }: AppLogoProps) {
   return (
-    <Image
-      src="/icons/icon-192.png"
-      alt="DaPenDig"
-      width={size}
-      height={size}
-      className={cn('object-cover', className)}
-      style={{ width: size, height: size }}
-      unoptimized
+    <div
+      role="img"
+      aria-label="DaPenDig"
+      className={cn('lgi shrink-0', className)}
+      style={{ width: size, height: size, borderRadius: Math.round(size * 0.28) }}
     />
   )
 }
 
 export function AppLogoFull({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-center gap-2.5', className)}>
-      <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-white/10">
-        <Image src="/icons/icon-192.png" alt="DaPenDig" width={36} height={36} className="w-full h-full object-cover" unoptimized />
-      </div>
-      <div className="flex flex-col leading-none">
-        <span className="text-sm font-semibold text-slate-100 tracking-tight">Data Penduduk Digital</span>
-        <span className="text-xs text-slate-500 mt-0.5">Desa Karang Sengon</span>
+    <div className={cn('flex items-center gap-[11px]', className)}>
+      <AppLogo size={40} />
+      <div className="leading-tight">
+        <b className="block font-display text-[16.5px] font-bold tracking-tight text-ink">DaPenDig</b>
+        <span className="block text-xs text-gold-600">Desa Karang Sengon</span>
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 {
   "name": "dapendig-next",
-  "version": "2.9.1",
+  "version": "3.2.0",
   "private": true,
   "overrides": {
     "uuid": "^14.0.1",
@@ -15,7 +15,8 @@
     "test": "vitest run --exclude firestore.rules.test.ts",
     "test:watch": "vitest --exclude firestore.rules.test.ts",
     "test:rules": "vitest run firestore.rules.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "versi": "node scripts/naikkan-versi.mjs"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -36,7 +37,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.8.0",
-    "next": "^16.3.0",
+    "next": "^16.4.3",
     "next-themes": "^0.4.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
@@ -55,7 +56,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.5",
     "eslint": "^9",
-    "eslint-config-next": "^16.3.0",
+    "eslint-config-next": "^16.4.3",
     "firebase-tools": "^15.26.0",
     "jsdom": "^30.0.1",
     "tailwindcss": "^4",
