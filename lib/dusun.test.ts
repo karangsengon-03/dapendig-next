@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { DUSUN_BAWAAN, RW_BAWAAN, daftarRt, dusunDariRt, normalisasiDusun, normalisasiRw, validasiDusun, validasiRw } from './dusun'
-import { RT_LIST, RW_LIST } from './penduduk-constants'
 
 describe('DUSUN_BAWAAN', () => {
-  it('gabungan RT bawaan = RT_LIST resmi (001–011) dan setiap RT hanya di satu dusun', () => {
-    expect(daftarRt(DUSUN_BAWAAN)).toEqual([...RT_LIST])
+  it('gabungan RT bawaan = RT resmi Desa Karang Sengon (001–011) dan setiap RT hanya di satu dusun', () => {
+    expect(daftarRt(DUSUN_BAWAAN)).toEqual(['001', '002', '003', '004', '005', '006', '007', '008', '009', '010', '011'])
     expect(validasiDusun(DUSUN_BAWAAN).ada).toBe(false)
   })
   it('pemetaan sama dengan yang dulu tertulis tetap di dashboard (RT 007 masuk Pesanggrahan)', () => {
@@ -79,8 +78,8 @@ describe('validasiDusun', () => {
 })
 
 describe('RW', () => {
-  it('RW_BAWAAN sama dengan RW_LIST lama (001–005)', () => {
-    expect(RW_BAWAAN).toEqual([...RW_LIST])
+  it('RW_BAWAAN = 001–005 (daftar RW lama)', () => {
+    expect(RW_BAWAAN).toEqual(['001', '002', '003', '004', '005'])
     expect(validasiRw(RW_BAWAAN)).toBeUndefined()
   })
   it('normalisasiRw: 3 digit, unik, terurut; kosong/bukan daftar → null', () => {

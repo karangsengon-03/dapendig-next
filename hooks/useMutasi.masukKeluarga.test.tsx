@@ -91,7 +91,7 @@ async function jalankanBatch(daftar: Data[]) {
 
 beforeEach(() => { toko.clear(); urutId = 0; tolakNik = null })
 
-describe('useAddMutasiMasukBatch — Pindah Masuk 1 keluarga', () => {
+describe('useAddMutasiMasukBatch — Pindah masuk 1 keluarga', () => {
   it('3 anggota → 3 catatan pindah masuk + 3 penduduk aktif + 3 log (tak ada yang tertinggal)', async () => {
     await jalankanBatch([A(), B(), C()])
     expect(isi('mutasi_masuk').map((d) => d.nik).sort()).toEqual(['3511140109480001', '3511140109480002', '3511140109480003'])

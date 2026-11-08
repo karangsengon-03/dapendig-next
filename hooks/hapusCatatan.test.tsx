@@ -58,7 +58,7 @@ beforeEach(() => {
   deleteDocMock.mockReset().mockResolvedValue(undefined)
 })
 
-describe('Hapus catatan Pindah Keluar — hanya untuk catatan yatim', () => {
+describe('Hapus catatan Pindah keluar — hanya untuk catatan yatim', () => {
   it('penduduk MASIH berstatus mutasi-keluar → ditolak, catatan tidak dihapus, tanpa log', async () => {
     getDocMock.mockResolvedValue(pendudukDengan('mutasi-keluar'))
     const { result } = renderHook(() => useDeleteMutasiKeluar(), { wrapper })
@@ -132,8 +132,8 @@ describe('Hapus catatan Kematian — hanya untuk catatan yatim', () => {
   })
 })
 
-describe('Hapus catatan Pindah Masuk dan Kelahiran — tidak berubah', () => {
-  it('Pindah Masuk dihapus tanpa memeriksa penduduk', async () => {
+describe('Hapus catatan Pindah masuk dan Kelahiran — tidak berubah', () => {
+  it('Pindah masuk dihapus tanpa memeriksa penduduk', async () => {
     const { result } = renderHook(() => useDeleteMutasiMasuk(), { wrapper })
     await result.current.mutateAsync({ id: 'mm-1', nama: 'Test' })
     expect(getDocMock).not.toHaveBeenCalled()

@@ -97,15 +97,15 @@ export default function MigratePendidikanPage() {
   // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
   if (!isAdmin()) {
     return (
-      <AppShell title="Migrasi Pendidikan">
+      <AppShell title="Migrasi pendidikan">
         <AksesDitolakAdmin />
       </AppShell>
     )
   }
 
   return (
-    <AppShell title="Migrasi Pendidikan">
-      <MigLayout title="Migrasi Pendidikan" desc="SLTP → SMP dan SLTA → SMA">
+    <AppShell title="Migrasi pendidikan">
+      <MigLayout title="Migrasi pendidikan" desc="SLTP → SMP dan SLTA → SMA">
         {status === 'idle' && (
           <>
             <MigBox>
@@ -113,7 +113,7 @@ export default function MigratePendidikanPage() {
                 <div key={old} className="mig-map"><span className="x mono">{old}</span><span className="ar">→</span><span className="y mono">{nw}</span></div>
               ))}
             </MigBox>
-            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan Data Terlebih Dahulu</MigPrimary>
+            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan data terlebih dahulu</MigPrimary>
           </>
         )}
 

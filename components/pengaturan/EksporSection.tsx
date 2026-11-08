@@ -114,7 +114,7 @@ interface EksporItem {
 const EKSPOR_LIST: EksporItem[] = [
   {
     koleksi: 'penduduk',
-    label: 'Data Penduduk',
+    label: 'Data penduduk',
     deskripsi: 'Seluruh data penduduk aktif dan tidak aktif',
     kolom: KOLOM_PENDUDUK,
     filename: 'data-penduduk',
@@ -122,7 +122,7 @@ const EKSPOR_LIST: EksporItem[] = [
   },
   {
     koleksi: 'lahir',
-    label: 'Data Kelahiran',
+    label: 'Data kelahiran',
     deskripsi: 'Catatan kelahiran yang telah direkam',
     kolom: KOLOM_LAHIR,
     filename: 'data-kelahiran',
@@ -130,7 +130,7 @@ const EKSPOR_LIST: EksporItem[] = [
   },
   {
     koleksi: 'meninggal',
-    label: 'Data Kematian',
+    label: 'Data kematian',
     deskripsi: 'Catatan kematian yang telah direkam',
     kolom: KOLOM_MENINGGAL,
     filename: 'data-kematian',
@@ -138,7 +138,7 @@ const EKSPOR_LIST: EksporItem[] = [
   },
   {
     koleksi: 'mutasi_keluar',
-    label: 'Mutasi Pindah Keluar',
+    label: 'Mutasi pindah keluar',
     deskripsi: 'Data penduduk yang pindah keluar desa',
     kolom: KOLOM_MUTASI_KELUAR,
     filename: 'mutasi-keluar',
@@ -146,7 +146,7 @@ const EKSPOR_LIST: EksporItem[] = [
   },
   {
     koleksi: 'mutasi_masuk',
-    label: 'Mutasi Pindah Masuk',
+    label: 'Mutasi pindah masuk',
     deskripsi: 'Data penduduk yang pindah masuk ke desa',
     kolom: KOLOM_MUTASI_MASUK,
     filename: 'mutasi-masuk',

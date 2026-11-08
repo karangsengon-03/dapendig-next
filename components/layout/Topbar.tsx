@@ -46,19 +46,19 @@ function buatCrumb(pathname: string, title: string | undefined, namaPenduduk: st
     case 'mutasi':
       return [{ label: 'Peristiwa' }, { label: 'Mutasi' }]
     case 'vital':
-      return [{ label: 'Peristiwa' }, { label: 'Kelahiran & Kematian' }]
+      return [{ label: 'Peristiwa' }, { label: 'Kelahiran & kematian' }]
     case 'monografi':
       return [{ label: 'Laporan' }, { label: 'Monografi' }]
     case 'log':
-      return [{ label: 'Laporan' }, { label: 'Log Aktivitas' }]
+      return [{ label: 'Laporan' }, { label: 'Log aktivitas' }]
     case 'recycle-bin':
-      return [{ label: 'Tempat Sampah' }]
+      return [{ label: 'Tempat sampah' }]
     case 'pengaturan':
       return a
         ? [{ label: 'Pengaturan', href: '/pengaturan' }, { label: title || a }]
         : [{ label: 'Pengaturan' }]
     case 'profil':
-      return [{ label: 'Profil Saya' }]
+      return [{ label: 'Profil saya' }]
     default:
       return [{ label: title || 'Beranda' }]
   }
@@ -190,13 +190,13 @@ export function Topbar({ title, onSearch }: TopbarProps) {
         >
           <div className="pop" role="menu" style={{ left: menu.left, top: menu.top, width: LEBAR_MENU }}>
             <div className="pt" style={{ paddingBottom: 8 }}>
-              <div style={{ fontSize: 13.5, color: 'var(--ink)', fontWeight: 600, wordBreak: 'break-word' }}>{namaUser}</div>
+              <div style={{ fontSize: 14, color: 'var(--ink)', fontWeight: 600, wordBreak: 'break-word' }}>{namaUser}</div>
               <div style={{ fontWeight: 500 }}>{ROLE_LABEL[user.role] ?? user.role}</div>
             </div>
             <div className="sep" />
             <button type="button" role="menuitem" className="o" onClick={() => pindah('/profil')}>
               <UserCircle className="i" style={{ fontSize: 16 }} />
-              Profil Saya
+              Profil saya
             </button>
             <button type="button" role="menuitem" className="o" onClick={() => pindah('/pengaturan')}>
               <Settings className="i" style={{ fontSize: 16 }} />

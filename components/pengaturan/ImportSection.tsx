@@ -204,7 +204,7 @@ export function ImportSection() {
             <div className="di"><Upload className="i" style={{ fontSize: 24 }} /></div>
             <b>Tarik berkas .xlsx ke sini</b>
             <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>atau klik untuk memilih dari perangkat</span>
-            <span style={{ fontSize: 12.5, color: 'var(--ink-4)' }}>Format: .xlsx, .xls, .csv</span>
+            <span style={{ fontSize: 13, color: 'var(--ink-4)' }}>Format: .xlsx, .xls, .csv</span>
           </div>
           <input
             ref={fileRef}
@@ -278,14 +278,14 @@ export function ImportSection() {
         <div className="flex flex-col gap-4 py-2">
           <p style={{ margin: 0, textAlign: 'center', fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>Mengimport data...</p>
           <MigrasiProgress current={progressCurrent} total={progressTotal} label="data diproses" />
-          <p style={{ margin: 0, textAlign: 'center', fontSize: 12.5, color: 'var(--ink-3)' }}>Jangan tutup halaman ini</p>
+          <p style={{ margin: 0, textAlign: 'center', fontSize: 13, color: 'var(--ink-3)' }}>Jangan tutup halaman ini</p>
         </div>
       )}
 
       {step === 'done' && result && (
         <div className="imp-hasil">
           <div className="ok-ic"><CircleCheck className="i" /></div>
-          <p style={{ fontFamily: 'var(--f-display)', fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>Import Selesai!</p>
+          <p style={{ fontFamily: 'var(--f-display)', fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>Impor selesai!</p>
           <p className="cnt-l">
             {result.diperbarui > 0 && (
               <><b className="i2">{result.diperbarui}</b> data diperbarui<br /></>
@@ -301,7 +301,7 @@ export function ImportSection() {
             Data yang sudah ada diperbarui berdasarkan kolom ID. Data baru ditambahkan jika NIK belum terdaftar.
           </small>
           <div className="set-ft" style={{ justifyContent: 'center' }}>
-            <Button variant="outline" onClick={reset}>Import Lagi</Button>
+            <Button variant="outline" onClick={reset}>Impor lagi</Button>
             <Button onClick={() => router.push('/penduduk')}>
               Lihat Data Penduduk →
             </Button>

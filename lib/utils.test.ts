@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import { formatTanggal, getInisial, getUmur, parseDate, toISODate, hitungUmurFromStr, cn } from '@/lib/utils'
+import { describe, it, expect } from 'vitest'
+import { formatTanggal, getInisial, parseDate, toISODate, cn } from '@/lib/utils'
 
 describe('formatTanggal (lib/utils.ts — berbeda dari formatTanggalLahir di dateUtils.ts)', () => {
   it('zero-pad tanggal 1-9 secara manual (string interpolation, bukan toLocaleDateString)', () => {
@@ -50,26 +50,6 @@ describe('getInisial', () => {
   })
 })
 
-describe('getUmur (versi lib/utils.ts)', () => {
-  afterEach(() => vi.useRealTimers())
-
-  it('return null untuk tanggal lahir kosong', () => {
-    expect(getUmur('')).toBeNull()
-    expect(getUmur(null)).toBeNull()
-  })
-
-  it('return null jika format tidak match regex YYYY-MM-DD di awal string', () => {
-    expect(getUmur('bukan-tanggal')).toBeNull()
-  })
-
-  it('menghitung umur benar, konsisten dengan hitungUmur di dateUtils.ts', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-08-10T12:00:00'))
-    expect(getUmur('2000-08-10')).toBe(26) // tepat ultah hari ini
-    expect(getUmur('2000-08-11')).toBe(25) // ultah besok, belum nambah
-  })
-})
-
 describe('toISODate', () => {
   it('membiarkan format YYYY-MM-DD yang sudah benar', () => {
     expect(toISODate('1990-01-17')).toBe('1990-01-17')
@@ -105,27 +85,6 @@ describe('parseDate (versi lib/utils.ts — TERPISAH dari dateUtils.ts, TIDAK pu
     // sebaiknya disatukan.
     const d = parseDate('2023-02-30')
     expect(d).not.toBeNull() // mendokumentasikan perilaku SAAT INI apa adanya
-  })
-})
-
-describe('hitungUmurFromStr', () => {
-  afterEach(() => vi.useRealTimers())
-
-  it('return -1 untuk input kosong', () => {
-    expect(hitungUmurFromStr('')).toBe(-1)
-    expect(hitungUmurFromStr(null)).toBe(-1)
-  })
-
-  it('menghitung umur benar dari format YYYY-MM-DD', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-08-10T12:00:00'))
-    expect(hitungUmurFromStr('2000-08-10')).toBe(26)
-  })
-
-  it('fallback ke format DD/MM/YYYY jika bukan YYYY-MM-DD', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-08-10T12:00:00'))
-    expect(hitungUmurFromStr('10/08/2000')).toBe(26)
   })
 })
 

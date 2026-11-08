@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { buangSemuaDraf } from '@/lib/draf-form'
 import { render, screen, fireEvent, within, cleanup, waitFor } from '@testing-library/react'
 
 vi.mock('@/components/layout/AppShell', () => ({ AppShell: ({ children }: { children: React.ReactNode }) => <>{children}</> }))
@@ -87,6 +88,7 @@ describe('Kelahiran — modal Edit sama dengan form Tambah', () => {
     const { container } = render(<LahirForm onSuccess={vi.fn()} onCancel={vi.fn()} />)
     const tambah = labelIsian(container)
     cleanup()
+    buangSemuaDraf() // form Tambah di atas dianggap sudah ditutup; draf tidak boleh membuka form di halaman
     render(<VitalPage />)
     const edit = labelIsian(bukaEdit())
     expect(tambah.length).toBeGreaterThanOrEqual(15)

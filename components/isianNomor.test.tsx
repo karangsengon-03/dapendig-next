@@ -20,11 +20,11 @@ import { PendudukForm } from '@/components/penduduk/PendudukForm'
  * spasi/titik/strip tetap utuh (dulu: huruf diterima, dan tempelan "3511 0300 0000 1826" terpotong di 13 digit).
  */
 const DAFTAR: [string, () => ReactElement, string[]][] = [
-  ['Pindah Keluar', () => <MutasiKeluarForm onSuccess={vi.fn()} onCancel={vi.fn()} />, ['mk-nik', 'mk-kk']],
-  ['Pindah Masuk', () => <MutasiMasukForm onSuccess={vi.fn()} onCancel={vi.fn()} />, ['pm-nik', 'pm-kk']],
+  ['Pindah keluar', () => <MutasiKeluarForm onSuccess={vi.fn()} onCancel={vi.fn()} />, ['mk-nik', 'mk-kk']],
+  ['Pindah masuk', () => <MutasiMasukForm onSuccess={vi.fn()} onCancel={vi.fn()} />, ['pm-nik', 'pm-kk']],
   ['Kelahiran', () => <LahirForm onSuccess={vi.fn()} onCancel={vi.fn()} />, ['lh-nik', 'lh-kk']],
   ['Kematian', () => <MeninggalForm onSuccess={vi.fn()} onCancel={vi.fn()} allPenduduk={[]} />, ['mn-nik', 'mn-kk']],
-  ['Edit Penduduk', () => <PendudukForm mode="edit" editId="x" initial={{}} onSubmit={vi.fn()} />, ['f-nik', 'f-kk']],
+  ['Edit penduduk', () => <PendudukForm mode="edit" editId="x" initial={{}} onSubmit={vi.fn()} />, ['f-nik', 'f-kk']],
 ]
 
 describe.each(DAFTAR)('isian nomor — %s', (_nama, buat, ids) => {

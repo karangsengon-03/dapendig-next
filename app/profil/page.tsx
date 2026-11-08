@@ -212,7 +212,7 @@ export default function ProfilPage() {
   const { user } = useAuthStore()
 
   return (
-    <AppShell title="Profil Saya">
+    <AppShell title="Profil saya">
       <div className="pg-narrow">
         <PageHeader title="Profil saya" description="Kelola informasi akun dan keamanan" />
 
@@ -224,7 +224,7 @@ export default function ProfilPage() {
               </div>
               <div style={{ minWidth: 0 }}>
                 <h2 style={{ fontSize: 22 }}>{user?.nama || '(nama belum diisi)'}</h2>
-                <p style={{ margin: '4px 0 8px', color: 'var(--ink-3)', fontSize: 13.5, overflowWrap: 'anywhere' }}>{user?.email}</p>
+                <p style={{ margin: '4px 0 8px', color: 'var(--ink-3)', fontSize: 14, overflowWrap: 'anywhere' }}>{user?.email}</p>
                 <span className="a-badge gold">{user?.role ? ROLE_LABEL[user.role] ?? user.role : '—'}</span>
               </div>
             </div>

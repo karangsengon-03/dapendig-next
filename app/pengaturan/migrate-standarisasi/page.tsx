@@ -116,21 +116,21 @@ export default function MigrateStandarisasiPage() {
   // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
   if (!isAdmin()) {
     return (
-      <AppShell title="Standarisasi Data">
+      <AppShell title="Standarisasi data">
         <AksesDitolakAdmin />
       </AppShell>
     )
   }
 
   return (
-    <AppShell title="Standarisasi Data">
-      <MigLayout title="Standarisasi Pendidikan & Pekerjaan" desc="Sesuai Permendagri 6/2026">
+    <AppShell title="Standarisasi data">
+      <MigLayout title="Standarisasi pendidikan & pekerjaan" desc="Sesuai Permendagri 6/2026">
         {status === 'idle' && (
           <>
             <MigBox>
               <p>Scan seluruh data penduduk untuk menemukan nilai pendidikan dan pekerjaan yang perlu distandarisasi, lalu pilih mana saja yang ingin diubah.</p>
             </MigBox>
-            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan Data Terlebih Dahulu</MigPrimary>
+            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan data terlebih dahulu</MigPrimary>
           </>
         )}
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { useAppStore } from '@/store/appStore'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 const toastMock = vi.fn()
@@ -35,6 +36,8 @@ function isiFormValid() {
 }
 
 beforeEach(() => {
+  // Alamat bawaan form = nama desa dari Pengaturan → Informasi wilayah (store); tidak lagi tertanam di kode
+  useAppStore.setState({ wilayah: { desa: 'Karang Sengon', kecamatan: 'Klabang', kabupaten: 'Bondowoso', provinsi: 'Jawa Timur', tahun: '2026' } })
   toastMock.mockClear()
   mutateMock.mockClear()
   mutateMasukMock.mockClear()
@@ -75,7 +78,7 @@ describe('MutasiKeluarForm — penanganan hasil simpan (perorangan)', () => {
   })
 })
 
-describe('MutasiMasukForm — isian Golongan Darah (opsional)', () => {
+describe('MutasiMasukForm — isian Golongan darah (opsional)', () => {
   function isiMasukValid() {
     const set = (id: string, v: string) => fireEvent.change(document.getElementById(id) as HTMLInputElement, { target: { value: v } })
     set('pm-nama', 'Uji Masuk'); set('pm-nik', '3511140109480098'); set('pm-kk', '3511030000001826')
@@ -145,5 +148,18 @@ describe('MutasiKeluarForm (keluarga) — galat isian No. KK saat tak ada anggot
     fireEvent.click(screen.getByRole('radio', { name: /1 Keluarga/ }))
     fireEvent.change(document.getElementById('mk-kk') as HTMLInputElement, { target: { value: '35110300' } })
     expect(screen.queryByText(PESAN)).toBeNull()
+  })
+})
+
+describe('alamat bawaan mengikuti nama desa di Pengaturan', () => {
+  it('desa lain → alamat bawaan form pindah masuk memakai nama desa itu (bukan nama tertanam)', async () => {
+    useAppStore.setState({ wilayah: { desa: 'Sumber Wringin', kecamatan: 'Sukowono', kabupaten: 'Jember', provinsi: 'Jawa Timur', tahun: '2026' } })
+    const { emptyAnggotaForm } = await import('@/components/mutasi/MutasiForm')
+    expect(emptyAnggotaForm('2026-11-03').alamat).toBe('SUMBER WRINGIN')
+  })
+  it('nama desa belum diisi → alamat bawaan kosong (diisi petugas)', async () => {
+    useAppStore.setState({ wilayah: { desa: '', kecamatan: '', kabupaten: '', provinsi: '', tahun: '2026' } })
+    const { emptyAnggotaForm } = await import('@/components/mutasi/MutasiForm')
+    expect(emptyAnggotaForm('2026-11-03').alamat).toBe('')
   })
 })

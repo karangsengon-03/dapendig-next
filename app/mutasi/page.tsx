@@ -41,6 +41,7 @@ import { usePendudukDetail, usePendudukList } from '@/hooks/usePenduduk'
 import { URUT_BAWAAN, buatPetaRt, cocokRt, urutkanCatatan, waktuBuat, type UrutCatatan } from '@/lib/saring-catatan'
 import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/components/ui/toast'
+import { buangDraf, tabBerDraf } from '@/lib/draf-form'
 import { GalatTolak } from '@/lib/galat-tolak'
 import { pesanHasilSinkron } from '@/lib/sinkron-catatan'
 import { validasiPindahKeluar, validasiPindahMasuk } from '@/lib/validasi-catatan'
@@ -251,8 +252,10 @@ function MutasiIsi() {
   const tabParam: Tab = sp.get('tab') === 'masuk' ? 'masuk' : 'keluar'
   const tambahParam = sp.get('tambah') === '1'
 
-  const [tabManual, setTabManual] = useState<Tab | null>(null)
-  const [formManual, setFormManual] = useState<boolean | null>(null)
+  // Form Tambah yang sempat ditinggalkan (lewat menu samping) terbuka lagi di tab yang sama dengan isian terakhir (lib/draf-form.ts)
+  const [tabDraf] = useState(() => tabBerDraf('mutasi', ['keluar', 'masuk']) as Tab | null)
+  const [tabManual, setTabManual] = useState<Tab | null>(tabDraf)
+  const [formManual, setFormManual] = useState<boolean | null>(tabDraf ? true : null)
   const [q, setQ] = useState('')
   const [bulan, setBulan] = useState('')
   const [rt, setRt] = useState('')
@@ -282,7 +285,7 @@ function MutasiIsi() {
   const { mutate: hapusMasuk, isPending: pendingHapusMasuk } = useDeleteMutasiMasuk()
   const { mutate: rollback, isPending: pendingRollback } = useRollbackMutasiKeluar()
 
-  // Catatan Pindah Keluar tidak menyimpan RT: RT diambil dari data penduduk (NIK), dimuat hanya saat RT dipakai.
+  // Catatan Pindah keluar tidak menyimpan RT: RT diambil dari data penduduk (NIK), dimuat hanya saat RT dipakai.
   const perluRtPenduduk = tab === 'keluar' && (rt !== '' || urut === 'rt')
   const { data: dataPenduduk, isLoading: loadingPenduduk } = usePendudukList({ enabled: perluRtPenduduk })
   const petaRt = useMemo(() => buatPetaRt(dataPenduduk), [dataPenduduk])
@@ -368,7 +371,8 @@ function MutasiIsi() {
   }
 
   function bukaTambah() { setFormManual(true) }
-  function tutupForm() { setFormManual(false) }
+  // Tutup form = isian dibuang (Batal, Tutup form, atau berhasil disimpan)
+  function tutupForm() { buangDraf(`mutasi.${tab}`); setFormManual(false) }
 
   const kosong = <Kosong tab={tab} adaSaringan={adaSaringan} onTambah={canAdd ? bukaTambah : undefined} />
 
@@ -391,8 +395,8 @@ function MutasiIsi() {
 
       <RecTabs
         tabs={[
-          { key: 'keluar', label: 'Pindah Keluar', icon: <PERISTIWA.pindah_keluar.Icon className="i" />, count: dataKeluar?.length },
-          { key: 'masuk', label: 'Pindah Masuk', icon: <PERISTIWA.pindah_masuk.Icon className="i" />, count: dataMasuk?.length },
+          { key: 'keluar', label: 'Pindah keluar', icon: <PERISTIWA.pindah_keluar.Icon className="i" />, count: dataKeluar?.length },
+          { key: 'masuk', label: 'Pindah masuk', icon: <PERISTIWA.pindah_masuk.Icon className="i" />, count: dataMasuk?.length },
         ]}
         aktif={tab}
         tone={tab === 'keluar' ? 'bad' : 'ok'}
@@ -515,7 +519,7 @@ function MutasiIsi() {
                           <th>NIK</th>
                           <th>No. KK</th>
                           <th>Tanggal</th>
-                          <th>Asal Daerah</th>
+                          <th>Asal daerah</th>
                           <th>RT/RW</th>
                           <th />
                         </tr>
@@ -616,7 +620,7 @@ function MutasiIsi() {
         <ConfirmModal
           icon={<Undo2 className="i" style={{ fontSize: 24 }} />}
           tone="warn"
-          title="Batalkan Mutasi Keluar?"
+          title="Batalkan mutasi keluar?"
           okLabel="Ya, Batalkan"
           okVariant="default"
           loading={pendingRollback}

@@ -47,7 +47,7 @@ export function useRecycleBinList() {
 }
 
 export const PESAN_NIK_SUDAH_ADA = 'NIK sudah terdaftar di data penduduk'
-export const PESAN_ITEM_SUDAH_HILANG = 'Data sudah tidak ada di Tempat Sampah'
+export const PESAN_ITEM_SUDAH_HILANG = 'Data sudah tidak ada di Tempat sampah'
 
 
 const STATUS_VALID: Penduduk['status'][] = ['aktif', 'tidak aktif', 'meninggal', 'mutasi-keluar']
@@ -59,10 +59,10 @@ export function statusUntukPulihkan(status: unknown): Penduduk['status'] {
 
 /**
  * Pulihkan = tulis ulang dokumen penduduk ber-ID = NIK (konvensi data), BUKAN dokumen baru ber-ID acak.
- *  - Ditolak (item tetap di Tempat Sampah) bila NIK sudah dipakai: dokumen ber-ID NIK ATAU dokumen lain
+ *  - Ditolak (item tetap di Tempat sampah) bila NIK sudah dipakai: dokumen ber-ID NIK ATAU dokumen lain
  *    yang field `nik`-nya sama (dokumen lama ber-ID acak).
- *  - Tulis penduduk dan hapus item Tempat Sampah dalam SATU transaksi: keduanya berhasil atau tidak sama sekali
- *    (tak ada penduduk ganda bila peran tidak boleh menghapus item Tempat Sampah; rules: hapus = admin).
+ *  - Tulis penduduk dan hapus item Tempat sampah dalam SATU transaksi: keduanya berhasil atau tidak sama sekali
+ *    (tak ada penduduk ganda bila peran tidak boleh menghapus item Tempat sampah; rules: hapus = admin).
  *  - Status asli dipertahankan; created_at asli dipertahankan supaya yang dipulihkan tidak terhitung
  *    "penduduk baru bulan ini".
  */

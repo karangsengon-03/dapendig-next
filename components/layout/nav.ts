@@ -30,20 +30,20 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Peristiwa',
     items: [
       { href: '/mutasi', label: 'Mutasi', icon: ArrowLeftRight },
-      { href: '/vital', label: 'Kelahiran & Kematian', icon: HeartPulse },
+      { href: '/vital', label: 'Kelahiran & kematian', icon: HeartPulse },
     ],
   },
   {
     label: 'Laporan',
     items: [
       { href: '/monografi', label: 'Monografi', icon: BarChart3 },
-      { href: '/log', label: 'Log Aktivitas', icon: ClipboardList },
+      { href: '/log', label: 'Log aktivitas', icon: ClipboardList },
     ],
   },
 ]
 
 export const NAV_FOOT: NavItem[] = [
-  { href: '/recycle-bin', label: 'Tempat Sampah', icon: Trash2 },
+  { href: '/recycle-bin', label: 'Tempat sampah', icon: Trash2 },
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ]
 

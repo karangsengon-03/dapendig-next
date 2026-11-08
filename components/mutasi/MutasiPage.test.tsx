@@ -36,7 +36,7 @@ const NIK = { a: '3511140109480011', b: '3511140109480012', c: '3511140109480013
 
 beforeEach(() => {
   daftarPendudukMock.mockClear()
-  // Pindah Keluar: Agus (Mar, RT 002), Budi (Sep, RT 010), Citra (Jun, RT 002). RT hanya ada di data penduduk.
+  // Pindah keluar: Agus (Mar, RT 002), Budi (Sep, RT 010), Citra (Jun, RT 002). RT hanya ada di data penduduk.
   keluar = [
     { id: 'k1', nama: 'Agus', nik_target: NIK.a, no_kk: '3511030000000001', tanggal: '2026-03-10', tujuan: 'Malang', alasan: '' },
     { id: 'k2', nama: 'Budi', nik_target: NIK.b, no_kk: '3511030000000002', tanggal: '2026-09-01', tujuan: 'Surabaya', alasan: '' },
@@ -47,7 +47,7 @@ beforeEach(() => {
     { id: NIK.b, nik: NIK.b, rt: '010' },
     { id: NIK.c, nik: NIK.c, rt: '002' },
   ]
-  // Pindah Masuk: Dewi (Mei, RT 001), Eko (Agu, RT 003), Fajar (Jul, RT 003). RT ada di catatannya.
+  // Pindah masuk: Dewi (Mei, RT 001), Eko (Agu, RT 003), Fajar (Jul, RT 003). RT ada di catatannya.
   masuk = [
     { id: 'm1', nama_lengkap: 'Dewi', nik: NIK.d, no_kk: '3511030000000004', tanggal: '2026-05-01', rt: '001', rw: '001', asal_daerah: 'Bondowoso' },
     { id: 'm2', nama_lengkap: 'Eko', nik: NIK.e, no_kk: '3511030000000005', tanggal: '2026-08-20', rt: '003', rw: '001', asal_daerah: 'Jember' },
@@ -63,7 +63,7 @@ const pilihMenu = (chip: string, item: string) => {
 }
 const kolomCari = () => screen.getByRole('textbox', { name: 'Cari nama, NIK, atau No. KK' })
 const cari = (v: string) => fireEvent.change(kolomCari(), { target: { value: v } })
-const bukaTabMasuk = () => fireEvent.click(screen.getByRole('button', { name: /Pindah Masuk/ }))
+const bukaTabMasuk = () => fireEvent.click(screen.getByRole('button', { name: /Pindah masuk/ }))
 
 describe('Halaman Mutasi — urutan', () => {
   it('bawaan: terbaru → terlama', () => {
@@ -121,7 +121,7 @@ describe('Halaman Mutasi — pencarian', () => {
 })
 
 describe('Halaman Mutasi — filter RT', () => {
-  it('Pindah Keluar: RT diambil dari data penduduk (RT tidak disimpan di catatannya)', () => {
+  it('Pindah keluar: RT diambil dari data penduduk (RT tidak disimpan di catatannya)', () => {
     render(<MutasiPage />)
     pilihMenu('Filter RT', 'RT 002')
     expect(barisNik()).toEqual([NIK.c, NIK.a]) // Budi (RT 010) tersaring; sisanya terbaru dulu
@@ -138,7 +138,7 @@ describe('Halaman Mutasi — filter RT', () => {
     expect(daftarPendudukMock.mock.calls.at(-1)?.[0]).toEqual({ enabled: true })
   })
 
-  it('Pindah Keluar: orang yang tak ada lagi di data penduduk tidak cocok dengan RT mana pun, tetapi tetap muncul tanpa filter RT', () => {
+  it('Pindah keluar: orang yang tak ada lagi di data penduduk tidak cocok dengan RT mana pun, tetapi tetap muncul tanpa filter RT', () => {
     penduduk = [{ id: NIK.a, nik: NIK.a, rt: '002' }]
     render(<MutasiPage />)
     expect(barisNik()).toHaveLength(3)
@@ -146,7 +146,7 @@ describe('Halaman Mutasi — filter RT', () => {
     expect(barisNik()).toEqual([NIK.a])
   })
 
-  it('Pindah Masuk: memakai RT pada catatan; gabung dengan pencarian', () => {
+  it('Pindah masuk: memakai RT pada catatan; gabung dengan pencarian', () => {
     render(<MutasiPage />)
     bukaTabMasuk()
     expect(barisNik()).toEqual([NIK.e, NIK.f, NIK.d]) // Agu, Jul, Mei
@@ -154,11 +154,11 @@ describe('Halaman Mutasi — filter RT', () => {
     expect(barisNik()).toEqual([NIK.e, NIK.f])
     cari('fajar')
     expect(barisNik()).toEqual([NIK.f])
-    // Pindah Masuk tidak butuh daftar penduduk
+    // Pindah masuk tidak butuh daftar penduduk
     expect(daftarPendudukMock.mock.calls.every((c) => c[0]?.enabled === false)).toBe(true)
   })
 
-  it('Pindah Masuk: urut RT ↑ (RT 001 dulu), RT sama → nama A–Z', () => {
+  it('Pindah masuk: urut RT ↑ (RT 001 dulu), RT sama → nama A–Z', () => {
     render(<MutasiPage />)
     bukaTabMasuk()
     pilihMenu('Urutkan', 'RT ↑')

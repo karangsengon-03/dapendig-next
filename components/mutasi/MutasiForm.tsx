@@ -25,6 +25,9 @@ import { GalatTolak } from '@/lib/galat-tolak'
 import { angka16 } from '@/lib/angka'
 import { opsiRt, rt3 } from '@/lib/rt-rw'
 import { useDusunAktif } from '@/hooks/useDusunAktif'
+import { useDrafState } from '@/hooks/useDrafForm'
+import { useAppStore } from '@/store/appStore'
+import { alamatBawaan, contohAlamat } from '@/lib/wilayah'
 import { validasiPindahKeluar, validasiPindahMasuk } from '@/lib/validasi-catatan'
 import type { MutasiKeluar, MutasiMasuk } from '@/types'
 import {
@@ -37,7 +40,7 @@ import {
   GOLONGAN_DARAH,
 } from '@/lib/penduduk-constants'
 
-// ── Pilihan "1 Orang / 1 Keluarga (KK)" (tombol radio gaya .a-opt, seperti dialog Pindah Keluar) ──
+// ── Pilihan "1 Orang / 1 Keluarga (KK)" (tombol radio gaya .a-opt, seperti dialog Pindah keluar) ──
 type Opsi = 'perorangan' | 'keluarga'
 
 // Golongan darah: opsional (kosong = belum diisi); nilai sama dengan data penduduk yang ada
@@ -77,7 +80,7 @@ function PilihJenis({
   )
 }
 
-// ── Form Pindah Keluar ───────────────────────────────────────────────────────
+// ── Form Pindah keluar ───────────────────────────────────────────────────────
 // Koleksi mutasi_keluar: nama, nik_target, no_kk, alasan, tujuan, tanggal
 
 interface MutasiKeluarFormProps {
@@ -90,15 +93,16 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
   const mutasiKeluarga = useCatatPindahKeluarKeluarga()
   const { data: allPenduduk = [], isLoading: memuatPenduduk } = usePendudukList()
   const { toast } = useToast()
-  const [opsi, setOpsi] = useState<Opsi>('perorangan')
-  const [form, setForm] = useState({
+  // Isian dipulihkan bila halaman sempat ditinggalkan dengan form terbuka (lib/draf-form.ts)
+  const [opsi, setOpsi] = useDrafState<Opsi>('mutasi.keluar', 'opsi', 'perorangan')
+  const [form, setForm] = useDrafState('mutasi.keluar', 'form', () => ({
     nama: '',
     nik_target: '',
     no_kk: '',
     tujuan: '',
     alasan: '',
     tanggal: hariIni(),
-  })
+  }))
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   function set(field: string, value: string) {
@@ -173,7 +177,7 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
         <div className="a-fg6" style={{ marginTop: 16 }}>
           {opsi === 'perorangan' && (
             <>
-              <Field label="Nama Lengkap" htmlFor="mk-nama" req error={errors.nama} className="s6 nikkk">
+              <Field label="Nama lengkap" htmlFor="mk-nama" req error={errors.nama} className="s6 nikkk">
                 <InBox error={!!errors.nama}>
                   <input id="mk-nama" value={form.nama} onChange={(e) => set('nama', e.target.value)} placeholder="Nama penduduk" autoComplete="off" />
                 </InBox>
@@ -215,17 +219,17 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
         sub="Tanggal, tujuan, dan alasan pindah"
       >
         <div className="a-fg6">
-          <Field label="Tanggal Pindah" htmlFor="mk-tanggal" req error={errors.tanggal} className="s2">
+          <Field label="Tanggal pindah" htmlFor="mk-tanggal" req error={errors.tanggal} className="s2">
             <InBox error={!!errors.tanggal}>
               <input id="mk-tanggal" type="date" value={form.tanggal} onChange={(e) => set('tanggal', e.target.value)} />
             </InBox>
           </Field>
-          <Field label="Tujuan Pindah" htmlFor="mk-tujuan" req error={errors.tujuan} className="s4">
+          <Field label="Tujuan pindah" htmlFor="mk-tujuan" req error={errors.tujuan} className="s4">
             <InBox error={!!errors.tujuan} icon={<MapPin className="i" />}>
               <input id="mk-tujuan" value={form.tujuan} onChange={(e) => set('tujuan', e.target.value)} placeholder="Kota/Desa tujuan" autoComplete="off" />
             </InBox>
           </Field>
-          <Field label="Alasan Pindah" htmlFor="mk-alasan" opt className="s6">
+          <Field label="Alasan pindah" htmlFor="mk-alasan" opt className="s6">
             <InBox>
               <input id="mk-alasan" value={form.alasan} onChange={(e) => set('alasan', e.target.value)} placeholder="Menikah, Pekerjaan, dll" autoComplete="off" />
             </InBox>
@@ -244,7 +248,7 @@ export function MutasiKeluarForm({ onSuccess, onCancel }: MutasiKeluarFormProps)
   )
 }
 
-// ── Form Pindah Masuk ────────────────────────────────────────────────────────
+// ── Form Pindah masuk ────────────────────────────────────────────────────────
 // Koleksi mutasi_masuk: data lengkap seperti penduduk + asal_daerah + tanggal
 // Opsi: 1 Orang (langsung submit) | 1 Keluarga (kumpul anggota dulu, submit batch)
 
@@ -277,7 +281,8 @@ export type AnggotaForm = {
   alamat: string
 }
 
-function emptyAnggotaForm(tanggal: string): AnggotaForm {
+// Diekspor hanya agar bisa diuji (alamat bawaan mengikuti nama desa di Pengaturan)
+export function emptyAnggotaForm(tanggal: string): AnggotaForm {
   return {
     nama_lengkap: '',
     nik: '',
@@ -299,7 +304,7 @@ function emptyAnggotaForm(tanggal: string): AnggotaForm {
     tanggal_lahir: '',
     tempat_lahir: '',
     golongan_darah: '',
-    alamat: 'KARANG SENGON',
+    alamat: alamatBawaan(useAppStore.getState().wilayah),
   }
 }
 
@@ -391,6 +396,7 @@ export function AnggotaFields({
   errors: Record<string, string>
   onChange: (field: string, value: string) => void
 }) {
+  const wilayah = useAppStore((s) => s.wilayah)
   const { rtList, rwList, dusunDariRt } = useDusunAktif()
   return (
     <>
@@ -400,7 +406,7 @@ export function AnggotaFields({
         sub="Sesuai KTP dan Kartu Keluarga"
       >
         <div className="a-fg6">
-          <Field label="Nama Lengkap" htmlFor="pm-nama" req error={errors.nama_lengkap} className="s2 nikkk">
+          <Field label="Nama lengkap" htmlFor="pm-nama" req error={errors.nama_lengkap} className="s2 nikkk">
             <InBox error={!!errors.nama_lengkap}>
               <input id="pm-nama" value={form.nama_lengkap} onChange={(e) => onChange('nama_lengkap', e.target.value)} placeholder="Nama lengkap" autoComplete="off" />
             </InBox>
@@ -415,17 +421,17 @@ export function AnggotaFields({
               <input placeholder="16 digit" id="pm-kk" className="mono" inputMode="numeric" value={form.no_kk} onChange={(e) => onChange('no_kk', angka16(e.target.value))} autoComplete="off" />
             </InBox>
           </Field>
-          <Field label="Asal Daerah" htmlFor="pm-asal" req error={errors.asal_daerah} className="s2">
+          <Field label="Asal daerah" htmlFor="pm-asal" req error={errors.asal_daerah} className="s2">
             <InBox error={!!errors.asal_daerah}>
               <input id="pm-asal" value={form.asal_daerah} onChange={(e) => onChange('asal_daerah', e.target.value)} placeholder="Kota/Desa asal" autoComplete="off" />
             </InBox>
           </Field>
-          <Field label="Tanggal Masuk" htmlFor="pm-tanggal" req error={errors.tanggal} className="s2">
+          <Field label="Tanggal masuk" htmlFor="pm-tanggal" req error={errors.tanggal} className="s2">
             <InBox error={!!errors.tanggal}>
               <input id="pm-tanggal" type="date" value={form.tanggal} onChange={(e) => onChange('tanggal', e.target.value)} />
             </InBox>
           </Field>
-          <Field label="Jenis Kelamin" htmlFor="pm-jk" req error={errors.jenis_kelamin} className="s2">
+          <Field label="Jenis kelamin" htmlFor="pm-jk" req error={errors.jenis_kelamin} className="s2">
             <SelectBox id="pm-jk" value={form.jenis_kelamin} onChange={(v) => onChange('jenis_kelamin', v)} options={JENIS_KELAMIN} kosong="Pilih jenis kelamin" error={!!errors.jenis_kelamin} />
           </Field>
         </div>
@@ -437,12 +443,12 @@ export function AnggotaFields({
         sub="Kelahiran dan status"
       >
         <div className="a-fg6">
-          <Field label="Tempat Lahir" htmlFor="pm-tempat" req error={errors.tempat_lahir} className="s2">
+          <Field label="Tempat lahir" htmlFor="pm-tempat" req error={errors.tempat_lahir} className="s2">
             <InBox error={!!errors.tempat_lahir}>
               <input id="pm-tempat" value={form.tempat_lahir} onChange={(e) => onChange('tempat_lahir', e.target.value)} placeholder="Kota/Kabupaten" autoComplete="off" />
             </InBox>
           </Field>
-          <Field label="Tanggal Lahir" htmlFor="pm-tgllahir" req error={errors.tanggal_lahir} className="s2">
+          <Field label="Tanggal lahir" htmlFor="pm-tgllahir" req error={errors.tanggal_lahir} className="s2">
             <InBox error={!!errors.tanggal_lahir}>
               <input id="pm-tgllahir" type="date" value={form.tanggal_lahir} onChange={(e) => onChange('tanggal_lahir', e.target.value)} />
             </InBox>
@@ -450,10 +456,10 @@ export function AnggotaFields({
           <Field label="Agama" htmlFor="pm-agama" req error={errors.agama} className="s2">
             <SelectBox id="pm-agama" value={form.agama} onChange={(v) => onChange('agama', v)} options={AGAMA} kosong="Pilih agama" error={!!errors.agama} />
           </Field>
-          <Field label="Hubungan Keluarga" htmlFor="pm-hub" req error={errors.hubungan_keluarga} className="s2">
+          <Field label="Hubungan keluarga" htmlFor="pm-hub" req error={errors.hubungan_keluarga} className="s2">
             <SelectBox id="pm-hub" value={form.hubungan_keluarga} onChange={(v) => onChange('hubungan_keluarga', v)} options={HUBUNGAN_KELUARGA} kosong="Pilih hubungan" error={!!errors.hubungan_keluarga} />
           </Field>
-          <Field label="Status Perkawinan" htmlFor="pm-kawin" req error={errors.status_perkawinan} className="s2">
+          <Field label="Status perkawinan" htmlFor="pm-kawin" req error={errors.status_perkawinan} className="s2">
             <SelectBox id="pm-kawin" value={form.status_perkawinan} onChange={(v) => onChange('status_perkawinan', v)} options={STATUS_PERKAWINAN} kosong="Pilih status" error={!!errors.status_perkawinan} />
           </Field>
           <Field label="Pendidikan" htmlFor="pm-pend" req error={errors.pendidikan} className="s2">
@@ -462,17 +468,17 @@ export function AnggotaFields({
           <Field label="Pekerjaan" htmlFor="pm-pek" req error={errors.pekerjaan} className="s2">
             <SelectBox id="pm-pek" value={form.pekerjaan} onChange={(v) => onChange('pekerjaan', v)} options={PEKERJAAN} kosong="Pilih pekerjaan" error={!!errors.pekerjaan} />
           </Field>
-          <Field label="Nama Ayah" htmlFor="pm-ayah" opt className="s2">
+          <Field label="Nama ayah" htmlFor="pm-ayah" opt className="s2">
             <InBox>
               <input id="pm-ayah" value={form.nama_ayah} onChange={(e) => onChange('nama_ayah', e.target.value)} placeholder="Nama ayah kandung" autoComplete="off" />
             </InBox>
           </Field>
-          <Field label="Nama Ibu" htmlFor="pm-ibu" opt className="s2">
+          <Field label="Nama ibu" htmlFor="pm-ibu" opt className="s2">
             <InBox>
               <input id="pm-ibu" value={form.nama_ibu} onChange={(e) => onChange('nama_ibu', e.target.value)} placeholder="Nama ibu kandung" autoComplete="off" />
             </InBox>
           </Field>
-          <Field label="Golongan Darah" htmlFor="pm-goldarah" opt className="s2">
+          <Field label="Golongan darah" htmlFor="pm-goldarah" opt className="s2">
             <SelectBox id="pm-goldarah" value={form.golongan_darah} onChange={(v) => onChange('golongan_darah', v)} options={GOLONGAN_DARAH} kosong="Belum diisi" />
           </Field>
         </div>
@@ -497,7 +503,7 @@ export function AnggotaFields({
           </Field>
           <Field label="Alamat" htmlFor="pm-alamat" req={form.hubungan_keluarga === 'Kepala Keluarga'} opt={form.hubungan_keluarga !== 'Kepala Keluarga'} error={errors.alamat} className="s6">
             <InBox>
-              <input id="pm-alamat" value={form.alamat} onChange={(e) => onChange('alamat', e.target.value)} placeholder="Contoh: KARANG SENGON" autoComplete="off" />
+              <input id="pm-alamat" value={form.alamat} onChange={(e) => onChange('alamat', e.target.value)} placeholder={contohAlamat(wilayah)} autoComplete="off" />
             </InBox>
           </Field>
         </div>
@@ -512,14 +518,14 @@ export function MutasiMasukForm({ onSuccess, onCancel }: MutasiMasukFormProps) {
   const { toast } = useToast()
   const today = hariIni()
 
-  const [opsi, setOpsi] = useState<Opsi>('perorangan')
+  const [opsi, setOpsi] = useDrafState<Opsi>('mutasi.masuk', 'opsi', 'perorangan')
 
-  // State untuk form anggota aktif (dipakai di kedua opsi)
-  const [form, setFormState] = useState<AnggotaForm>(emptyAnggotaForm(today))
+  // State untuk form anggota aktif (dipakai di kedua opsi); dipulihkan bila halaman sempat ditinggalkan dengan form terbuka
+  const [form, setFormState] = useDrafState<AnggotaForm>('mutasi.masuk', 'form', () => emptyAnggotaForm(today))
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // State untuk daftar anggota yang sudah ditambahkan (opsi keluarga)
-  const [daftarAnggota, setDaftarAnggota] = useState<AnggotaForm[]>([])
+  const [daftarAnggota, setDaftarAnggota] = useDrafState<AnggotaForm[]>('mutasi.masuk', 'daftar', [])
 
   function handleChange(field: string, value: string) {
     setFormState((p) => ({ ...p, [field]: value }))

@@ -146,7 +146,7 @@ export default function DetailPendudukPage() {
     if (!data) return
     try {
       await deleteMutation.mutateAsync({ id: data.id, nama: data.nama_lengkap })
-      toast(`${data.nama_lengkap} dipindahkan ke Tempat Sampah`, 'success')
+      toast(`${data.nama_lengkap} dipindahkan ke Tempat sampah`, 'success')
       router.push('/recycle-bin')
     } catch {
       toast('Gagal menghapus data penduduk', 'error')
@@ -170,7 +170,7 @@ export default function DetailPendudukPage() {
   )
 
   return (
-    <AppShell title="Detail Penduduk">
+    <AppShell title="Detail penduduk">
       <>
         {tombolKembali}
 
@@ -201,13 +201,13 @@ export default function DetailPendudukPage() {
             <div className="a-empty" style={{ padding: '70px 24px' }}>
               <div className="em"><User className="i" style={{ fontSize: 30 }} /></div>
               <h3>Data penduduk tidak ditemukan</h3>
-              <p>Data ini mungkin sudah dihapus atau dipindahkan ke Tempat Sampah.</p>
+              <p>Data ini mungkin sudah dihapus atau dipindahkan ke Tempat sampah.</p>
               <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Button asChild variant="outline" style={{ marginTop: 0 }}>
                   <Link href="/penduduk">Ke daftar penduduk</Link>
                 </Button>
                 <Button asChild style={{ marginTop: 0 }}>
-                  <Link href="/recycle-bin"><Trash2 className="i" />Buka Tempat Sampah</Link>
+                  <Link href="/recycle-bin"><Trash2 className="i" />Buka tempat sampah</Link>
                 </Button>
               </div>
             </div>
@@ -306,7 +306,7 @@ export default function DetailPendudukPage() {
                       aria-label="Hapus data"
                       onClick={() => setShowDelete(true)}
                     >
-                      <Trash2 className="i" /><span className="hm">Hapus</span>
+                      <Trash2 className="i" />Hapus
                     </Button>
                   )}
                 </div>
@@ -352,7 +352,7 @@ export default function DetailPendudukPage() {
                 <div className="a-card lift">
                   <div className="ch">
                     <div>
-                      <h3>Riwayat Perubahan Data</h3>
+                      <h3>Riwayat perubahan data</h3>
                       <p>Aktivitas yang tercatat sejak sistem log aktif</p>
                     </div>
                     {!loadingRiwayat && <span className="a-badge nd mute sm">{riwayat.length} entri</span>}
@@ -367,7 +367,7 @@ export default function DetailPendudukPage() {
                       <div className="em" style={{ width: 56, height: 56, borderRadius: 18 }}>
                         <History className="i" style={{ fontSize: 24 }} />
                       </div>
-                      <h3 style={{ fontSize: 15.5 }}>Belum ada riwayat tercatat</h3>
+                      <h3 style={{ fontSize: 16 }}>Belum ada riwayat tercatat</h3>
                       <p>Riwayat hanya tersedia untuk aktivitas setelah sistem log aktif</p>
                     </div>
                   ) : (

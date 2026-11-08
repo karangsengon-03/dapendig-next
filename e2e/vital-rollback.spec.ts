@@ -18,7 +18,9 @@ test.describe('Alur: Catat kematian via menu Vital → suksesi KK → rollback',
 
   test('peringatan amber "penggantinya" HANYA muncul saat hub_asli = Kepala Keluarga', async ({ page }) => {
     await page.goto('/vital')
-    await page.getByRole('button', { name: /catat kematian/i }).click()
+    // Satu tombol "Tambah data" untuk tab aktif (seperti Mutasi): pilih tab Kematian dulu
+    await page.locator('.tabs2 button', { hasText: 'Kematian' }).click()
+    await page.getByRole('button', { name: /tambah data/i }).click()
 
     const peringatan = page.getByText(/sistem akan otomatis menentukan penggantinya/i)
     // Default form adalah 'Kepala Keluarga' (dilihat dari kode) — peringatan harus muncul
@@ -35,7 +37,9 @@ test.describe('Alur: Catat kematian via menu Vital → suksesi KK → rollback',
     const noKkUnik = `8888${Date.now().toString().slice(-12)}`
 
     await page.goto('/vital')
-    await page.getByRole('button', { name: /catat kematian/i }).click()
+    // Satu tombol "Tambah data" untuk tab aktif (seperti Mutasi): pilih tab Kematian dulu
+    await page.locator('.tabs2 button', { hasText: 'Kematian' }).click()
+    await page.getByRole('button', { name: /tambah data/i }).click()
 
     await page.getByPlaceholder('Nama penduduk').fill('E2E Test Kepala Keluarga')
     await page.getByPlaceholder('16 digit').first().fill(nikUnik)
@@ -53,7 +57,7 @@ test.describe('Alur: Catat kematian via menu Vital → suksesi KK → rollback',
     await barisRecord.getByText('Batalkan').click()
 
     // Dialog konfirmasi 2-langkah harus muncul
-    await expect(page.getByText('Batalkan Kematian?')).toBeVisible()
+    await expect(page.getByText('Batalkan kematian?')).toBeVisible()
     await page.getByRole('button', { name: 'Ya, Batalkan' }).click()
 
     // Record harus hilang dari daftar kematian setelah rollback berhasil

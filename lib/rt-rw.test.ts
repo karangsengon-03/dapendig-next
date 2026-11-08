@@ -46,3 +46,17 @@ describe('opsiRt', () => {
     expect(opsiRt(DAFTAR, undefined)).toEqual(DAFTAR)
   })
 })
+
+import { labelRtRw, rt3Sah } from '@/lib/rt-rw'
+describe('RT/RW belum diisi tidak tampil sebagai "RT 000/RW 000"', () => {
+  it('rt3Sah: "000", "0", kosong → ""', () => {
+    for (const v of ['000', '0', '', '  ', null, undefined, 0]) expect(rt3Sah(v as never)).toBe('')
+    expect(rt3Sah('1')).toBe('001')
+    expect(rt3Sah('Lain-lain')).toBe('Lain-lain')
+  })
+  it('labelRtRw', () => {
+    expect(labelRtRw('1', '01')).toBe('RT 001/RW 001')
+    expect(labelRtRw('000', '000')).toBe('RT —/RW —')
+    expect(labelRtRw('', '2')).toBe('RT —/RW 002')
+  })
+})

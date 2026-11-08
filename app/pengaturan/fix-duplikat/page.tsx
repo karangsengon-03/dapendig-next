@@ -106,21 +106,21 @@ export default function FixDuplikatPage() {
   // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
   if (!isAdmin()) {
     return (
-      <AppShell title="Fix Duplikat">
+      <AppShell title="Fix duplikat">
         <AksesDitolakAdmin />
       </AppShell>
     )
   }
 
   return (
-    <AppShell title="Fix Duplikat">
-      <MigLayout title="Fix Duplikat Dokumen" desc="Hapus dokumen lama jika NIK sudah ada sebagai dokumen terpisah">
+    <AppShell title="Fix duplikat">
+      <MigLayout title="Fix duplikat dokumen" desc="Hapus dokumen lama jika NIK sudah ada sebagai dokumen terpisah">
         {status === 'idle' && (
           <>
             <MigBox>
               <p>Mencari dokumen yang ID-nya masih auto-generate tetapi NIK-nya sudah ada sebagai dokumen terpisah. Dokumen lama (ID random) akan dihapus.</p>
             </MigBox>
-            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan Duplikat Terlebih Dahulu</MigPrimary>
+            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan duplikat terlebih dahulu</MigPrimary>
           </>
         )}
 

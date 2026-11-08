@@ -17,6 +17,9 @@ import { GalatTolak } from '@/lib/galat-tolak'
 import { angka16 } from '@/lib/angka'
 import { opsiRt, rt3 } from '@/lib/rt-rw'
 import { useDusunAktif } from '@/hooks/useDusunAktif'
+import { useDrafState } from '@/hooks/useDrafForm'
+import { useAppStore } from '@/store/appStore'
+import { alamatBawaan, contohAlamat } from '@/lib/wilayah'
 import { validasiKelahiran, validasiKematian } from '@/lib/validasi-catatan'
 import { useAddLahir, useAddMeninggal } from '@/hooks/useVital'
 import type { Lahir, Meninggal, Penduduk } from '@/types'
@@ -80,7 +83,7 @@ function lahirAwal(): LahirFormState {
     // Bayi baru lahir: bawaan yang terlihat dan tercetak di KK (bisa diubah, mis. balita PAUD)
     pendidikan: 'Tidak/Belum Sekolah',
     pekerjaan: 'Tidak/Belum Bekerja',
-    alamat: 'KARANG SENGON',
+    alamat: alamatBawaan(useAppStore.getState().wilayah),
   }
 }
 
@@ -139,6 +142,7 @@ export function LahirFields({
   errors: Record<string, string>
   onChange: (field: string, value: string) => void
 }) {
+  const wilayah = useAppStore((s) => s.wilayah)
   const { rtList, rwList, dusunDariRt } = useDusunAktif()
   return (
     <>
@@ -148,7 +152,7 @@ export function LahirFields({
       sub="Identitas bayi dan orang tua"
     >
       <div className="a-fg6">
-        <Field label="Nama Lengkap Bayi" htmlFor="lh-nama" req error={errors.nama_lengkap} className="s2 nikkk">
+        <Field label="Nama lengkap bayi" htmlFor="lh-nama" req error={errors.nama_lengkap} className="s2 nikkk">
           <InBox error={!!errors.nama_lengkap}>
             <input id="lh-nama" value={form.nama_lengkap} onChange={(e) => onChange('nama_lengkap', e.target.value)} placeholder="Nama lengkap bayi" autoComplete="off" />
           </InBox>
@@ -163,15 +167,15 @@ export function LahirFields({
             <input placeholder="16 digit" id="lh-kk" className="mono" inputMode="numeric" value={form.no_kk} onChange={(e) => onChange('no_kk', angka16(e.target.value))} autoComplete="off" />
           </InBox>
         </Field>
-        <Field label="Jenis Kelamin" htmlFor="lh-jk" req error={errors.jenis_kelamin} className="s2">
+        <Field label="Jenis kelamin" htmlFor="lh-jk" req error={errors.jenis_kelamin} className="s2">
           <SelectBox id="lh-jk" value={form.jenis_kelamin} onChange={(v) => onChange('jenis_kelamin', v)} options={JENIS_KELAMIN} kosong="Pilih jenis kelamin" error={!!errors.jenis_kelamin} />
         </Field>
-        <Field label="Tempat Lahir" htmlFor="lh-tempat" req error={errors.tempat_lahir} className="s2">
+        <Field label="Tempat lahir" htmlFor="lh-tempat" req error={errors.tempat_lahir} className="s2">
           <InBox error={!!errors.tempat_lahir}>
             <input id="lh-tempat" value={form.tempat_lahir} onChange={(e) => onChange('tempat_lahir', e.target.value)} placeholder="Kota/Kabupaten" autoComplete="off" />
           </InBox>
         </Field>
-        <Field label="Tanggal Lahir" htmlFor="lh-tgl" req error={errors.tanggal_lahir} className="s2">
+        <Field label="Tanggal lahir" htmlFor="lh-tgl" req error={errors.tanggal_lahir} className="s2">
           <InBox error={!!errors.tanggal_lahir}>
             <input id="lh-tgl" type="date" value={form.tanggal_lahir} onChange={(e) => onChange('tanggal_lahir', e.target.value)} />
           </InBox>
@@ -179,15 +183,15 @@ export function LahirFields({
         <Field label="Agama" htmlFor="lh-agama" req error={errors.agama} className="s3">
           <SelectBox id="lh-agama" value={form.agama} onChange={(v) => onChange('agama', v)} options={AGAMA} kosong="Pilih agama" error={!!errors.agama} />
         </Field>
-        <Field label="Hubungan Keluarga" htmlFor="lh-hub" req error={errors.hubungan_keluarga} className="s3">
+        <Field label="Hubungan keluarga" htmlFor="lh-hub" req error={errors.hubungan_keluarga} className="s3">
           <SelectBox id="lh-hub" value={form.hubungan_keluarga} onChange={(v) => onChange('hubungan_keluarga', v)} options={HUBUNGAN_KELUARGA} kosong="Pilih hubungan" error={!!errors.hubungan_keluarga} />
         </Field>
-        <Field label="Nama Ayah" htmlFor="lh-ayah" req error={errors.nama_ayah} className="s3">
+        <Field label="Nama ayah" htmlFor="lh-ayah" req error={errors.nama_ayah} className="s3">
           <InBox error={!!errors.nama_ayah}>
             <input id="lh-ayah" value={form.nama_ayah} onChange={(e) => onChange('nama_ayah', e.target.value)} placeholder="Nama ayah kandung" autoComplete="off" />
           </InBox>
         </Field>
-        <Field label="Nama Ibu" htmlFor="lh-ibu" req error={errors.nama_ibu} className="s3">
+        <Field label="Nama ibu" htmlFor="lh-ibu" req error={errors.nama_ibu} className="s3">
           <InBox error={!!errors.nama_ibu}>
             <input id="lh-ibu" value={form.nama_ibu} onChange={(e) => onChange('nama_ibu', e.target.value)} placeholder="Nama ibu kandung" autoComplete="off" />
           </InBox>
@@ -214,7 +218,7 @@ export function LahirFields({
           </Field>
           <Field label="Alamat" htmlFor="lh-alamat" req={form.hubungan_keluarga === 'Kepala Keluarga'} opt={form.hubungan_keluarga !== 'Kepala Keluarga'} error={errors.alamat} className="s6">
           <InBox>
-            <input id="lh-alamat" value={form.alamat} onChange={(e) => onChange('alamat', e.target.value)} placeholder="Contoh: KARANG SENGON" autoComplete="off" />
+            <input id="lh-alamat" value={form.alamat} onChange={(e) => onChange('alamat', e.target.value)} placeholder={contohAlamat(wilayah)} autoComplete="off" />
           </InBox>
         </Field>
       </div>
@@ -241,7 +245,7 @@ export function LahirFields({
 export function LahirForm({ onSuccess, onCancel }: LahirFormProps) {
   const { mutate, isPending } = useAddLahir()
   const { toast } = useToast()
-  const [form, setForm] = useState<LahirFormState>(lahirAwal)
+  const [form, setForm] = useDrafState<LahirFormState>('vital.lahir', 'form', lahirAwal)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   function set(field: string, value: string) {
@@ -295,14 +299,14 @@ interface MeninggalFormProps {
 export function MeninggalForm({ onSuccess, onCancel, allPenduduk }: MeninggalFormProps) {
   const { mutate, isPending } = useAddMeninggal()
   const { toast } = useToast()
-  const [form, setForm] = useState({
+  const [form, setForm] = useDrafState('vital.meninggal', 'form', () => ({
     nama: '',
     nik_target: '',
     no_kk: '',
     hub_asli: 'Kepala Keluarga' as typeof HUBUNGAN_KELUARGA[number],
     sebab: '',
     tanggal: hariIni(),
-  })
+  }))
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   function set(field: string, value: string) {
@@ -353,7 +357,7 @@ export function MeninggalForm({ onSuccess, onCancel, allPenduduk }: MeninggalFor
           </div>
         )}
         <div className="a-fg6">
-          <Field label="Nama Lengkap" htmlFor="mn-nama" req error={errors.nama} className="s2 nikkk">
+          <Field label="Nama lengkap" htmlFor="mn-nama" req error={errors.nama} className="s2 nikkk">
             <InBox error={!!errors.nama}>
               <input id="mn-nama" value={form.nama} onChange={(e) => set('nama', e.target.value)} placeholder="Nama penduduk" autoComplete="off" />
             </InBox>
@@ -368,15 +372,15 @@ export function MeninggalForm({ onSuccess, onCancel, allPenduduk }: MeninggalFor
               <input placeholder="16 digit" id="mn-kk" className="mono" inputMode="numeric" value={form.no_kk} onChange={(e) => set('no_kk', angka16(e.target.value))} autoComplete="off" />
             </InBox>
           </Field>
-          <Field label="Tanggal Meninggal" htmlFor="mn-tgl" req error={errors.tanggal} className="s2">
+          <Field label="Tanggal meninggal" htmlFor="mn-tgl" req error={errors.tanggal} className="s2">
             <InBox error={!!errors.tanggal}>
               <input id="mn-tgl" type="date" value={form.tanggal} onChange={(e) => set('tanggal', e.target.value)} />
             </InBox>
           </Field>
-          <Field label="Hubungan Keluarga" htmlFor="mn-hub" className="s2">
+          <Field label="Hubungan keluarga" htmlFor="mn-hub" className="s2">
             <SelectBox id="mn-hub" value={form.hub_asli} onChange={(v) => set('hub_asli', v)} options={HUBUNGAN_KELUARGA} />
           </Field>
-          <Field label="Sebab Kematian" htmlFor="mn-sebab" req error={errors.sebab} className="s2">
+          <Field label="Sebab kematian" htmlFor="mn-sebab" req error={errors.sebab} className="s2">
             <InBox error={!!errors.sebab}>
               <input id="mn-sebab" value={form.sebab} onChange={(e) => set('sebab', e.target.value)} placeholder="Sakit, Kecelakaan, dll" autoComplete="off" />
             </InBox>

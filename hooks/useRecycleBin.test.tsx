@@ -105,7 +105,7 @@ describe('useRestorePenduduk — Pulihkan menulis ke ID = NIK (bukan dokumen aca
     expect(addDocMock.mock.calls.some(([c]) => (c as { __col: string }).__col === 'penduduk')).toBe(false)
   })
 
-  it('menghapus item Tempat Sampah dalam transaksi yang sama, lalu mencatat log', async () => {
+  it('menghapus item Tempat sampah dalam transaksi yang sama, lalu mencatat log', async () => {
     const tx = siapkanTransaksi()
     const { result } = renderHook(() => useRestorePenduduk(), { wrapper })
     await result.current.mutateAsync({ recycleId: 'rb-1', dataAsli })
@@ -148,7 +148,7 @@ describe('useRestorePenduduk — Pulihkan menulis ke ID = NIK (bukan dokumen aca
 })
 
 describe('useRestorePenduduk — menolak bila NIK sudah terdaftar', () => {
-  it('dokumen ber-ID = NIK sudah ada → ditolak, tidak menulis, item tetap di Tempat Sampah, tanpa log', async () => {
+  it('dokumen ber-ID = NIK sudah ada → ditolak, tidak menulis, item tetap di Tempat sampah, tanpa log', async () => {
     const tx = siapkanTransaksi({ pendudukAda: true })
     const { result } = renderHook(() => useRestorePenduduk(), { wrapper })
     await expect(result.current.mutateAsync({ recycleId: 'rb-1', dataAsli })).rejects.toThrow('NIK sudah terdaftar di data penduduk')
@@ -174,10 +174,10 @@ describe('useRestorePenduduk — menolak bila NIK sudah terdaftar', () => {
     expect(runTransactionMock).not.toHaveBeenCalled()
   })
 
-  it('item Tempat Sampah sudah tidak ada (sudah dipulihkan/dihapus di tab lain) → ditolak, tidak menulis', async () => {
+  it('item Tempat sampah sudah tidak ada (sudah dipulihkan/dihapus di tab lain) → ditolak, tidak menulis', async () => {
     const tx = siapkanTransaksi({ itemAda: false })
     const { result } = renderHook(() => useRestorePenduduk(), { wrapper })
-    await expect(result.current.mutateAsync({ recycleId: 'rb-1', dataAsli })).rejects.toThrow('Data sudah tidak ada di Tempat Sampah')
+    await expect(result.current.mutateAsync({ recycleId: 'rb-1', dataAsli })).rejects.toThrow('Data sudah tidak ada di Tempat sampah')
     expect(tx.set).not.toHaveBeenCalled()
   })
 
@@ -219,7 +219,7 @@ describe('useHapusSemuaRecycleBin — mengembalikan jumlah yang benar-benar diha
     expect(logCall?.[1]).toMatchObject({ aksi: 'hapus_permanen', keterangan: 'Hapus semua recycle bin (3 data)' })
   })
 
-  it('Tempat Sampah sudah kosong → mengembalikan 0', async () => {
+  it('Tempat sampah sudah kosong → mengembalikan 0', async () => {
     getDocsMock.mockResolvedValue({ empty: true, size: 0, docs: [] })
     const { result } = renderHook(() => useHapusSemuaRecycleBin(), { wrapper })
     expect(await result.current.mutateAsync()).toBe(0)

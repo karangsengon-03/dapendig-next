@@ -14,7 +14,7 @@ export interface OpsiAksi {
 
 /** Label sama dengan lencana di tabel Log supaya filter dan baris tidak berbeda nama. */
 export const OPSI_FILTER_AKSI: readonly OpsiAksi[] = [
-  { value: '', label: 'Semua Aksi' },
+  { value: '', label: 'Semua aksi' },
   { value: 'tambah', label: 'Tambah' },
   { value: 'edit', label: 'Edit' },
   { value: 'hapus', label: 'Hapus' }, // mencakup hapus dan hapus_permanen

@@ -84,7 +84,7 @@ export function validasiDusun(dusun: readonly DusunItem[]): GalatDusun {
 }
 
 // ── RW ──
-/** Bawaan = RW_LIST lama (001–005). Sama dengan `RW_LIST` di penduduk-constants (dijaga tes). */
+/** Bawaan = daftar RW lama (001–005); dikunci tes. */
 export const RW_BAWAAN: string[] = ['001', '002', '003', '004', '005']
 
 /** Rapikan daftar RW: 3 digit, unik, terurut. Bukan daftar atau kosong → null. */

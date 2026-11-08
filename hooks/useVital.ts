@@ -50,7 +50,7 @@ async function fetchLahir(): Promise<Lahir[]> {
  *  - NIK diperiksa SEBELUM menulis apa pun (dulu catatan ditulis lebih dulu, NIK kosong baru ditolak sesudahnya
  *    sehingga tertinggal catatan kelahiran tanpa penduduk).
  *  - Kelahiran selalu orang baru: NIK yang sudah ada di penduduk (status apa pun) ditolak, tidak ditimpa diam-diam
- *    (prinsip "tolak, jangan timpa" seperti addPenduduk dan Pindah Masuk).
+ *    (prinsip "tolak, jangan timpa" seperti addPenduduk dan Pindah masuk).
  */
 async function addLahir(
   data: Omit<Lahir, 'id' | 'created_at' | 'created_by'>,

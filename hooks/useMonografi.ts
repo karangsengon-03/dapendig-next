@@ -1,7 +1,8 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { rt3 } from '@/lib/rt-rw'
+import { sebaranPerRt } from '@/lib/sebaran-rt'
+import { klasifikasiDariUmur } from '@/lib/umur'
 import { collection, getDocs, query, where, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Penduduk } from '@/types'
@@ -57,15 +58,6 @@ export interface MonografiData {
   kelompokUmurConfig: KelompokUmurConfig
 }
 
-// Klasifikasi tetap (tidak dipengaruhi konfigurasi piramida)
-const KLASIFIKASI = [
-  { label: 'Balita',    min: 0,  max: 5   },
-  { label: 'Anak-anak', min: 6,  max: 10  },
-  { label: 'Remaja',    min: 11, max: 19  },
-  { label: 'Dewasa',    min: 20, max: 44  },
-  { label: 'Lansia',    min: 45, max: 999 },
-]
-
 function hitungUmur(tanggalLahir: string): number {
   return calcUmur(tanggalLahir)
 }
@@ -109,7 +101,6 @@ async function fetchMonografi(): Promise<MonografiData> {
   const byPendidikan: Record<string, number> = {}
   const byPekerjaan: Record<string, number> = {}
   const byStatusPerkawinan: Record<string, number> = {}
-  const byRT: Record<string, { laki: number; perempuan: number }> = {}
   const byKlasifikasiUmur: Record<string, number> = {}
 
   const piramida = kelompokUmurConfig.map((k) => ({
@@ -137,11 +128,6 @@ async function fetchMonografi(): Promise<MonografiData> {
     const statusPerkawinan = p.status_perkawinan?.trim()
     if (statusPerkawinan) byStatusPerkawinan[statusPerkawinan] = (byStatusPerkawinan[statusPerkawinan] ?? 0) + 1
 
-    const kunciRt = rt3(p.rt)
-    if (!byRT[kunciRt]) byRT[kunciRt] = { laki: 0, perempuan: 0 }
-    if (p.jenis_kelamin === 'Laki-laki') byRT[kunciRt].laki++
-    else byRT[kunciRt].perempuan++
-
     if (p.tanggal_lahir) {
       const umur = hitungUmur(p.tanggal_lahir)
 
@@ -153,10 +139,13 @@ async function fetchMonografi(): Promise<MonografiData> {
       }
 
       // Klasifikasi umur (tetap)
-      const kls = KLASIFIKASI.find((k) => umur >= k.min && umur <= k.max)
+      const kls = klasifikasiDariUmur(umur)
       if (kls) byKlasifikasiUmur[kls.label] = (byKlasifikasiUmur[kls.label] ?? 0) + 1
     }
   }
+
+  // Per RT 3 digit (data "1" dan "001" menyatu); logika di lib/sebaran-rt.ts
+  const byRT = sebaranPerRt(all)
 
   return {
     totalAktif,

@@ -114,18 +114,18 @@ export default function MigrateDocIdPage() {
   // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
   if (!isAdmin()) {
     return (
-      <AppShell title="Migrasi Document ID">
+      <AppShell title="Migrasi document ID">
         <AksesDitolakAdmin />
       </AppShell>
     )
   }
 
   return (
-    <AppShell title="Migrasi Document ID">
+    <AppShell title="Migrasi document ID">
       <MigLayout title="Migrasi ID Dokumen → NIK" desc="Seragamkan semua ID dokumen penduduk menggunakan NIK">
         <div>
           <h3 style={{ margin: 0, fontSize: 15 }}>Seragamkan ID dokumen penduduk</h3>
-          <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.55 }}>
+          <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.55 }}>
             Proses ini memindahkan semua dokumen penduduk yang ID-nya masih acak ke format baru
             menggunakan <strong>NIK</strong> sebagai ID dokumen.
             Data tidak akan hilang — hanya ID dokumen yang diperbarui.
@@ -141,7 +141,7 @@ export default function MigrateDocIdPage() {
         </div>
 
         {status === 'idle' && (
-          <MigPrimary onClick={handlePreview} disabled={!isAdmin()} icon={<Search className="i" />}>Cek Data Sebelum Migrasi</MigPrimary>
+          <MigPrimary onClick={handlePreview} disabled={!isAdmin()} icon={<Search className="i" />}>Cek data sebelum migrasi</MigPrimary>
         )}
 
         {status === 'loading' && (
@@ -151,7 +151,7 @@ export default function MigrateDocIdPage() {
         {status === 'preview' && (
           <>
             <div className="mig-box">
-              <span className="ttl">Hasil Pemeriksaan</span>
+              <span className="ttl">Hasil pemeriksaan</span>
               <div className="kv"><span>Sudah pakai NIK sebagai ID</span><b className="ok">{preview.sudahBenar} dokumen</b></div>
               <div className="kv"><span>Perlu dimigrasi</span><b className="warn">{preview.perluMigrasi} dokumen</b></div>
               {preview.tanpaNik > 0 && (
@@ -192,7 +192,7 @@ export default function MigrateDocIdPage() {
         )}
 
         {status === 'done' && (
-          <MigDone title="Migrasi selesai!" onBack={() => router.push('/penduduk')} backLabel="Lihat Data Penduduk">
+          <MigDone title="Migrasi selesai!" onBack={() => router.push('/penduduk')} backLabel="Lihat data penduduk">
             <MigResultBox>
               <p><b>{result.dipindah}</b> dokumen berhasil dimigrasi ke ID = NIK</p>
               <p style={{ color: 'var(--ink-3)' }}><b>{result.dilewati}</b> dokumen dilewati (sudah benar atau tanpa NIK)</p>

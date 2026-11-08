@@ -24,14 +24,14 @@ export function DeleteDialog({
     <ConfirmModal
       icon={<Trash2 className="i" style={{ fontSize: 24 }} />}
       tone="bad"
-      title="Pindahkan ke Tempat Sampah?"
-      okLabel="Pindahkan ke Tempat Sampah"
+      title="Pindahkan ke tempat sampah?"
+      okLabel="Pindahkan ke Tempat sampah"
       loading={loading}
       onConfirm={onConfirm}
       onCancel={onCancel}
     >
-      Data <b>{nama}</b> akan dipindahkan ke Tempat Sampah. Data <b>tidak hilang</b> dan bisa
-      dipulihkan kapan saja dari menu Tempat Sampah.
+      Data <b>{nama}</b> akan dipindahkan ke Tempat sampah. Data <b>tidak hilang</b> dan bisa
+      dipulihkan kapan saja dari menu Tempat sampah.
     </ConfirmModal>
   )
 }

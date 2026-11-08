@@ -21,7 +21,7 @@ const instrument = Instrument_Sans({
 
 export const metadata: Metadata = {
   title: 'DaPenDig Next',
-  description: 'Data Penduduk Digital — Desa Karang Sengon, Klabang, Bondowoso',
+  description: 'Data Penduduk Digital — administrasi kependudukan desa',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

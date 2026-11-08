@@ -23,7 +23,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
         <CircleAlert className="i" />
       </div>
 
-      <h1>Terjadi Kesalahan</h1>
+      <h1>Terjadi kesalahan</h1>
       <p>Aplikasi mengalami error yang tidak terduga. Coba muat ulang halaman.</p>
 
       {/* Detail error (dev only) */}

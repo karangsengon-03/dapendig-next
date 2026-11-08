@@ -140,7 +140,6 @@ export interface ConfigWilayah {
   updated_by?: string
 }
 
-export type WilayahConfig = ConfigWilayah
 
 export type UserRole = 'admin' | 'operator' | 'viewer'
 

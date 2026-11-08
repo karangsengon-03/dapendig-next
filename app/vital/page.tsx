@@ -39,6 +39,7 @@ import { usePendudukDetail, usePendudukList } from '@/hooks/usePenduduk'
 import { URUT_BAWAAN, buatPetaRt, cocokRt, urutkanCatatan, waktuBuat, type UrutCatatan } from '@/lib/saring-catatan'
 import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/components/ui/toast'
+import { buangDraf, tabBerDraf } from '@/lib/draf-form'
 import { GalatTolak } from '@/lib/galat-tolak'
 import { pesanHasilSinkron } from '@/lib/sinkron-catatan'
 import { validasiKelahiran, validasiKematian } from '@/lib/validasi-catatan'
@@ -213,7 +214,7 @@ function EditMeninggalModal({ row, onClose }: { row: Meninggal; onClose: () => v
         <Field label="No. KK" htmlFor="emn-kk" req error={errors.no_kk} className="s3 nikkk">
           <InBox error={!!errors.no_kk}><input id="emn-kk" className="mono" inputMode="numeric" value={form.no_kk} onChange={e => set('no_kk', angka16(e.target.value))} autoComplete="off" /></InBox>
         </Field>
-        <Field label="Tanggal Meninggal" htmlFor="emn-tgl" req error={errors.tanggal} className="s3">
+        <Field label="Tanggal meninggal" htmlFor="emn-tgl" req error={errors.tanggal} className="s3">
           <InBox error={!!errors.tanggal}><input id="emn-tgl" type="date" value={form.tanggal} onChange={e => set('tanggal', e.target.value)} /></InBox>
         </Field>
         <Field label="Sebab" htmlFor="emn-sebab" req error={errors.sebab} className="s3">
@@ -245,8 +246,10 @@ function VitalIsi() {
   const tabParam: Tab = sp.get('tab') === 'meninggal' ? 'meninggal' : 'lahir'
   const tambahParam = sp.get('tambah') === '1'
 
-  const [tabManual, setTabManual] = useState<Tab | null>(null)
-  const [formManual, setFormManual] = useState<boolean | null>(null)
+  // Form Tambah yang sempat ditinggalkan (lewat menu samping) terbuka lagi di tab yang sama dengan isian terakhir (lib/draf-form.ts)
+  const [tabDraf] = useState(() => tabBerDraf('vital', ['lahir', 'meninggal']) as Tab | null)
+  const [tabManual, setTabManual] = useState<Tab | null>(tabDraf)
+  const [formManual, setFormManual] = useState<boolean | null>(tabDraf ? true : null)
   const [q, setQ] = useState('')
   const [bulan, setBulan] = useState('')
   const [rt, setRt] = useState('')
@@ -340,7 +343,8 @@ function VitalIsi() {
     if (untuk !== tab) { setTabManual(untuk); setHalaman(1); setQ(''); setBulan('') }
     setFormManual(true)
   }
-  function tutupForm() { setFormManual(false) }
+  // Tutup form = isian dibuang (Batal, Tutup form, atau berhasil disimpan)
+  function tutupForm() { buangDraf(`vital.${tab}`); setFormManual(false) }
 
   function handleDelete() {
     if (!deleteTarget) return
@@ -375,24 +379,15 @@ function VitalIsi() {
   return (
     <>
       <PageHeader
-        className="ph-dua"
+       
         title="Kelahiran & kematian"
         description="Peristiwa kelahiran dan kematian warga"
         action={canAdd ? (
-          showForm ? (
-            <Button type="button" variant="outline" onClick={tutupForm}>
-              <X className="i" />Tutup form
-            </Button>
-          ) : (
-            <>
-              <Button type="button" variant={tab === 'lahir' ? 'default' : 'outline'} onClick={() => bukaTambah('lahir')}>
-                <PERISTIWA.kelahiran.Icon className="i" />Catat kelahiran
-              </Button>
-              <Button type="button" variant={tab === 'meninggal' ? 'default' : 'outline'} onClick={() => bukaTambah('meninggal')}>
-                <PERISTIWA.kematian.Icon className="i" />Catat kematian
-              </Button>
-            </>
-          )
+          // Satu tombol untuk tab yang sedang dipilih, sama dengan halaman Mutasi (dulu dua tombol "Catat ...")
+          <Button type="button" variant={showForm ? 'outline' : 'default'} onClick={() => (showForm ? tutupForm() : bukaTambah(tab))}>
+            {showForm ? <X className="i" /> : <Plus className="i" />}
+            {showForm ? 'Tutup form' : 'Tambah data'}
+          </Button>
         ) : undefined}
       />
 
@@ -436,10 +431,10 @@ function VitalIsi() {
                       <thead>
                         <tr>
                           <th className="frz frz-no">No</th>
-                          <th className="frz frz-nm">Nama Bayi</th>
+                          <th className="frz frz-nm">Nama bayi</th>
                           <th>NIK</th>
                           <th>JK</th>
-                          <th>Tgl Lahir</th>
+                          <th>Tgl lahir</th>
                           <th>Ayah</th>
                           <th>Ibu</th>
                           <th>RT/RW</th>
@@ -509,7 +504,7 @@ function VitalIsi() {
                           <th className="frz frz-nm">Nama</th>
                           <th>NIK</th>
                           <th>No. KK</th>
-                          <th>Tgl Meninggal</th>
+                          <th>Tgl meninggal</th>
                           <th>Hub. Keluarga</th>
                           <th>Sebab</th>
                           <th />
@@ -622,7 +617,7 @@ function VitalIsi() {
         <ConfirmModal
           icon={<Undo2 className="i" style={{ fontSize: 24 }} />}
           tone="warn"
-          title="Batalkan Kematian?"
+          title="Batalkan kematian?"
           okLabel="Ya, Batalkan"
           okVariant="default"
           loading={pendingRollback}

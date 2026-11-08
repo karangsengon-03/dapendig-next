@@ -133,7 +133,7 @@ export function DusunRtSection() {
       <div className="dsn-card" data-testid="rw-kartu" style={{ marginTop: 14 }}>
         <div>
           <h5 style={{ margin: 0, fontWeight: 800, fontSize: 14 }}>Daftar RW</h5>
-          <p className="a-hint">RW yang tersedia di seluruh desa. Menjadi pilihan RW di Pindah Masuk, Kelahiran, dan Edit penduduk.</p>
+          <p className="a-hint">RW yang tersedia di seluruh desa. Menjadi pilihan RW di Pindah masuk, Kelahiran, dan Edit penduduk.</p>
         </div>
         <div>
           <div className="dsn-chips" aria-label="Daftar RW">

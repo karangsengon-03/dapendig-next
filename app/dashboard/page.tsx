@@ -165,7 +165,7 @@ export default function DashboardPage() {
             {isAdmin() && (
               <Button asChild variant="outline">
                 <Link href="/pengaturan?bagian=ekspor" title="Ekspor, Impor, dan Laporan Bulanan ada di Pengaturan">
-                  <Download className="i" /><span className="hm">Ekspor / Impor / Laporan</span>
+                  <Download className="i" />Ekspor / Impor / Laporan
                 </Link>
               </Button>
             )}

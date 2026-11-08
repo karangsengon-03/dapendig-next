@@ -83,7 +83,7 @@ export function CatatMeninggalModal({ penduduk, allPenduduk, onClose, onSuccess 
         </div>
       )}
 
-      <Field label="Tanggal Meninggal" htmlFor="pm-tanggal" req error={error || undefined}>
+      <Field label="Tanggal meninggal" htmlFor="pm-tanggal" req error={error || undefined}>
         <InBox error={!!error}>
           <input
             id="pm-tanggal"
@@ -94,7 +94,7 @@ export function CatatMeninggalModal({ penduduk, allPenduduk, onClose, onSuccess 
         </InBox>
       </Field>
 
-      <Field label="Sebab Meninggal" htmlFor="pm-sebab" opt>
+      <Field label="Sebab meninggal" htmlFor="pm-sebab" opt>
         <InBox>
           <input
             id="pm-sebab"

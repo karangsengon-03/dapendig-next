@@ -14,7 +14,8 @@ import {
 } from 'lucide-react'
 import { JK_VISUAL } from '@/lib/visual'
 import { PENDIDIKAN, STATUS_PERKAWINAN } from '@/lib/penduduk-constants'
-import { kunciRentang } from '@/lib/umur'
+import { KLASIFIKASI_UMUR } from '@/lib/umur'
+import { labelDesa } from '@/lib/wilayah'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatCard } from '@/components/dashboard/StatCard'
@@ -59,15 +60,7 @@ function Piramida({ data }: { data: DataKel[] }) {
   )
 }
 
-// ── Klasifikasi umur (tetap, tidak dipengaruhi konfigurasi piramida) ──────────
-const KLASIFIKASI_UMUR = [
-  { label: 'Balita', min: 0, max: 5, tone: 'ok' },
-  { label: 'Anak-anak', min: 6, max: 10, tone: 'info' },
-  { label: 'Remaja', min: 11, max: 19, tone: 'pur' },
-  { label: 'Dewasa', min: 20, max: 44, tone: 'warn' },
-  { label: 'Lansia', min: 45, max: 999, tone: 'bad' },
-]
-
+// ── Klasifikasi umur (tetap, tidak dipengaruhi konfigurasi piramida; daftar di lib/umur.ts) ──
 function KlasifikasiUmur({ byKlasifikasi, total }: { byKlasifikasi: Record<string, number>; total: number }) {
   const tercatat = Object.values(byKlasifikasi).reduce((a, b) => a + b, 0)
   return (
@@ -80,7 +73,7 @@ function KlasifikasiUmur({ byKlasifikasi, total }: { byKlasifikasi: Record<strin
         {KLASIFIKASI_UMUR.map(k => {
           const n = byKlasifikasi[k.label] ?? 0
           return (
-            <Link className="kt clk" key={k.label} href={`/penduduk?umur=${kunciRentang(k.min, k.max)}&status=aktif`}>
+            <Link className="kt clk" key={k.label} href={`/penduduk?klasifikasi=${encodeURIComponent(k.label)}&status=aktif`}>
               <span className={`a-badge ${k.tone} sm nd`}>{k.label}</span>
               <b><CountUp value={n} /></b>
               <small>
@@ -387,7 +380,7 @@ export default function MonografiPage() {
 
   return (
     <AppShell title="Monografi">
-      <PageHeader title="Monografi desa" description={`Statistik penduduk aktif Desa ${wilayah.desa}`} />
+      <PageHeader title="Monografi" description={`Statistik penduduk aktif${labelDesa(wilayah) ? ` ${labelDesa(wilayah)}` : ''}`} />
 
       <div className="g4">
         <StatCard label="Penduduk aktif" icon={Users} tone="navy" value={data?.totalAktif} loading={isLoading} subLabel="dihitung dari status Aktif" />

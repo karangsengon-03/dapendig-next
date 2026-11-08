@@ -4,7 +4,7 @@ Aplikasi PWA manajemen data penduduk untuk **Desa Karang Sengon, Kecamatan Klaba
 
 ---
 
-## Versi Saat Ini: v3.2.0
+## Versi Saat Ini: v3.3.1
 
 Rilis **fitur dan perbaikan** di atas redesain v3.0.0: Dusun, RT, dan RW dapat diatur dari Pengaturan, Edit catatan Pindah Masuk/Kelahiran ikut memperbarui menu Penduduk, ikon dan warna diseragamkan, toast di atas layar, dan Next.js 16.4.3. Struktur data Firestore dan `firestore.rules` **tidak berubah** dari v2.9.1, sehingga data lama tetap terbaca dan rules tidak perlu di-deploy ulang. Ringkasan lengkap ada di [Riwayat Versi](#riwayat-versi).
 
@@ -207,6 +207,52 @@ Deploy `firestore.rules` bila berubah: lihat `PANDUAN_DEPLOY_RULES.md`.
 ---
 
 ## Riwayat Versi
+
+### v3.3.1 — November 2026
+
+Rilis **keputusan lanjutan** di atas v3.3.0. Struktur data tetap; `firestore.rules` tidak berubah.
+
+- **Klasifikasi umur: Pra-lansia 45–59 dan Lansia 60+** (dulu satu kategori "Lansia 45+"). Kini ada enam klasifikasi (Balita 0–5, Anak-anak 6–10, Remaja 11–19, Dewasa 20–44, Pra-lansia 45–59, Lansia 60+) di Monografi, filter Daftar Penduduk (`?klasifikasi=Pra-lansia`), dan hitungan `byKlasifikasiUmur`; Lansia kini sama dengan 60+ di kelompok umur Beranda. "Tanggungan tua (65+)" pada Rasio beban tanggungan tetap, karena itu definisi baku rasio ketergantungan (0–14, 15–64, 65+), bukan klasifikasi. Kotak Klasifikasi umur tersusun 6 kolom (desktop), 3 kolom, atau 2 kolom (HP) tanpa kotak yatim.
+- **Judul halaman = nama menu** di semua halaman: "Penduduk" (dulu "Data penduduk"), "Monografi" (dulu "Monografi desa"), "Edit penduduk" (dulu "Edit data penduduk").
+- **Pemilih bulan Beranda rata tengah**: panah di tepi, bulan dan tahun di tengah, teks pilihan rata tengah (`.a-seg.mn`).
+
+### v3.3.0 — November 2026
+
+Rilis **fitur, keseragaman tampilan, dan pembersihan**. Struktur data tetap; `firestore.rules` tidak berubah; tidak ada koleksi, field, atau query baru.
+
+**Keputusan yang diterapkan**
+- **Tombol Tambah seragam.** Kelahiran & kematian kini memakai satu tombol "Tambah data" (untuk tab yang dipilih) seperti Mutasi; dua tombol "Catat ..." dihapus. `e2e/vital-rollback.spec.ts` disesuaikan (pilih tab Kematian lalu "Tambah data"; belum dijalankan di sini).
+- **Filter Klasifikasi umur** (`?klasifikasi=Balita`) di samping filter Umur rentang (`?umur=0-4`). Kotak Klasifikasi umur di Monografi membuka filter klasifikasi; label selalu menyertakan rentang ("Balita (0–5 th)"). Daftar klasifikasi satu sumber di `lib/umur.ts` (dulu dua salinan di hook dan halaman Monografi).
+- **Isian form Tambah bertahan saat meninggalkan halaman** lewat menu samping (Pindah keluar/masuk, Kelahiran, Kematian): form terbuka lagi di tab yang sama dengan isian terakhir. Disimpan hanya di memori (`lib/draf-form.ts`, `hooks/useDrafForm.ts`), bukan localStorage, sehingga data pribadi tidak tertinggal di perangkat; dibuang saat Batal/Tutup form, berhasil disimpan, atau keluar akun.
+- **Nama desa tidak lagi tertanam.** Semua tampilan membaca Pengaturan → Informasi wilayah lewat `lib/wilayah.ts`: menu samping, layar masuk dan memuat, kop Beranda, Monografi, alamat bawaan form (`KARANG SENGON` → nama desa), contoh alamat, migrasi alamat, Cetak KK. Layar sebelum masuk memakai cadangan nama desa di perangkat (`dapendig_identitas_desa`). Nilai bawaan store kini kosong (bukan Karang Sengon), nama desa wajib diisi saat menyimpan, dan menyimpan Informasi wilayah langsung memperbarui tampilan (dulu perlu muat ulang). **Kode pos tidak lagi punya nilai bawaan `68284`**; kosong dicetak "-" di Cetak KK dan diberi peringatan. Pengaturan: Informasi wilayah dan Dusun, RT, dan RW kini berdampingan. `DUSUN_BAWAAN` (pemetaan RT→dusun bila belum ada pengaturan) tetap pemetaan Desa Karang Sengon.
+- **Kode mati dihapus** (nol rujukan): `components/ui/input.tsx`, `label.tsx`, `select.tsx`, `components/dashboard/RTChart.tsx`, `AppLogoFull`, hook `useKelahiranBulanIni`/`useKematianBulanIni`/`useMutasiBulanIni` beserta pengambil datanya, `AKSI_FILTER_OPTIONS`, `LOG_PAGE_SIZE`, `useDeleteUser`, `useUpdateUserRole`, `APP_NAME`, `APP_TAGLINE`, `DESA_DEFAULT`, `getUmur`, `hitungUmurFromStr` (fungsi umur ganda, hanya dipakai tes), `STATUS_PENDUDUK`, `RT_LIST`, `RW_LIST`, tipe `WilayahConfig`. Juga `useAddPenduduk` dan `addPenduduk` beserta `hooks/usePenduduk.test.tsx` (tes yang hanya menjaganya): tambah penduduk manual memang dinonaktifkan (`/penduduk/tambah` hanya mengalihkan; penambahan lewat Pindah masuk dan Kelahiran).
+
+**Keseragaman tampilan**
+- **Teks tombol selalu tampil** (kelas `hm` yang menyembunyikan teks di HP dihapus dari tombol): Impor Excel, Ekspor Excel, Ekspor / Impor / Laporan, Hapus, Kembali ke detail. Sortir dan "Atur filter" di Daftar Penduduk kini chip seperti di Mutasi dan Kelahiran & kematian (dulu tombol persegi berukuran lain), berlabel "Urut: ..." di semua halaman.
+- **Kop halaman di HP** sama di semua halaman: judul + deskripsi selebar layar, tombol aksi di baris sendiri (dulu pemilih periode Beranda memeras deskripsi sampai terpotong). Bar atas HP sempit: tombol 36 px dan judul panjang membungkus 2 baris, tidak terpotong "…".
+- **Huruf kalimat (bukan Title Case)** di seluruh label: menu, judul bar atas, tab, isian form, tombol, pilihan filter, peristiwa log. Nama menu di dalam kalimat ditulis persis seperti menunya ("Tempat sampah", "Log aktivitas", "Kelahiran & kematian"). "Import" → "Impor". Templat cetak KK dan nilai data (Kepala Keluarga, Belum Kawin, ...) tidak diubah.
+- **Ukuran font**: semua ukuran setengah piksel (10,5/11,5/12,5/13,5/14,5/16,5) dibulatkan (76 di CSS, 16 inline); judul halaman migrasi disamakan dengan judul halaman lain; bilah sebaran dan label panjang dirapikan (rilis 3.2.0).
+- **Pilihan filter** diberi nama lengkap: "Semua jenis kelamin", "Semua status kawin", "Semua dusun", dst.
+
+**Perbaikan data dan ambiguitas**
+- **Jumlah kepala keluarga** Beranda dan Daftar Penduduk kini satu definisi (`lib/keluarga.ts`: No. KK berbeda). Dulu Beranda menghitung baris "Kepala Keluarga" (457) dan Daftar Penduduk No. KK berbeda (459): selisih 2 = KK yang tidak punya kepala aktif.
+- **RT/RW belum diisi** tampil "RT —/RW —" (bukan "RT 000/RW 000") di Daftar Penduduk dan Cetak KK (`rt3Sah`, `labelRtRw`).
+- **Log aktivitas**: bila rentang tanggal bawaan (hari ini) tidak ada hasil dan tidak ada filter lain, keadaan kosong menjelaskannya dan menyediakan "Tampilkan semua tanggal".
+
+**Tes**: ditambah `lib/wilayah.test.ts`, `lib/keluarga.test.ts`, `lib/draf-form.test.tsx`, kasus klasifikasi di `lib/umur.test.ts`, `labelRtRw`/`rt3Sah` di `lib/rt-rw.test.ts`; tes lama disesuaikan dengan label huruf kalimat dan nama desa dari store. `vitest.setup.ts` mengosongkan draf sebelum tiap tes.
+
+### v3.2.1 — November 2026
+
+Rilis **tes tambahan (butir 6E a–d)** dan satu perbaikan keamanan kecil. Tampilan dan alur tidak berubah.
+
+**Tes baru** (tanpa mengubah perilaku)
+- **6E-a** `hooks/useImport.test.ts`: `normImportVal` (kini `export`, satu kata) mengubah RT/RW impor Excel ke 3 digit: `1`, `01`, `001`, `3`, `Lain-lain`, kosong, dan angka dari sel.
+- **6E-b** `lib/exportExcel.test.ts`: kolom RT/RW di `exportToExcel` dan sheet Kelahiran di `exportBulanan` 3 digit; kolom lain tidak ikut berubah. ExcelJS ditiru, tanpa mengubah kode ekspor.
+- **6E-c** `lib/sebaran-rt.ts` (baru) + `lib/sebaran-rt.test.ts`: pengelompokan RT dan dusun dikeluarkan dari `useDashboard` dan `useMonografi` menjadi fungsi murni (`sebaranPerRt`, `kelompokRt`, `kelompokDusun`). Data `1`, `01`, `001` menyatu; RT mengikuti Pengaturan → Dusun dan RT; "Lain-lain" hanya bila ada. Ada tes pembanding dengan salinan logika lama pada 500 baris acak: hasilnya sama persis.
+- **6E-d** `components/penduduk/CetakKKModal.html.test.tsx`: HTML Cetak KK tidak dipisah (templatnya ±320 baris di dalam komponen); diuji lewat klik "Unduh PDF A4" dan penangkapan isi `window.open`: RT/RW 3 digit, kolom kosong "-", alamat cadangan dari anggota lain, 1 vs 2 halaman, escape.
+
+**Perbaikan**
+- Cetak KK: sisipan teks yang dulu belum di-escape (nama Kepala Keluarga di kolom tanda tangan, nama/NIP/jabatan Kepala Desa, nama desa/kecamatan/kabupaten, kode pos, No. KK, tanggal lahir tak terformat) kini di-escape seperti kolom lain. Data normal tercetak identik. Nama berkas PDF memakai No. KK yang disanitasi (`KK_Sementara_<No. KK>.pdf`, karakter selain huruf/angka/titik/strip jadi `_`).
 
 ### v3.2.0 — November 2026
 

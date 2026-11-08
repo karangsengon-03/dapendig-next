@@ -23,7 +23,7 @@ const opsiRt = () => [...rtEl().options].map((o) => o.value)
 beforeEach(() => { act(() => useAppStore.setState({ dusun: DUSUN_BAWAAN, rw: RW_BAWAAN })) })
 const opsiRw = () => [...(document.getElementById('pm-rw') as HTMLSelectElement).options].map((o) => o.value)
 
-describe('Form Pindah Masuk: isian Dusun mengikuti RT', () => {
+describe('Form Pindah masuk: isian Dusun mengikuti RT', () => {
   it('ada isian Dusun hanya-baca berisi dusun dari RT terpilih', () => {
     render(<MutasiMasukForm onSuccess={() => {}} onCancel={() => {}} />)
     expect(screen.getByLabelText('Dusun')).toBe(dusunEl())
@@ -52,7 +52,7 @@ describe('Form Pindah Masuk: isian Dusun mengikuti RT', () => {
   })
 })
 
-describe('Form Pindah Masuk: pilihan RW mengikuti pengaturan', () => {
+describe('Form Pindah masuk: pilihan RW mengikuti pengaturan', () => {
   it('bawaan 001–005', () => {
     render(<MutasiMasukForm onSuccess={() => {}} onCancel={() => {}} />)
     expect(opsiRw()).toEqual(['001', '002', '003', '004', '005'])

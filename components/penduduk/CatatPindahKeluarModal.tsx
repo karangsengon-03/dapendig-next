@@ -146,7 +146,7 @@ export function CatatPindahKeluarModal({ penduduk, allPenduduk, onClose, onSucce
       )}
 
       <Field
-        label="Tujuan Pindah"
+        label="Tujuan pindah"
         htmlFor="pk-tujuan"
         req
         error={error?.field === 'tujuan' ? error.pesan : undefined}

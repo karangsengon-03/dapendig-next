@@ -68,3 +68,50 @@ export function cocokRentangUmur(tanggalLahir: string | null | undefined, kunci:
   const umur = umurDari(tanggalLahir)
   return umur >= 0 && umur >= r.min && umur <= r.max
 }
+
+// ── Klasifikasi umur (Monografi dan filter Daftar Penduduk) ───────────────────
+// Satu sumber untuk kotak "Klasifikasi umur" di Monografi, penghitungnya (useMonografi), dan filter "Klasifikasi umur"
+// di Daftar Penduduk. Berbeda dari kelompok umur Beranda (rentang saja, KATEGORI_UMUR): di sini rentangnya ikut ditampilkan.
+export interface KlasifikasiUmur {
+  label: string
+  min: number
+  max: number
+  tone: 'ok' | 'info' | 'pur' | 'warn' | 'gold' | 'bad'
+}
+
+export const KLASIFIKASI_UMUR: KlasifikasiUmur[] = [
+  { label: 'Balita', min: 0, max: 5, tone: 'ok' },
+  { label: 'Anak-anak', min: 6, max: 10, tone: 'info' },
+  { label: 'Remaja', min: 11, max: 19, tone: 'pur' },
+  { label: 'Dewasa', min: 20, max: 44, tone: 'warn' },
+  { label: 'Pra-lansia', min: 45, max: 59, tone: 'gold' },
+  { label: 'Lansia', min: 60, max: UMUR_TAK_TERBATAS, tone: 'bad' },
+]
+
+/** Klasifikasi untuk umur (tahun) tertentu; undefined bila umur tidak sah (< 0). */
+export function klasifikasiDariUmur(umur: number): KlasifikasiUmur | undefined {
+  return KLASIFIKASI_UMUR.find((k) => umur >= k.min && umur <= k.max)
+}
+
+/** Label tampil, mis. "Balita (0–5 th)". */
+export function labelKlasifikasi(k: KlasifikasiUmur): string {
+  return `${k.label} (${labelRentang(k.min, k.max)})`
+}
+
+/** Nama klasifikasi sah (mis. dari URL) → dikembalikan; selain itu '' (tanpa penyaring). */
+export function klasifikasiSah(nama: string | null | undefined): string {
+  return KLASIFIKASI_UMUR.find((k) => k.label === nama)?.label ?? ''
+}
+
+/** Label tampil untuk nama klasifikasi, mis. "Balita (0–5 th)". */
+export function labelNamaKlasifikasi(nama: string): string {
+  const k = KLASIFIKASI_UMUR.find((x) => x.label === nama)
+  return k ? labelKlasifikasi(k) : nama
+}
+
+/** Apakah tanggal lahir ini masuk klasifikasi `nama`? Nama tidak dikenal = tidak menyaring. */
+export function cocokKlasifikasi(tanggalLahir: string | null | undefined, nama: string): boolean {
+  const k = KLASIFIKASI_UMUR.find((x) => x.label === nama)
+  if (!k) return true
+  return cocokRentangUmur(tanggalLahir, kunciRentang(k.min, k.max))
+}

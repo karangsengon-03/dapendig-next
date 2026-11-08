@@ -27,15 +27,19 @@ describe('Beranda → kelompok umur bisa diklik', () => {
 
 describe('Daftar Penduduk → chip Dusun, Umur, Pendidikan', () => {
   const props = { onChange: () => {}, total: 1200, filtered: 40, pendidikanOptions: ['SMA/Sederajat', 'Diploma IV/Strata I'] }
-  it('ketiga chip tampil bawaan', () => {
+  it('chip Dusun, Umur, Klasifikasi, dan Pendidikan tampil bawaan', () => {
     render(<PendudukFilter {...props} filter={FILTER_AWAL} />)
-    for (const t of ['Dusun', 'Umur', 'Pendidikan']) expect(screen.getByRole('button', { name: new RegExp(`^${t}`) })).toBeInTheDocument()
+    for (const t of ['Dusun', 'Umur', 'Klasifikasi', 'Pendidikan']) expect(screen.getByRole('button', { name: new RegExp(`^${t}`) })).toBeInTheDocument()
   })
   it('filter aktif dari tautan ditampilkan dengan label yang jelas', () => {
     render(<PendudukFilter {...props} filter={{ ...FILTER_AWAL, dusun: 'Paleran', umur: '0-4', pendidikan: 'Diploma IV/Strata I' }} />)
     expect(screen.getByRole('button', { name: /Dusun Paleran/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Umur 0–4 th/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Diploma IV\/Strata I/ })).toBeInTheDocument()
+  })
+  it('klasifikasi umur dari Monografi tampil dengan nama dan rentangnya', () => {
+    render(<PendudukFilter {...props} filter={{ ...FILTER_AWAL, klasifikasi: 'Balita' }} />)
+    expect(screen.getByRole('button', { name: /Balita \(0–5 th\)/ })).toBeInTheDocument()
   })
   it('rentang umur dari Monografi (di luar pilihan chip) tetap berlabel jelas', () => {
     render(<PendudukFilter {...props} filter={{ ...FILTER_AWAL, umur: '45-999' }} />)

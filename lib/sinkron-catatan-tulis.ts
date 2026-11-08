@@ -1,5 +1,5 @@
 /**
- * sinkron-catatan-tulis.ts — penulisan Firestore untuk Edit catatan Pindah Masuk / Kelahiran (aturan lengkap ada di
+ * sinkron-catatan-tulis.ts — penulisan Firestore untuk Edit catatan Pindah masuk / Kelahiran (aturan lengkap ada di
  * sinkron-catatan.ts). Dipisah supaya halaman bisa memakai pesanHasilSinkron tanpa menarik Firebase.
  */
 import { collection, doc, getDoc, getDocs, limit, query, runTransaction, serverTimestamp, where } from 'firebase/firestore'

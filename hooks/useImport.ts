@@ -11,7 +11,8 @@ import { AGAMA, PENDIDIKAN, PEKERJAAN, HUBUNGAN_KELUARGA } from '@/lib/penduduk-
 import { toISODate } from '@/lib/utils'
 import { rt3 } from '@/lib/rt-rw'
 
-function normImportVal(key: string, rawValue: unknown): unknown {
+// Diekspor hanya agar bisa diuji (hooks/useImport.test.ts); tidak dipakai di luar berkas ini.
+export function normImportVal(key: string, rawValue: unknown): unknown {
   const v = String(rawValue ?? '').trim()
 
   if (key === 'hubungan_keluarga') {

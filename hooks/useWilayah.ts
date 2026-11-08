@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase'
 import { useAppStore } from '@/store/appStore'
 import type { ConfigWilayah } from '@/types'
 import { normalisasiDusun, normalisasiRw, validasiDusun, validasiRw } from '@/lib/dusun'
+import { simpanIdentitas } from '@/lib/wilayah'
 
 // Path aktual Firestore: config (koleksi) → wilayah (dokumen)
 export function useWilayah() {
@@ -15,7 +16,9 @@ export function useWilayah() {
     getDoc(doc(db, 'config', 'wilayah'))
       .then((snap) => {
         if (snap.exists()) {
-          setWilayah(snap.data() as ConfigWilayah)
+          const w = snap.data() as ConfigWilayah
+          setWilayah(w)
+          simpanIdentitas(w) // cadangan di perangkat untuk layar sebelum masuk
         }
       })
       .catch(() => {})

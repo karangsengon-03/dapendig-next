@@ -1,12 +1,12 @@
 /**
  * visual.ts — satu sumber kebenaran ikon dan warna untuk konsep yang tampil di banyak menu.
- * Semua tempat (Beranda, Mutasi, Kelahiran & Kematian, Detail penduduk, filter, form, Monografi) wajib memakai ini
+ * Semua tempat (Beranda, Mutasi, Kelahiran & kematian, Detail penduduk, filter, form, Monografi) wajib memakai ini
  * supaya satu konsep selalu berikon dan berwarna sama. `lib/visual.test.ts` menjaga ini lewat pemindaian sumber.
  *
  *  Peristiwa : Kelahiran = Baby (hijau) · Pindah masuk = ArrowLeftFromLine (hijau, sama-sama menambah penduduk)
  *              Kematian = HeartCrack (abu-abu) · Pindah keluar = ArrowRightFromLine (merah)
  *  Catatan   : LogOut/LogIn HANYA untuk masuk/keluar akun, bukan untuk pindah; HeartPulse hanya untuk menu
- *              gabungan "Kelahiran & Kematian".
+ *              gabungan "Kelahiran & kematian".
  *  Jenis kelamin : Laki-laki = Mars, warna --lk (biru) · Perempuan = Venus, warna --pr (merah muda) · campuran = VenusAndMars
  */
 import { ArrowLeftFromLine, ArrowRightFromLine, Baby, HeartCrack, Mars, Venus, type LucideIcon } from 'lucide-react'

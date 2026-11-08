@@ -169,14 +169,14 @@ export default function FixTanggalLahirPage() {
   // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
   if (!isAdmin()) {
     return (
-      <AppShell title="Fix Tanggal Lahir">
+      <AppShell title="Fix tanggal lahir">
         <AksesDitolakAdmin />
       </AppShell>
     )
   }
 
   return (
-    <AppShell title="Fix Tanggal Lahir">
+    <AppShell title="Fix tanggal lahir">
       <MigLayout
         title="Fix Tanggal Lahir (Timezone Bug)"
         desc="Koreksi tanggal yang bergeser akibat konversi UTC"

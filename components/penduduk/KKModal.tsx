@@ -60,7 +60,7 @@ export function KKModal({ noKk, allPenduduk, onClose, onNavigate }: Props) {
         }
       >
         {anggota.length === 0 ? (
-          <p style={{ margin: 0, padding: '18px 0', textAlign: 'center', fontSize: 13.5, color: 'var(--ink-3)' }}>
+          <p style={{ margin: 0, padding: '18px 0', textAlign: 'center', fontSize: 14, color: 'var(--ink-3)' }}>
             Tidak ada anggota ditemukan
           </p>
         ) : (

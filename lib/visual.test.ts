@@ -45,7 +45,7 @@ describe('konsistensi ikon di seluruh aplikasi (pemindaian sumber)', () => {
       expect(salah, `${ikon} dipakai di luar autentikasi: ${salah.join(', ')}`).toEqual([])
     }
   })
-  it('HeartPulse hanya untuk menu gabungan "Kelahiran & Kematian" (nav); kematian selalu HeartCrack', () => {
+  it('HeartPulse hanya untuk menu gabungan "Kelahiran & kematian" (nav); kematian selalu HeartCrack', () => {
     expect(pemakai('HeartPulse')).toEqual(['components/layout/nav.ts'])
   })
   it('UserMinus tidak dipakai (pindah keluar = ArrowRightFromLine)', () => {

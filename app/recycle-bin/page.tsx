@@ -88,7 +88,7 @@ export default function RecycleBinPage() {
       setJumlahSegar(jumlah)
       setConfirmHapusSemua(true)
     } catch {
-      toast('Gagal memuat ulang Tempat Sampah', 'error')
+      toast('Gagal memuat ulang Tempat sampah', 'error')
     } finally {
       setMemuatHapusSemua(false)
     }
@@ -115,7 +115,7 @@ export default function RecycleBinPage() {
     </div>
   )
 
-  // Pulihkan = tulis penduduk + hapus item Tempat Sampah; rules: hapus item = admin → tombol hanya untuk admin
+  // Pulihkan = tulis penduduk + hapus item Tempat sampah; rules: hapus item = admin → tombol hanya untuk admin
   const tombolPulihkan = (item: RecycleBinItem) => canAdmin ? (
     <Button type="button" variant="secondary" size="xs" onClick={() => handleRestore(item)} disabled={restoreMutation.isPending}>
       <ArchiveRestore className="i" />Pulihkan
@@ -123,7 +123,7 @@ export default function RecycleBinPage() {
   ) : null
 
   return (
-    <AppShell title="Tempat Sampah">
+    <AppShell title="Tempat sampah">
       <PageHeader
         title="Tempat sampah"
         description="Data penduduk yang dihapus · bisa dipulihkan kapan saja"
@@ -246,7 +246,7 @@ export default function RecycleBinPage() {
           onConfirm={handleHapusSemua}
           onCancel={() => setConfirmHapusSemua(false)}
         >
-          <b>{jumlahSegar} data</b> di Tempat Sampah akan dihapus selamanya. Tindakan ini tidak bisa dibatalkan.
+          <b>{jumlahSegar} data</b> di Tempat sampah akan dihapus selamanya. Tindakan ini tidak bisa dibatalkan.
         </ConfirmModal>
       )}
     </AppShell>

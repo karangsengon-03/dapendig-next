@@ -72,8 +72,8 @@ function koleksiBadge(koleksi: string | undefined): string | null {
     penduduk: 'Penduduk',
     lahir: 'Kelahiran',
     meninggal: 'Kematian',
-    mutasi_keluar: 'Mutasi Keluar',
-    mutasi_masuk: 'Mutasi Masuk',
+    mutasi_keluar: 'Mutasi keluar',
+    mutasi_masuk: 'Mutasi masuk',
   }
   return map[koleksi] ?? koleksi
 }
@@ -330,11 +330,18 @@ export default function LogPage() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  // Rentang bawaan (hari ini) tanpa filter lain dan tanpa hasil: jelaskan, jangan tampak seperti log kosong
+  const hanyaHariIni = !filter.search && !filter.aksi && !filter.koleksi && filter.dateFrom === todayStr && filter.dateTo === todayStr
   const kosong = (
     <div className="a-empty">
       <div className="em"><ClipboardList className="i" style={{ fontSize: 30 }} /></div>
-      <h3>Tidak ada log ditemukan</h3>
-      <p>Coba ubah kata kunci, filter, atau rentang tanggal.</p>
+      <h3>{hanyaHariIni ? 'Belum ada aktivitas hari ini' : 'Tidak ada log ditemukan'}</h3>
+      <p>{hanyaHariIni ? 'Log menampilkan aktivitas hari ini secara bawaan. Ubah rentang tanggal untuk melihat yang lebih lama.' : 'Coba ubah kata kunci, filter, atau rentang tanggal.'}</p>
+      {hanyaHariIni && (
+        <Button type="button" variant="outline" size="sm" onClick={() => { setFilter({ ...filter, dateFrom: '', dateTo: '' }); setPage(1) }}>
+          Tampilkan semua tanggal
+        </Button>
+      )}
       {batas.mulaiSebelumTertua && tertuaDate && (
         <p>Rentang tanggal dimulai sebelum entri tertua yang dimuat ({tertuaDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}); entri yang lebih lama tidak dimuat.</p>
       )}
@@ -342,7 +349,7 @@ export default function LogPage() {
   )
 
   return (
-    <AppShell title="Log Aktivitas">
+    <AppShell title="Log aktivitas">
       <PageHeader
         title="Log aktivitas"
         description={`Rekam jejak perubahan data oleh petugas · ${allLogs.length.toLocaleString('id-ID')} entri`}
@@ -450,7 +457,7 @@ export default function LogPage() {
                     <m.Icon className="i" style={{ fontSize: 16 }} />
                   </span>
                   <div className="m">
-                    <b style={{ fontSize: 13.5, whiteSpace: 'normal' }}>{log.keterangan || log.nama || '—'}</b>
+                    <b style={{ fontSize: 14, whiteSpace: 'normal' }}>{log.keterangan || log.nama || '—'}</b>
                     <span>{m.label} · {koleksiBadge(log.koleksi) ?? '—'}</span>
                     <span>{formatWaktu(log.ts)} · {log.oleh}</span>
                     {log.nik_target && <span className="mn">NIK {log.nik_target}</span>}

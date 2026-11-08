@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { buangSemuaDraf } from '@/lib/draf-form'
 import { render, screen, fireEvent, within, cleanup, waitFor } from '@testing-library/react'
 
 vi.mock('@/components/layout/AppShell', () => ({ AppShell: ({ children }: { children: React.ReactNode }) => <>{children}</> }))
@@ -59,7 +60,7 @@ function labelIsian(root: ParentNode): string[] {
     return (salin.textContent ?? '').trim()
   }).filter(Boolean)
 }
-const bukaTabMasuk = () => fireEvent.click(screen.getByRole('button', { name: /Pindah Masuk/ }))
+const bukaTabMasuk = () => fireEvent.click(screen.getByRole('button', { name: /Pindah masuk/ }))
 function bukaEdit() {
   bukaTabMasuk()
   fireEvent.click(document.querySelector('tbody tr') as HTMLElement)
@@ -74,7 +75,7 @@ beforeEach(() => {
   masuk = [{ ...REKAMAN }]
 })
 
-describe('Pindah Masuk — Detail menampilkan seluruh isian catatan', () => {
+describe('Pindah masuk — Detail menampilkan seluruh isian catatan', () => {
   it('semua isian form Tambah ikut tampil di Detail', () => {
     render(<MutasiPage />)
     bukaTabMasuk()
@@ -89,11 +90,12 @@ describe('Pindah Masuk — Detail menampilkan seluruh isian catatan', () => {
   })
 })
 
-describe('Pindah Masuk — modal Edit sama dengan form Tambah', () => {
+describe('Pindah masuk — modal Edit sama dengan form Tambah', () => {
   it('daftar isian (label dan urutan) sama persis dengan form Tambah', () => {
     const { container } = render(<MutasiMasukForm onSuccess={vi.fn()} onCancel={vi.fn()} />)
     const tambah = labelIsian(container)
     cleanup()
+    buangSemuaDraf() // form Tambah di atas dianggap sudah ditutup; draf tidak boleh membuka form di halaman
     render(<MutasiPage />)
     const dialog = bukaEdit()
     const edit = labelIsian(dialog)

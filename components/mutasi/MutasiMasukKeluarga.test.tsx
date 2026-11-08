@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { useAppStore } from '@/store/appStore'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 const toastMock = vi.fn()
@@ -61,12 +62,14 @@ function mulaiKeluarga(onSuccess = vi.fn()) {
 const nikDiPanggilan = () => (batchMock.mock.calls[0][0] as { nik: string }[]).map((a) => a.nik)
 
 beforeEach(() => {
+  // Alamat bawaan form = nama desa dari Pengaturan → Informasi wilayah (store); tidak lagi tertanam di kode
+  useAppStore.setState({ wilayah: { desa: 'Karang Sengon', kecamatan: 'Klabang', kabupaten: 'Bondowoso', provinsi: 'Jawa Timur', tahun: '2026' } })
   toastMock.mockClear()
   batchMock.mockReset()
   batchMock.mockResolvedValue(undefined)
 })
 
-describe('Pindah Masuk 1 Keluarga — anggota yang sedang diisi tidak boleh hilang saat Simpan Semua', () => {
+describe('Pindah masuk 1 Keluarga — anggota yang sedang diisi tidak boleh hilang saat Simpan Semua', () => {
   it('REPRODUKSI BUG: anggota ke-2 sudah diisi tetapi "Tambah Anggota" belum diklik → tetap ikut tersimpan', async () => {
     const onSuccess = mulaiKeluarga()
     isiAnggota('Budi Santoso', NIK_1, 'Kepala Keluarga', { pertama: true })
@@ -222,9 +225,9 @@ describe('Pindah Masuk 1 Keluarga — anggota yang sedang diisi tidak boleh hila
       const l = Array.from(document.querySelectorAll('label')).find((x) => (x.textContent ?? '').startsWith(teks)) as HTMLElement
       return { req: !!l.querySelector('.req'), opt: !!l.querySelector('.opt') }
     }
-    for (const w of ['Jenis Kelamin', 'Agama', 'Hubungan Keluarga', 'Status Perkawinan', 'Pendidikan', 'Pekerjaan', 'Tempat Lahir', 'Tanggal Lahir'])
+    for (const w of ['Jenis kelamin', 'Agama', 'Hubungan keluarga', 'Status perkawinan', 'Pendidikan', 'Pekerjaan', 'Tempat lahir', 'Tanggal lahir'])
       expect(penanda(w), w).toEqual({ req: true, opt: false })
-    for (const o of ['Nama Ayah', 'Nama Ibu', 'Golongan Darah'])
+    for (const o of ['Nama ayah', 'Nama ibu', 'Golongan darah'])
       expect(penanda(o), o).toEqual({ req: false, opt: true })
   })
 })

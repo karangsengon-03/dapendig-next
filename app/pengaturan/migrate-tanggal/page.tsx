@@ -107,15 +107,15 @@ export default function MigrateTanggalPage() {
   // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
   if (!isAdmin()) {
     return (
-      <AppShell title="Migrasi Format Tanggal">
+      <AppShell title="Migrasi format tanggal">
         <AksesDitolakAdmin />
       </AppShell>
     )
   }
 
   return (
-    <AppShell title="Migrasi Format Tanggal">
-      <MigLayout title="Migrasi Format Tanggal" desc="Konversi DD/MM/YYYY → YYYY-MM-DD di semua koleksi">
+    <AppShell title="Migrasi format tanggal">
+      <MigLayout title="Migrasi format tanggal" desc="Konversi DD/MM/YYYY → YYYY-MM-DD di semua koleksi">
         {status === 'idle' && (
           <>
             <MigBox>
@@ -123,7 +123,7 @@ export default function MigrateTanggalPage() {
                 <p key={koleksi}>· <span className="mig-code">{koleksi}</span> — {fields.join(', ')}</p>
               ))}
             </MigBox>
-            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan Semua Koleksi</MigPrimary>
+            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan semua koleksi</MigPrimary>
           </>
         )}
 

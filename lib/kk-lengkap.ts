@@ -1,7 +1,7 @@
 /**
  * kk-lengkap.ts — aturan data untuk Kartu Keluarga (KK): urutan anggota dan pemeriksaan kelengkapan.
  *
- * Skema isian (berlaku sama di form Tambah Pindah Masuk/Kelahiran, modal Edit, dan Edit penduduk):
+ * Skema isian (berlaku sama di form Tambah Pindah masuk/Kelahiran, modal Edit, dan Edit penduduk):
  *  - WAJIB (tercetak di KK dan tidak boleh kosong): nama lengkap, NIK, jenis kelamin, tempat lahir, tanggal lahir, agama,
  *    pendidikan, pekerjaan, status perkawinan, hubungan keluarga; untuk Kepala Keluarga juga alamat dan RT/RW.
  *  - OPSIONAL (kosong dicetak "-"): golongan darah, nama ayah, nama ibu (di Kelahiran nama ayah/ibu wajib).

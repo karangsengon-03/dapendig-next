@@ -1,7 +1,7 @@
 /**
- * sinkron-catatan.ts — bagian murni (tanpa Firebase) dari Edit catatan Pindah Masuk / Kelahiran ikut memperbarui data di menu Penduduk.
+ * sinkron-catatan.ts — bagian murni (tanpa Firebase) dari Edit catatan Pindah masuk / Kelahiran ikut memperbarui data di menu Penduduk.
  *
- * Penduduk baru memang berasal dari catatan Pindah Masuk atau Kelahiran (ID dokumen = NIK). Bila catatan diedit tetapi
+ * Penduduk baru memang berasal dari catatan Pindah masuk atau Kelahiran (ID dokumen = NIK). Bila catatan diedit tetapi
  * penduduknya tidak, datanya berbeda dan bisa menimbulkan duplikat atau galat. Aturan:
  *  - Hanya kolom yang BERUBAH di catatan yang diteruskan ke penduduk. Isian yang sudah diubah lewat Edit penduduk tidak
  *    ditimpa kembali oleh isian lama dari catatan.
@@ -12,7 +12,7 @@
  */
 import { rt3 } from '@/lib/rt-rw'
 
-/** Kolom catatan Pindah Masuk yang menjadi isi dokumen penduduk (cermin dataPendudukDariMasuk di useMutasi). */
+/** Kolom catatan Pindah masuk yang menjadi isi dokumen penduduk (cermin dataPendudukDariMasuk di useMutasi). */
 export const KOLOM_PENDUDUK_DARI_MASUK = [
   'nama_lengkap', 'nik', 'no_kk', 'jenis_kelamin', 'agama', 'hubungan_keluarga', 'nama_ayah', 'nama_ibu',
   'pendidikan', 'pekerjaan', 'rt', 'rw', 'status_perkawinan', 'tanggal_lahir', 'tempat_lahir', 'golongan_darah', 'alamat',

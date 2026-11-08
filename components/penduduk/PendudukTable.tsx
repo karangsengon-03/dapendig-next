@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { rt3 } from '@/lib/rt-rw'
+import { labelRtRw } from '@/lib/rt-rw'
 import { useEffect, useRef } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
 import { JkIkon } from '@/components/ui/jk-ikon'
@@ -109,7 +109,7 @@ export function PendudukTable({ data, loading, page, pageSize, tampilan = 'tabel
             <Avatar nama={p.nama_lengkap} jk={p.jenis_kelamin} size={46} />
             <div className="m">
               <b>{p.nama_lengkap}</b>
-              <span>{p.hubungan_keluarga} · {hitungUmur(p.tanggal_lahir)} · RT {rt3(p.rt)}/RW {rt3(p.rw)}</span>
+              <span>{p.hubungan_keluarga} · {hitungUmur(p.tanggal_lahir)} · {labelRtRw(p.rt, p.rw)}</span>
               <span className="mn">{p.nik}</span>
             </div>
             {p.status !== 'aktif' && <StatusBadge status={p.status} />}
@@ -165,7 +165,7 @@ export function PendudukTable({ data, loading, page, pageSize, tampilan = 'tabel
               </span>
             </td>
             <td className="num">{hitungUmur(p.tanggal_lahir)}</td>
-            <td className="num">RT {rt3(p.rt)}/RW {rt3(p.rw)}</td>
+            <td className="num">{labelRtRw(p.rt, p.rw)}</td>
             <td><StatusBadge status={p.status} /></td>
             <td style={{ textAlign: 'right', color: 'var(--ink-4)' }}><ChevronRight className="i" style={{ fontSize: 17 }} /></td>
           </tr>

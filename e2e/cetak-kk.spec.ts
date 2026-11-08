@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Cetak KK Sementara — Tanggal Cetak bisa diubah (fitur v2.7.2)', () => {
+test.describe('Cetak KK Sementara — Tanggal cetak bisa diubah (fitur v2.7.2)', () => {
   const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? ''
   const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? ''
   test.skip(!TEST_EMAIL, 'E2E_TEST_EMAIL belum di-set')

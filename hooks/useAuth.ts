@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
 import { auth, db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
+import { buangSemuaDraf } from '@/lib/draf-form'
 import type { AppUser, UserRole } from '@/types'
 
 const ALLOWED_UIDS = [
@@ -64,6 +65,7 @@ export function useAuthListener() {
 }
 
 export async function logout(router: ReturnType<typeof useRouter>) {
+  buangSemuaDraf() // isian form yang belum disimpan tidak boleh tertinggal untuk pengguna berikutnya
   await signOut(auth)
   router.replace('/login')
 }

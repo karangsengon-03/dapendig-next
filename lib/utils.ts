@@ -40,28 +40,7 @@ export function getInisial(nama: string | undefined | null): string {
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
-
-export function getUmur(tanggalLahir: string | undefined | null): number | null {
-  if (!tanggalLahir) return null
-  // Parse manual dari YYYY-MM-DD untuk hindari timezone issue
-  const m = tanggalLahir.match(/^(\d{4})-(\d{2})-(\d{2})/)
-  if (!m) return null
-  const today = new Date()
-  const tyear = today.getFullYear()
-  const tmonth = today.getMonth() + 1
-  const tday = today.getDate()
-  const byear = parseInt(m[1], 10)
-  const bmonth = parseInt(m[2], 10)
-  const bday = parseInt(m[3], 10)
-  let age = tyear - byear
-  if (tmonth < bmonth || (tmonth === bmonth && tday < bday)) age--
-  return age
-}
-
-export const APP_VERSION = 'v3.2.0'
-export const APP_NAME = 'DaPenDig Next'
-export const APP_TAGLINE = 'Data Penduduk Digital'
-export const DESA_DEFAULT = 'Karang Sengon'
+export const APP_VERSION = 'v3.3.1'
 
 /**
  * Parse tanggal dari berbagai format ke Date object.
@@ -107,27 +86,3 @@ export function toISODate(str: string | null | undefined): string {
   return str  // kembalikan apa adanya jika format tidak dikenali
 }
 
-/**
- * Hitung umur dari string tanggal (support DD/MM/YYYY dan YYYY-MM-DD)
- */
-export function hitungUmurFromStr(tanggal: string | null | undefined): number {
-  if (!tanggal) return -1
-  // Coba parse YYYY-MM-DD langsung (timezone-safe)
-  const m = tanggal.match(/^(\d{4})-(\d{2})-(\d{2})/)
-  if (m) {
-    const now = new Date()
-    let age = now.getFullYear() - parseInt(m[1], 10)
-    const bmonth = parseInt(m[2], 10)
-    const bday = parseInt(m[3], 10)
-    if (now.getMonth() + 1 < bmonth || (now.getMonth() + 1 === bmonth && now.getDate() < bday)) age--
-    return age
-  }
-  // Fallback untuk format DD/MM/YYYY
-  const lahir = parseDate(tanggal)
-  if (!lahir) return -1
-  const now = new Date()
-  let age = now.getFullYear() - lahir.getFullYear()
-  const mo = now.getMonth() - lahir.getMonth()
-  if (mo < 0 || (mo === 0 && now.getDate() < lahir.getDate())) age--
-  return age
-}

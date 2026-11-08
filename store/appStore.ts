@@ -18,11 +18,12 @@ interface AppStore {
   toggleSidebar: () => void
 }
 
+// Kosong sampai konfigurasi dimuat (Pengaturan → Informasi wilayah): tidak ada nama desa bawaan yang tertanam di kode.
 const defaultWilayah: ConfigWilayah = {
-  desa: 'Karang Sengon',
-  kecamatan: 'Klabang',
-  kabupaten: 'Bondowoso',
-  provinsi: 'Jawa Timur',
+  desa: '',
+  kecamatan: '',
+  kabupaten: '',
+  provinsi: '',
   tahun: String(new Date().getFullYear()),
 }
 

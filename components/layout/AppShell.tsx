@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useAppStore } from '@/store/appStore'
 import { useWilayah } from '@/hooks/useWilayah'
+import { useIdentitasDesa } from '@/hooks/useIdentitasDesa'
+import { labelDesa } from '@/lib/wilayah'
 import { cn } from '@/lib/utils'
 import { AppLogo } from './AppLogo'
 import { Sidebar } from './Sidebar'
@@ -21,6 +23,7 @@ interface AppShellProps {
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore()
   const router = useRouter()
+  const identitas = useIdentitasDesa()
 
   useEffect(() => {
     if (!loading && !user) {
@@ -34,7 +37,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         <AppLogo size={80} className="shadow-pop ring-1 ring-gold-400/40" />
         <div className="flex flex-col items-center gap-0.5 text-center">
           <p className="font-display text-base font-semibold text-ink">Data Penduduk Digital</p>
-          <p className="text-xs text-ink-3">Desa Karang Sengon</p>
+          {labelDesa(identitas) && <p className="text-xs text-ink-3">{labelDesa(identitas)}</p>}
         </div>
         <div className="w-5 h-5 border-2 border-line-2 border-t-navy-600 rounded-full animate-spin mt-1" />
       </div>

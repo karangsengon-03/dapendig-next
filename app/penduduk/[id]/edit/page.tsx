@@ -38,7 +38,7 @@ export default function EditPendudukPage() {
   // Rules: ubah penduduk = operator atau admin. Peran lihat-saja tidak melihat form (bisa dibuka lewat URL langsung).
   if (!isOperator()) {
     return (
-      <AppShell title="Edit Penduduk">
+      <AppShell title="Edit penduduk">
         <AksesDitolak
           judul="Halaman ini hanya untuk Operator atau Admin"
           keterangan="Peran Anda hanya dapat melihat data penduduk"
@@ -73,15 +73,15 @@ export default function EditPendudukPage() {
     : undefined
 
   return (
-    <AppShell title="Edit Penduduk">
+    <AppShell title="Edit penduduk">
       <>
         <PageHeader
-          title="Edit data penduduk"
+          title="Edit penduduk"
           description={isLoading ? 'Memuat...' : data ? `${data.nama_lengkap} · NIK ${data.nik || '—'}` : undefined}
           action={
             <Button asChild variant="outline">
               <Link href={`/penduduk/${id}`} aria-label="Kembali ke detail">
-                <ArrowLeft className="i" /><span className="hm">Kembali ke detail</span>
+                <ArrowLeft className="i" />Kembali ke detail
               </Link>
             </Button>
           }
@@ -104,7 +104,7 @@ export default function EditPendudukPage() {
             <div className="a-empty" style={{ padding: '70px 24px' }}>
               <div className="em"><User className="i" style={{ fontSize: 30 }} /></div>
               <h3>Data penduduk tidak ditemukan</h3>
-              <p>Data ini mungkin sudah dihapus atau dipindahkan ke Tempat Sampah.</p>
+              <p>Data ini mungkin sudah dihapus atau dipindahkan ke Tempat sampah.</p>
               <Button asChild>
                 <Link href="/penduduk">Ke daftar penduduk</Link>
               </Button>

@@ -12,7 +12,7 @@ import { OPSI_URUT_CATATAN, URUT_BAWAAN, type UrutCatatan } from '@/lib/saring-c
 import { cn } from '@/lib/utils'
 
 /* ============================================================================
-   Bagian bersama halaman catatan (Mutasi, Kelahiran & Kematian) — padanan
+   Bagian bersama halaman catatan (Mutasi, Kelahiran & kematian) — padanan
    `recPage()` / `fcard()` / `formFoot()` prototype. Semua murni tampilan.
    ============================================================================ */
 
@@ -195,7 +195,7 @@ export function RecToolbar({
           onClick={(e) => buka('urut', e.currentTarget, 200)}
         >
           <SlidersHorizontal className="i" />
-          {labelUrut}
+          Urut: {labelUrut}
           <ChevronDown className="i" style={{ fontSize: 13 }} />
         </button>
       )}
@@ -269,7 +269,7 @@ export function FormCard({
 export function FormBar({ children }: { children: React.ReactNode }) {
   return (
     <div className="a-sticky sbar">
-      <span style={{ fontSize: 13.5, color: 'var(--ink-3)' }}>
+      <span style={{ fontSize: 14, color: 'var(--ink-3)' }}>
         Kolom bertanda <span style={{ color: 'var(--bad)' }}>*</span> wajib diisi
       </span>
       <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>{children}</div>
@@ -313,7 +313,7 @@ export function DetailFoot({
   canDelete: boolean
   /** Hapus ditampilkan tetapi dinonaktifkan (mis. penduduk masih berstatus pindah keluar/meninggal). */
   hapusNonaktif?: boolean
-  /** Batalkan hanya untuk Pindah Keluar dan Kematian. */
+  /** Batalkan hanya untuk Pindah keluar dan Kematian. */
   bisaBatal: boolean
   onClose: () => void
   onEdit: () => void

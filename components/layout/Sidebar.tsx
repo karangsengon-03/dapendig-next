@@ -7,6 +7,8 @@ import { useTheme } from 'next-themes'
 import { ChevronsLeft, ChevronsRight, LogOut, Moon, Sun, X } from 'lucide-react'
 import { cn, APP_VERSION } from '@/lib/utils'
 import { useAppStore } from '@/store/appStore'
+import { useIdentitasDesa } from '@/hooks/useIdentitasDesa'
+import { labelDesa } from '@/lib/wilayah'
 import { useAuthStore } from '@/store/authStore'
 import { logout } from '@/hooks/useAuth'
 import { usePendudukBaruBulanIni } from '@/hooks/useDashboard'
@@ -41,6 +43,7 @@ function NavLink({ item, active, badge, onNavigate }: {
 }
 
 export function Sidebar() {
+  const identitas = useIdentitasDesa()
   const pathname = usePathname()
   const router = useRouter()
   const { sidebarOpen, setSidebarOpen } = useAppStore()
@@ -101,7 +104,7 @@ export function Sidebar() {
           {!rail && (
             <div>
               <b>DaPenDig</b>
-              <span>Desa Karang Sengon</span>
+              <span>{labelDesa(identitas) || 'Data Penduduk Digital'}</span>
             </div>
           )}
           {desktop ? (
@@ -162,7 +165,7 @@ export function Sidebar() {
 
           {user && (
             <div className="me">
-              <Link href="/profil" onClick={handleNav} className="melink" title="Profil Saya">
+              <Link href="/profil" onClick={handleNav} className="melink" title="Profil saya">
                 <div className="av">{getInisial(namaUser)}</div>
                 <div className="who">
                   <b>{namaUser}</b>

@@ -79,7 +79,7 @@ export function GenderChart({ lakiLaki, perempuan, loading }: GenderChartProps) 
             {perempuan > 0 && (
               <>
                 <div style={{ height: 1, background: 'var(--line)' }} />
-                <div style={{ fontSize: 12.5, color: 'var(--ink-3)', lineHeight: 1.45 }}>
+                <div style={{ fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.45 }}>
                   Rasio <b style={{ color: 'var(--ink)' }}>{Math.round((lakiLaki / perempuan) * 100)} laki-laki</b> per 100 perempuan
                 </div>
               </>

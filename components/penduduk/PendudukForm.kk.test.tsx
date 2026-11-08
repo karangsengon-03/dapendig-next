@@ -17,11 +17,11 @@ const el = (id: string) => document.getElementById(id) as HTMLSelectElement & HT
 const label = (teks: string) => Array.from(document.querySelectorAll('label')).find((l) => (l.textContent ?? '').startsWith(teks)) as HTMLElement
 
 describe('Edit penduduk — skema isian yang tercetak di KK', () => {
-  it('Golongan Darah tersedia (opsional) dan ikut tersimpan', async () => {
+  it('Golongan darah tersedia (opsional) dan ikut tersimpan', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined)
     render(<PendudukForm mode="edit" editId="x" initial={{ ...AWAL, pendidikan: 'SMA/Sederajat', pekerjaan: 'Petani/Pekebun', alamat: 'KARANG SENGON' }} onSubmit={onSubmit} />)
     expect(el('f-gol')).toBeTruthy()
-    expect(label('Golongan Darah').querySelector('.opt')).toBeTruthy()
+    expect(label('Golongan darah').querySelector('.opt')).toBeTruthy()
     fireEvent.change(el('f-gol'), { target: { value: 'AB' } })
     fireEvent.click(screen.getByRole('button', { name: /Simpan Perubahan/ }))
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
@@ -48,8 +48,8 @@ describe('Edit penduduk — skema isian yang tercetak di KK', () => {
 
   it('penanda: wajib (*) untuk isian KK, (opsional) untuk nama ayah, nama ibu, golongan darah', () => {
     render(<PendudukForm mode="edit" editId="x" initial={AWAL} onSubmit={vi.fn()} />)
-    for (const w of ['Hubungan Keluarga', 'Status Perkawinan', 'Agama', 'Pendidikan', 'Pekerjaan', 'Jenis Kelamin']) expect(label(w).querySelector('.req'), w).toBeTruthy()
-    for (const o of ['Nama Ayah', 'Nama Ibu', 'Golongan Darah']) expect(label(o).querySelector('.opt'), o).toBeTruthy()
+    for (const w of ['Hubungan keluarga', 'Status perkawinan', 'Agama', 'Pendidikan', 'Pekerjaan', 'Jenis kelamin']) expect(label(w).querySelector('.req'), w).toBeTruthy()
+    for (const o of ['Nama ayah', 'Nama ibu', 'Golongan darah']) expect(label(o).querySelector('.opt'), o).toBeTruthy()
   })
 
   it('nilai pilihan yang kosong di data lama tampil kosong (bukan diam-diam diganti pilihan pertama)', () => {

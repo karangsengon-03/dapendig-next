@@ -8,6 +8,8 @@ import { Eye, EyeOff, LogIn, Loader2, Lock, Mail, Moon, Sun } from 'lucide-react
 import { auth } from '@/lib/firebase'
 import { APP_VERSION } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
+import { useIdentitasDesa } from '@/hooks/useIdentitasDesa'
+import { labelDesa, labelPemerintahDesa } from '@/lib/wilayah'
 import { AppLogo } from '@/components/layout/AppLogo'
 import { Avatar } from '@/components/ui/avatar'
 // TIDAK memanggil useAuthListener di sini — sudah dipanggil di AppShell.
@@ -20,6 +22,7 @@ const KEY_PASS  = 'dapendig_pass'
 type Mode = 'lanjut' | 'ganti' | 'baru'
 
 export function LoginForm() {
+  const identitas = useIdentitasDesa()
   const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
   const { user, loading: authLoading } = useAuthStore()
@@ -111,7 +114,7 @@ export function LoginForm() {
         <AppLogo size={80} />
         <div className="flex flex-col items-center gap-0.5 text-center">
           <p className="font-display text-base font-bold text-ink">Data Penduduk Digital</p>
-          <p className="text-xs text-ink-3">Desa Karang Sengon</p>
+          {labelDesa(identitas) && <p className="text-xs text-ink-3">{labelDesa(identitas)}</p>}
         </div>
         <Loader2 className="i animate-spin text-navy-600" style={{ fontSize: 22 }} />
       </div>
@@ -127,20 +130,20 @@ export function LoginForm() {
           <AppLogo size={46} />
           <div>
             <b style={{ fontFamily: 'var(--f-display)', fontSize: 19, letterSpacing: '-.01em', display: 'block' }}>DaPenDig</b>
-            <span style={{ fontSize: 12.5, color: 'var(--gold-400)' }}>Data Penduduk Digital</span>
+            <span style={{ fontSize: 13, color: 'var(--gold-400)' }}>Data Penduduk Digital</span>
           </div>
         </div>
         <div style={{ position: 'relative' }}>
           <p className="lgh">Data warga tertib, pelayanan makin cepat.</p>
-          <p style={{ margin: '14px 0 0', color: '#B8C9E3', fontSize: 14.5, lineHeight: 1.55, maxWidth: '38ch' }}>
-            Kelola penduduk, mutasi, kelahiran, dan kematian Desa Karang Sengon dalam satu tempat.
+          <p style={{ margin: '14px 0 0', color: '#B8C9E3', fontSize: 15, lineHeight: 1.55, maxWidth: '38ch' }}>
+            Kelola penduduk, mutasi, kelahiran, dan kematian {labelDesa(identitas) || 'desa'} dalam satu tempat.
           </p>
         </div>
         <div className="fl">
           <div><b>{APP_VERSION}</b><span>versi aplikasi</span></div>
         </div>
-        <div style={{ position: 'relative', fontSize: 12.5, color: '#8FA5C6' }}>
-          Pemerintah Desa Karang Sengon, Kec. Klabang, Kab. Bondowoso
+        <div style={{ position: 'relative', fontSize: 13, color: '#8FA5C6' }}>
+          {labelPemerintahDesa(identitas)}
         </div>
       </div>
 
@@ -169,7 +172,7 @@ export function LoginForm() {
 
           {error && (
             <p className="a-err" role="alert" style={{
-              padding: '10px 14px', borderRadius: 11, background: 'var(--bad-bg)', fontSize: 13.5,
+              padding: '10px 14px', borderRadius: 11, background: 'var(--bad-bg)', fontSize: 14,
             }}>
               {error}
             </p>
@@ -265,8 +268,8 @@ export function LoginForm() {
             </button>
           )}
 
-          <p style={{ margin: 0, textAlign: 'center', fontSize: 12.5, color: 'var(--ink-3)' }}>
-            © Pemerintah Desa Karang Sengon 2026
+          <p style={{ margin: 0, textAlign: 'center', fontSize: 13, color: 'var(--ink-3)' }}>
+            © {labelPemerintahDesa({ desa: identitas.desa })} {new Date().getFullYear()}
           </p>
         </div>
       </div>

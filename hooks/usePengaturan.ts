@@ -6,7 +6,6 @@ import {
   getDocs,
   doc,
   updateDoc,
-  deleteDoc,
   getDoc,
   setDoc,
   addDoc,
@@ -17,7 +16,8 @@ import { useAuthStore } from '@/store/authStore'
 import { useAppStore } from '@/store/appStore'
 import { DUSUN_BAWAAN, RW_BAWAAN, normalisasiDusun, normalisasiRw, validasiDusun, validasiRw, type DusunItem } from '@/lib/dusun'
 import { GalatTolak } from '@/lib/galat-tolak'
-import type { AppUser, ConfigWilayah, UserRole } from '@/types'
+import { simpanIdentitas } from '@/lib/wilayah'
+import type { AppUser, ConfigWilayah } from '@/types'
 import { PEKERJAAN, HUBUNGAN_KELUARGA } from '@/lib/penduduk-constants'
 
 const LOG_COL = 'log'
@@ -51,49 +51,14 @@ export function useUserList() {
     staleTime: 60_000,
   })
 }
-
-export function useUpdateUserRole() {
-  const qc = useQueryClient()
-  const user = useAuthStore((s) => s.user)
-  return useMutation({
-    mutationFn: async ({ uid, role }: { uid: string; role: UserRole }) => {
-      await updateDoc(doc(db, 'users', uid), { role })
-      await writeLog('edit', `Ganti role user ${uid} → ${role}`, user?.email ?? 'unknown')
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['pengaturan', 'users'], exact: false })
-    },
-  })
-}
-
-export function useDeleteUser() {
-  const qc = useQueryClient()
-  const user = useAuthStore((s) => s.user)
-  return useMutation({
-    mutationFn: async ({ uid, email }: { uid: string; email: string }) => {
-      await deleteDoc(doc(db, 'users', uid))
-      await writeLog('hapus', `Hapus user: ${email}`, user?.email ?? 'unknown')
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['pengaturan', 'users'], exact: false })
-    },
-  })
-}
-
 // ── Wilayah Config (path: config/wilayah) ───────────────────────────────────
 // Sesuai data aktual Firestore: koleksi 'config', dokumen 'wilayah'
 
 async function fetchWilayahConfig(): Promise<ConfigWilayah> {
   const snap = await getDoc(doc(db, 'config', 'wilayah'))
   if (!snap.exists()) {
-    return {
-      desa: 'Karang Sengon',
-      kecamatan: 'Klabang',
-      kabupaten: 'Bondowoso',
-      provinsi: 'Jawa Timur',
-      kode_pos: '68284',
-      tahun: new Date().getFullYear().toString(),
-    }
+    // Belum pernah disimpan: kosong (diisi di Pengaturan → Informasi wilayah), bukan nama desa bawaan
+    return { desa: '', kecamatan: '', kabupaten: '', provinsi: '', kode_pos: '', tahun: new Date().getFullYear().toString() }
   }
   return snap.data() as ConfigWilayah
 }
@@ -122,7 +87,10 @@ export function useSaveWilayah() {
         user?.email ?? 'unknown'
       )
     },
-    onSuccess: () => {
+    onSuccess: (_hasil, data) => {
+      // Perbarui store dan cadangan di perangkat sekarang juga, supaya nama desa di menu, form, dan Cetak KK langsung berubah (tanpa muat ulang)
+      useAppStore.getState().setWilayah({ ...useAppStore.getState().wilayah, ...data })
+      simpanIdentitas(data)
       qc.invalidateQueries({ queryKey: ['wilayah'], exact: false })
     },
   })

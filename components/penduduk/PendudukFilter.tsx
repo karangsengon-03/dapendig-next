@@ -18,11 +18,13 @@ import {
   MapPinned,
   Hourglass,
   GraduationCap,
+  Tags,
 } from 'lucide-react'
 import { STATUS_PERKAWINAN } from '@/lib/penduduk-constants'
-import { KATEGORI_UMUR, kunciRentang, labelKunciRentang } from '@/lib/umur'
+import { KATEGORI_UMUR, KLASIFIKASI_UMUR, kunciRentang, labelKunciRentang, labelKlasifikasi, labelNamaKlasifikasi } from '@/lib/umur'
 import { useDusunAktif } from '@/hooks/useDusunAktif'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { PopLayer, hitungPos, type PopPos } from './PopLayer'
 
 export interface FilterState {
@@ -33,6 +35,8 @@ export interface FilterState {
   jenisKelamin: string
   /** Kunci rentang umur "min-maks" (lib/umur.ts), mis. "0-4" atau "60-999". */
   umur: string
+  /** Nama klasifikasi umur (lib/umur.ts): Balita, Anak-anak, Remaja, Dewasa, Pra-lansia, Lansia. */
+  klasifikasi: string
   agama: string
   statusPerkawinan: string
   pekerjaan: string
@@ -46,13 +50,14 @@ export interface FilterState {
 const ALL_FILTERS = [
   { key: 'rt',               label: 'RT' },
   { key: 'dusun',            label: 'Dusun' },
-  { key: 'jenisKelamin',     label: 'Jenis Kelamin' },
+  { key: 'jenisKelamin',     label: 'Jenis kelamin' },
   { key: 'umur',             label: 'Umur' },
+  { key: 'klasifikasi',      label: 'Klasifikasi umur' },
   { key: 'agama',            label: 'Agama' },
-  { key: 'statusPerkawinan', label: 'Status Perkawinan' },
+  { key: 'statusPerkawinan', label: 'Status perkawinan' },
   { key: 'pendidikan',       label: 'Pendidikan' },
   { key: 'pekerjaan',        label: 'Pekerjaan' },
-  { key: 'status',           label: 'Status Penduduk' },
+  { key: 'status',           label: 'Status penduduk' },
   { key: 'sort',             label: 'Urutan' },
 ] as const
 
@@ -67,6 +72,7 @@ const CHIPS: { key: ChipKey; label: string; icon: LucideIcon }[] = [
   { key: 'dusun',            label: 'Dusun',         icon: MapPinned },
   { key: 'jenisKelamin',     label: 'Jenis kelamin', icon: VenusAndMars },
   { key: 'umur',             label: 'Umur',          icon: Hourglass },
+  { key: 'klasifikasi',      label: 'Klasifikasi',   icon: Tags },
   { key: 'agama',            label: 'Agama',         icon: Layers },
   { key: 'statusPerkawinan', label: 'Status kawin',  icon: HeartHandshake },
   { key: 'pendidikan',       label: 'Pendidikan',    icon: GraduationCap },
@@ -76,10 +82,10 @@ const CHIPS: { key: ChipKey; label: string; icon: LucideIcon }[] = [
 
 const OPSI_STATUS = [
   { value: 'aktif',         label: 'Aktif' },
-  { value: 'tidak aktif',   label: 'Tidak Aktif' },
+  { value: 'tidak aktif',   label: 'Tidak aktif' },
   { value: 'meninggal',     label: 'Meninggal' },
-  { value: 'mutasi-keluar', label: 'Mutasi Keluar' },
-  { value: '',              label: 'Semua Status' },
+  { value: 'mutasi-keluar', label: 'Mutasi keluar' },
+  { value: '',              label: 'Semua status' },
 ]
 
 const OPSI_URUT = [
@@ -88,19 +94,19 @@ const OPSI_URUT = [
   { value: 'nama_lengkap:desc',  label: 'Nama Z–A' },
   { value: 'nik:asc',            label: 'NIK ↑' },
   { value: 'rt:asc',             label: 'RT ↑' },
-  { value: 'tanggal_lahir:asc',  label: 'Umur Tertua' },
-  { value: 'tanggal_lahir:desc', label: 'Umur Termuda' },
+  { value: 'tanggal_lahir:asc',  label: 'Umur tertua' },
+  { value: 'tanggal_lahir:desc', label: 'Umur termuda' },
 ]
 
 export const FILTER_AWAL: FilterState = {
-  search: '', rt: '', dusun: '', jenisKelamin: '', umur: '', agama: '', statusPerkawinan: '', pekerjaan: '', pendidikan: '',
+  search: '', rt: '', dusun: '', jenisKelamin: '', umur: '', klasifikasi: '', agama: '', statusPerkawinan: '', pekerjaan: '', pendidikan: '',
   sortBy: 'rt_kk', sortDir: 'asc', status: 'aktif',
 }
 
 /** Ada filter yang sedang dipakai (selain urutan)? Status bawaan "aktif" tidak dihitung. */
 export function adaFilterAktif(f: FilterState): boolean {
   return Boolean(
-    f.search || f.rt || f.dusun || f.jenisKelamin || f.umur || f.agama || f.statusPerkawinan ||
+    f.search || f.rt || f.dusun || f.jenisKelamin || f.umur || f.klasifikasi || f.agama || f.statusPerkawinan ||
     f.pekerjaan || f.pendidikan || f.status !== 'aktif'
   )
 }
@@ -155,19 +161,21 @@ export function PendudukFilter({
       case 'rt':
         return [{ value: '', label: 'Semua RT' }, ...rtList.map(rt => ({ value: rt, label: `RT ${rt}` }))]
       case 'dusun':
-        return [{ value: '', label: 'Semua Dusun' }, ...dusun.map(d => ({ value: d.nama, label: `Dusun ${d.nama}` }))]
+        return [{ value: '', label: 'Semua dusun' }, ...dusun.map(d => ({ value: d.nama, label: `Dusun ${d.nama}` }))]
       case 'umur':
-        return [{ value: '', label: 'Semua Umur' }, ...KATEGORI_UMUR.map(k => { const v = kunciRentang(k.min, k.max); return { value: v, label: labelKunciRentang(v) } })]
+        return [{ value: '', label: 'Semua umur' }, ...KATEGORI_UMUR.map(k => { const v = kunciRentang(k.min, k.max); return { value: v, label: labelKunciRentang(v) } })]
+      case 'klasifikasi':
+        return [{ value: '', label: 'Semua klasifikasi' }, ...KLASIFIKASI_UMUR.map(k => ({ value: k.label, label: labelKlasifikasi(k) }))]
       case 'pendidikan':
-        return [{ value: '', label: 'Semua Pendidikan' }, ...pendidikanOptions.map(p => ({ value: p, label: p }))]
+        return [{ value: '', label: 'Semua pendidikan' }, ...pendidikanOptions.map(p => ({ value: p, label: p }))]
       case 'jenisKelamin':
-        return [{ value: '', label: 'Semua JK' }, { value: 'Laki-laki', label: 'Laki-laki' }, { value: 'Perempuan', label: 'Perempuan' }]
+        return [{ value: '', label: 'Semua jenis kelamin' }, { value: 'Laki-laki', label: 'Laki-laki' }, { value: 'Perempuan', label: 'Perempuan' }]
       case 'agama':
-        return [{ value: '', label: 'Semua Agama' }, ...agamaOptions.map(a => ({ value: a, label: a }))]
+        return [{ value: '', label: 'Semua agama' }, ...agamaOptions.map(a => ({ value: a, label: a }))]
       case 'statusPerkawinan':
-        return [{ value: '', label: 'Semua Kawin' }, ...STATUS_PERKAWINAN.map(s => ({ value: s, label: s }))]
+        return [{ value: '', label: 'Semua status kawin' }, ...STATUS_PERKAWINAN.map(s => ({ value: s, label: s }))]
       case 'pekerjaan':
-        return [{ value: '', label: 'Semua Pekerjaan' }, ...pekerjaanOptions.map(p => ({ value: p, label: p }))]
+        return [{ value: '', label: 'Semua pekerjaan' }, ...pekerjaanOptions.map(p => ({ value: p, label: p }))]
       case 'status':
         return OPSI_STATUS
     }
@@ -202,7 +210,7 @@ export function PendudukFilter({
 
     if (pop.kunci === 'tampil') {
       return (
-        <PopLayer pos={pop.pos} lebar={pop.lebar} title="Tampilkan Filter" onClose={tutup}>
+        <PopLayer pos={pop.pos} lebar={pop.lebar} title="Atur filter" onClose={tutup}>
           {ALL_FILTERS.map(f => {
             const on = visibleFilters.has(f.key)
             return (
@@ -259,29 +267,28 @@ export function PendudukFilter({
         </div>
 
         {visibleFilters.has('sort') && (
-          <Button type="button" variant="outline" style={{ height: 42 }} aria-haspopup="menu"
-            onClick={e => buka('sort', e.currentTarget)}>
-            <SlidersHorizontal className="i" /><span className="hm">{labelUrut}</span>
-          </Button>
+          <button type="button" className={cn('a-chip', (filter.sortBy !== FILTER_AWAL.sortBy || filter.sortDir !== FILTER_AWAL.sortDir) && 'on')}
+            aria-haspopup="menu" aria-label="Urutkan" onClick={e => buka('sort', e.currentTarget)}>
+            <SlidersHorizontal className="i" />Urut: {labelUrut}
+          </button>
         )}
 
-        <Button type="button" variant="outline" size="icon" style={{ height: 42, width: 42 }} aria-haspopup="menu"
-          title="Atur filter yang ditampilkan" aria-label="Tampilkan Filter"
+        <button type="button" className="a-chip" aria-haspopup="menu" title="Pilih filter yang ditampilkan"
           onClick={e => buka('tampil', e.currentTarget)}>
-          <ListChecks className="i" />
-        </Button>
+          <ListChecks className="i" />Atur filter
+        </button>
       </div>
 
       {/* Chip filter */}
       <div className="chips-row">
-        {/* Filter yang sedang dipakai selalu tampil, walau disembunyikan lewat "Tampilkan Filter" (mis. datang dari Beranda/Monografi) */}
+        {/* Filter yang sedang dipakai selalu tampil, walau disembunyikan lewat "Atur filter" (mis. datang dari Beranda/Monografi) */}
         {CHIPS.filter(c => visibleFilters.has(c.key) || filter[c.key] !== (c.key === 'status' ? 'aktif' : '')).map(c => {
           const nilai = filter[c.key]
           const bawaan = c.key === 'status' ? 'aktif' : ''
           const on = nilai !== bawaan
           const Ikon = c.icon
           // Nilai di luar daftar pilihan (mis. rentang umur dari Monografi) tetap diberi label yang jelas
-          const labelNilai = opsiChip(c.key).find(o => o.value === nilai)?.label ?? (c.key === 'umur' ? labelKunciRentang(nilai) : nilai)
+          const labelNilai = opsiChip(c.key).find(o => o.value === nilai)?.label ?? (c.key === 'umur' ? labelKunciRentang(nilai) : c.key === 'klasifikasi' ? labelNamaKlasifikasi(nilai) : nilai)
           return (
             <button key={c.key} type="button" className={`a-chip${on ? ' on' : ''}`} aria-haspopup="menu"
               onClick={e => buka(c.key, e.currentTarget, c.key === 'pekerjaan' || c.key === 'pendidikan' ? 270 : 230)}>

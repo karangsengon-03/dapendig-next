@@ -52,8 +52,8 @@ type SecKey = 'wilayah' | 'kades' | 'dusun' | 'pengguna' | 'tampilan' | 'ekspor'
 
 const SECTIONS: { key: SecKey; ikon: React.ReactNode; label: string }[] = [
   { key: 'wilayah', ikon: <Landmark size={17} />, label: 'Informasi wilayah' },
-  { key: 'kades', ikon: <BadgeCheck size={17} />, label: 'Kepala desa' },
   { key: 'dusun', ikon: <MapPinned size={17} />, label: 'Dusun, RT, dan RW' },
+  { key: 'kades', ikon: <BadgeCheck size={17} />, label: 'Kepala desa' },
   { key: 'pengguna', ikon: <UserCog size={17} />, label: 'Pengguna' },
   { key: 'tampilan', ikon: <Palette size={17} />, label: 'Tampilan' },
   { key: 'ekspor', ikon: <FileSpreadsheet size={17} />, label: 'Ekspor data' },
@@ -139,37 +139,37 @@ function PengaturanIsi({ currentUid }: { currentUid: string }) {
 
 const MIGRASI_ITEMS = [
   {
-    label: 'Migrasi Alamat Penduduk',
-    desc: 'Isi alamat KARANG SENGON untuk semua penduduk yang belum punya alamat',
+    label: 'Migrasi alamat penduduk',
+    desc: 'Isi alamat bawaan (nama desa) untuk semua penduduk yang belum punya alamat',
     href: '/pengaturan/migrate-alamat',
     tone: 'warn' as const,
   },
   {
-    label: 'Migrasi Pendidikan',
+    label: 'Migrasi pendidikan',
     desc: 'Ganti SLTP → SMP dan SLTA → SMA untuk semua data penduduk',
     href: '/pengaturan/migrate-pendidikan',
     tone: 'warn' as const,
   },
   {
-    label: 'Migrasi Format Tanggal',
+    label: 'Migrasi format tanggal',
     desc: 'Konversi DD/MM/YYYY → YYYY-MM-DD di semua koleksi Firestore',
     href: '/pengaturan/migrate-tanggal',
     tone: 'warn' as const,
   },
   {
-    label: 'Standarisasi Pendidikan & Pekerjaan',
+    label: 'Standarisasi pendidikan & pekerjaan',
     desc: 'Sesuai Permendagri 6/2026 — PNS→ASN (PNS), Ibu RT→Mengurus RT, dll',
     href: '/pengaturan/migrate-standarisasi',
     tone: 'warn' as const,
   },
   {
-    label: 'Fix Duplikat Dokumen',
+    label: 'Fix duplikat dokumen',
     desc: 'Hapus dokumen lama yang ID-nya masih random jika NIK sudah ada',
     href: '/pengaturan/fix-duplikat',
     tone: 'bad' as const,
   },
   {
-    label: 'Standarisasi ID Dokumen',
+    label: 'Standarisasi ID dokumen',
     desc: 'Seragamkan semua ID dokumen penduduk menggunakan NIK',
     href: '/pengaturan/migrate-docid',
     tone: 'warn' as const,
@@ -394,7 +394,7 @@ function WilayahKadesForm({ tampil }: { tampil: 'wilayah' | 'kades' | null }) {
     kecamatan: '',
     kabupaten: '',
     provinsi: '',
-    kode_pos: '68284',
+    kode_pos: '',
     tahun: '',
     nama_kades: '',
     jabatan_kades: 'Kepala Desa',
@@ -410,7 +410,7 @@ function WilayahKadesForm({ tampil }: { tampil: 'wilayah' | 'kades' | null }) {
           kecamatan: d.kecamatan ?? '',
           kabupaten: d.kabupaten ?? '',
           provinsi: d.provinsi ?? '',
-          kode_pos: d.kode_pos ?? '68284',
+          kode_pos: d.kode_pos ?? '',
           tahun: d.tahun ?? new Date().getFullYear().toString(),
           nama_kades: d.nama_kades ?? '',
           jabatan_kades: d.jabatan_kades ?? 'Kepala Desa',
@@ -425,6 +425,10 @@ function WilayahKadesForm({ tampil }: { tampil: 'wilayah' | 'kades' | null }) {
   }
 
   function handleSave() {
+    if (!form.desa.trim()) {
+      toast('Nama desa wajib diisi', 'error')
+      return
+    }
     save(form, {
       onSuccess: () => toast('Informasi wilayah berhasil disimpan', 'success'),
       onError: () => toast('Gagal menyimpan informasi wilayah', 'error'),
@@ -455,7 +459,7 @@ function WilayahKadesForm({ tampil }: { tampil: 'wilayah' | 'kades' | null }) {
             <div className="a-fs">
               <div className="fh">
                 <h4>Informasi wilayah</h4>
-                <p>Nama desa, kecamatan, kabupaten, provinsi. Dipakai pada kop dokumen dan cetak KK.</p>
+                <p>Nama desa, kecamatan, kabupaten, dan provinsi. Nama desa tampil di seluruh aplikasi (menu samping, layar masuk, alamat bawaan form, kop dokumen, dan Cetak KK); ganti di sini bila aplikasi dipakai desa lain. Struktur dusun, RT, dan RW diatur di <b>Dusun, RT, dan RW</b>.</p>
               </div>
               <div className="a-fg6">
                 <Field label="Desa" htmlFor="w-desa" className="s3">
@@ -470,10 +474,10 @@ function WilayahKadesForm({ tampil }: { tampil: 'wilayah' | 'kades' | null }) {
                 <Field label="Provinsi" htmlFor="w-prov" className="s3">
                   <InBox><input placeholder="Nama provinsi" id="w-prov" value={form.provinsi} onChange={(e) => set('provinsi', e.target.value)} /></InBox>
                 </Field>
-                <Field label="Kode Pos" htmlFor="w-pos" className="s3">
+                <Field label="Kode pos" htmlFor="w-pos" className="s3">
                   <InBox>
                     <input
-                      placeholder="68284"
+                      placeholder="5 digit"
                       id="w-pos"
                       value={form.kode_pos ?? ''}
                       onChange={(e) => set('kode_pos', e.target.value)}
@@ -510,7 +514,7 @@ function WilayahKadesForm({ tampil }: { tampil: 'wilayah' | 'kades' | null }) {
                     <ChevronDown className="i chev" />
                   </InBox>
                 </Field>
-                <Field label="Nama Kepala Desa" htmlFor="w-kades" className="s3 nikkk">
+                <Field label="Nama kepala desa" htmlFor="w-kades" className="s3 nikkk">
                   <InBox>
                     <input
                       placeholder="Nama lengkap kepala desa"

@@ -6,6 +6,8 @@ import { CircleCheck, CircleX, IdCard, Loader2, MapPin, Save, User, Users, Check
 import { JkIkon } from '@/components/ui/jk-ikon'
 import { opsiRt } from '@/lib/rt-rw'
 import { useDusunAktif } from '@/hooks/useDusunAktif'
+import { useAppStore } from '@/store/appStore'
+import { contohAlamat } from '@/lib/wilayah'
 import {
   HUBUNGAN_KELUARGA,
   JENIS_KELAMIN,
@@ -73,7 +75,7 @@ const FIELD_PERUBAHAN: { key: keyof PendudukFormData; label: string; fmt?: (v: s
   { key: 'agama', label: 'Agama' },
   { key: 'pendidikan', label: 'Pendidikan' },
   { key: 'pekerjaan', label: 'Pekerjaan' },
-  { key: 'golongan_darah', label: 'Golongan Darah' },
+  { key: 'golongan_darah', label: 'Golongan darah' },
   { key: 'rt', label: 'RT' },
   { key: 'rw', label: 'RW' },
   { key: 'alamat', label: 'Alamat' },
@@ -122,6 +124,7 @@ export function PendudukForm({
   onSubmit,
 }: PendudukFormProps) {
   const { rtList, rwList, dusunDariRt } = useDusunAktif()
+  const wilayah = useAppStore((s) => s.wilayah)
   const router = useRouter()
   // Nilai awal (untuk panel Perubahan dan kartu identitas) dibekukan saat form dibuka
   const [awal] = useState<PendudukFormData>(() => ({ ...EMPTY, ...initial }))
@@ -222,7 +225,7 @@ export function PendudukForm({
                 <span className="sfx">{form.no_kk.length}/16</span>
               </InBox>
             </Field>
-            <Field label="Nama Lengkap" htmlFor="f-nama" req error={errors.nama_lengkap} className="s6">
+            <Field label="Nama lengkap" htmlFor="f-nama" req error={errors.nama_lengkap} className="s6">
               <InBox error={!!errors.nama_lengkap}>
                 <input
                   id="f-nama"
@@ -233,7 +236,7 @@ export function PendudukForm({
                 />
               </InBox>
             </Field>
-            <Field label="Hubungan Keluarga" htmlFor="f-hub" req error={errors.hubungan_keluarga} className="s2">
+            <Field label="Hubungan keluarga" htmlFor="f-hub" req error={errors.hubungan_keluarga} className="s2">
               <SelectIn
                 id="f-hub"
                 value={form.hubungan_keluarga}
@@ -243,7 +246,7 @@ export function PendudukForm({
                   error={!!errors.hubungan_keluarga}
               />
             </Field>
-            <Field label="Nama Ayah" htmlFor="f-ayah" opt className="s2">
+            <Field label="Nama ayah" htmlFor="f-ayah" opt className="s2">
               <InBox>
                 <input
                   id="f-ayah"
@@ -254,7 +257,7 @@ export function PendudukForm({
                 />
               </InBox>
             </Field>
-            <Field label="Nama Ibu" htmlFor="f-ibu" opt className="s2">
+            <Field label="Nama ibu" htmlFor="f-ibu" opt className="s2">
               <InBox>
                 <input
                   id="f-ibu"
@@ -271,8 +274,8 @@ export function PendudukForm({
         {/* Data diri */}
         <FormCard Icon={User} title="Data diri" sub="Kelahiran, pendidikan, dan pekerjaan">
           <div className="a-fg6">
-            <Field label="Jenis Kelamin" req error={errors.jenis_kelamin} className="s3">
-              <div className="a-seg full sgr" style={{ height: 44, padding: 3 }} role="radiogroup" aria-label="Jenis Kelamin">
+            <Field label="Jenis kelamin" req error={errors.jenis_kelamin} className="s3">
+              <div className="a-seg full sgr" style={{ height: 44, padding: 3 }} role="radiogroup" aria-label="Jenis kelamin">
                 {JENIS_KELAMIN.map((j) => (
                   <label key={j}>
                     <input
@@ -287,7 +290,7 @@ export function PendudukForm({
                 ))}
               </div>
             </Field>
-            <Field label="Status Perkawinan" htmlFor="f-kawin" req error={errors.status_perkawinan} className="s3">
+            <Field label="Status perkawinan" htmlFor="f-kawin" req error={errors.status_perkawinan} className="s3">
               <SelectIn
                 id="f-kawin"
                 value={form.status_perkawinan}
@@ -297,7 +300,7 @@ export function PendudukForm({
                   error={!!errors.status_perkawinan}
               />
             </Field>
-            <Field label="Tempat Lahir" htmlFor="f-tempat" req error={errors.tempat_lahir} className="s3">
+            <Field label="Tempat lahir" htmlFor="f-tempat" req error={errors.tempat_lahir} className="s3">
               <InBox error={!!errors.tempat_lahir}>
                 <input
                   id="f-tempat"
@@ -308,7 +311,7 @@ export function PendudukForm({
                 />
               </InBox>
             </Field>
-            <Field label="Tanggal Lahir" htmlFor="f-tgl" req error={errors.tanggal_lahir} className="s3">
+            <Field label="Tanggal lahir" htmlFor="f-tgl" req error={errors.tanggal_lahir} className="s3">
               <InBox error={!!errors.tanggal_lahir}>
                 <input
                   id="f-tgl"
@@ -348,7 +351,7 @@ export function PendudukForm({
                   error={!!errors.pekerjaan}
               />
             </Field>
-              <Field label="Golongan Darah" htmlFor="f-gol" opt className="s2">
+              <Field label="Golongan darah" htmlFor="f-gol" opt className="s2">
                 <SelectIn
                   id="f-gol"
                   value={form.golongan_darah ?? ''}
@@ -380,7 +383,7 @@ export function PendudukForm({
                   id="f-alamat"
                   value={form.alamat ?? ''}
                   onChange={(e) => set({ alamat: e.target.value })}
-                  placeholder="Contoh: KARANG SENGON"
+                  placeholder={contohAlamat(wilayah)}
                   autoComplete="off"
                 />
               </InBox>
@@ -431,7 +434,7 @@ export function PendudukForm({
 
         {/* Bilah simpan */}
         <div className="a-sticky sbar">
-          <span style={{ fontSize: 13.5, color: 'var(--ink-3)' }} aria-live="polite">
+          <span style={{ fontSize: 14, color: 'var(--ink-3)' }} aria-live="polite">
             {perubahan.length ? (
               <><b style={{ color: 'var(--ink)' }}>{perubahan.length} isian diubah</b> · belum disimpan</>
             ) : (

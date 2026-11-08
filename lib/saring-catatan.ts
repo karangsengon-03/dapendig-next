@@ -40,7 +40,7 @@ export function cocokRt(dipilih: string, rtBaris: string | undefined): boolean {
 }
 
 /**
- * Peta NIK → RT dari daftar penduduk, untuk catatan yang tidak menyimpan RT (Pindah Keluar, Kematian).
+ * Peta NIK → RT dari daftar penduduk, untuk catatan yang tidak menyimpan RT (Pindah keluar, Kematian).
  * Kunci: field `nik` dan ID dokumen (ID dokumen = NIK, tetapi dokumen lama bisa ber-ID acak).
  */
 export function buatPetaRt(penduduk: readonly { id?: string; nik?: string; rt?: string }[] | undefined): Map<string, string> {

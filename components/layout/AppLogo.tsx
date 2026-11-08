@@ -16,15 +16,3 @@ export function AppLogo({ className, size = 32 }: AppLogoProps) {
     />
   )
 }
-
-export function AppLogoFull({ className }: { className?: string }) {
-  return (
-    <div className={cn('flex items-center gap-[11px]', className)}>
-      <AppLogo size={40} />
-      <div className="leading-tight">
-        <b className="block font-display text-[16.5px] font-bold tracking-tight text-ink">DaPenDig</b>
-        <span className="block text-xs text-gold-600">Desa Karang Sengon</span>
-      </div>
-    </div>
-  )
-}

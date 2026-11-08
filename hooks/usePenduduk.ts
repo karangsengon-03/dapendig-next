@@ -13,7 +13,6 @@ import {
   where,
   orderBy,
   serverTimestamp,
-  runTransaction,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
@@ -63,38 +62,6 @@ async function fetchPendudukById(id: string): Promise<Penduduk | null> {
   return null
 }
 
-// ── Add ───────────────────────────────────────────────────────────────────────
-
-async function addPenduduk(
-  data: PendudukFormData,
-  email: string
-): Promise<string> {
-  const nik = data.nik?.trim()
-  if (!nik) throw new Error('NIK wajib diisi untuk menyimpan data penduduk')
-
-  // FIX race condition: checkNikExists() di form dan setDoc() di sini punya
-  // celah waktu — dua operator bisa lolos pengecekan bersamaan lalu operator
-  // kedua menimpa data operator pertama tanpa peringatan (setDoc bersifat
-  // overwrite). runTransaction membaca+menulis dokumen yang sama secara ATOMIK
-  // di level Firestore: siapa pun yang transaksinya sampai lebih dulu menang,
-  // yang kedua mendapat error jelas alih-alih menimpa diam-diam.
-  const docRef = doc(db, COL, nik)
-  await runTransaction(db, async (tx) => {
-    const existing = await tx.get(docRef)
-    if (existing.exists()) {
-      throw new Error(`NIK ${nik} sudah terdaftar atas nama ${existing.data()?.nama_lengkap ?? 'penduduk lain'}. Data tidak disimpan untuk mencegah menimpa data yang sudah ada.`)
-    }
-    tx.set(docRef, {
-      ...data,
-      created_at: serverTimestamp(),
-      updated_at: serverTimestamp(),
-    })
-  })
-
-  await writeLog('tambah', `Tambah penduduk: ${data.nama_lengkap}`, email, nik)
-  return nik
-}
-
 // ── Update ───────────────────────────────────────────────────────────────────
 
 async function updatePenduduk(
@@ -128,7 +95,7 @@ async function deletePendudukToRecycleBin(
   await writeLog('hapus', `Hapus (ke recycle bin): ${nama}`, email)
 }
 
-// ── Catat Pindah Keluar ───────────────────────────────────────────────────────
+// ── Catat Pindah keluar ───────────────────────────────────────────────────────
 
 async function catatPindahKeluar(params: {
   pendudukId: string
@@ -158,7 +125,7 @@ async function catatPindahKeluar(params: {
   await writeLog('mutasi_keluar', `${nama} pindah ke ${tujuan}`, email, nik)
 }
 
-// ── Catat Pindah Keluar Satu Keluarga ────────────────────────────────────────
+// ── Catat Pindah keluar Satu Keluarga ────────────────────────────────────────
 
 async function catatPindahKeluarKeluarga(params: {
   noKk: string
@@ -258,22 +225,6 @@ export function usePendudukDetail(id: string) {
     enabled: !!id,
   })
 }
-
-export function useAddPenduduk() {
-  const qc = useQueryClient()
-  const user = useAuthStore((s) => s.user)
-
-  return useMutation({
-    mutationFn: (data: PendudukFormData) =>
-      addPenduduk(data, user?.email ?? 'unknown'),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['penduduk'], exact: false })
-      qc.invalidateQueries({ queryKey: ['dashboard'], exact: false })
-      qc.invalidateQueries({ queryKey: ['monografi'], exact: false })
-    },
-  })
-}
-
 export function useUpdatePenduduk(id: string) {
   const qc = useQueryClient()
   const user = useAuthStore((s) => s.user)

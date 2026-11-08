@@ -6,6 +6,8 @@ import { db } from '@/lib/firebase'
 import { AppShell } from '@/components/layout/AppShell'
 import { AksesDitolakAdmin } from '@/components/ui/akses-ditolak'
 import { useAuthStore } from '@/store/authStore'
+import { useAppStore } from '@/store/appStore'
+import { alamatBawaan } from '@/lib/wilayah'
 import { useRouter } from 'next/navigation'
 import { MigrasiProgress } from '@/components/ui/migrasi-progress'
 import { Search } from 'lucide-react'
@@ -17,6 +19,8 @@ type PreviewItem = { id: string; nama: string; nik: string; done: boolean; loadi
 
 export default function MigrateAlamatPage() {
   const { isAdmin } = useAuthStore()
+  // Alamat bawaan = nama desa dari Pengaturan → Informasi wilayah (bukan nama tertanam)
+  const alamat = alamatBawaan(useAppStore((s) => s.wilayah))
   const router = useRouter()
   const { toast } = useToast()
   const [status, setStatus] = useState<'idle' | 'scanning' | 'preview' | 'running' | 'done' | 'error'>('idle')
@@ -47,7 +51,7 @@ export default function MigrateAlamatPage() {
     if (!isAdmin()) return
     setItems(prev => prev.map(x => x.id === id ? { ...x, loading: true } : x))
     try {
-      await updateDoc(doc(db, 'penduduk', id), { alamat: 'KARANG SENGON' })
+      await updateDoc(doc(db, 'penduduk', id), { alamat })
       setItems(prev => prev.map(x => x.id === id ? { ...x, done: true, loading: false } : x))
       setUpdated(u => u + 1)
     } catch (e) {
@@ -68,10 +72,10 @@ export default function MigrateAlamatPage() {
         ukuranBatch: 499,
         tulisBatch: async (kelompok) => {
           const batch = writeBatch(db)
-          for (const it of kelompok) batch.update(doc(db, 'penduduk', it.id), { alamat: 'KARANG SENGON' })
+          for (const it of kelompok) batch.update(doc(db, 'penduduk', it.id), { alamat })
           await batch.commit()
         },
-        tulisSatu: (it) => updateDoc(doc(db, 'penduduk', it.id), { alamat: 'KARANG SENGON' }),
+        tulisSatu: (it) => updateDoc(doc(db, 'penduduk', it.id), { alamat }),
         onProgress: (n) => setProgressCurrent(n),
       })
       // Ringkasan dari hasil nyata: tandai selesai HANYA yang berhasil; hitung bersama yang sudah selesai satuan
@@ -89,21 +93,21 @@ export default function MigrateAlamatPage() {
   // Hanya admin; peran lain tidak melihat isi halaman (handler di bawah tetap memeriksa isAdmin() juga)
   if (!isAdmin()) {
     return (
-      <AppShell title="Migrasi Alamat">
+      <AppShell title="Migrasi alamat">
         <AksesDitolakAdmin />
       </AppShell>
     )
   }
 
   return (
-    <AppShell title="Migrasi Alamat">
-      <MigLayout title="Migrasi Alamat Penduduk" desc="Isi alamat KARANG SENGON untuk yang belum punya alamat">
+    <AppShell title="Migrasi alamat">
+      <MigLayout title="Migrasi alamat penduduk" desc={alamat ? `Isi alamat ${alamat} untuk yang belum punya alamat` : 'Isi nama desa di Pengaturan → Informasi wilayah terlebih dahulu'}>
         {status === 'idle' && (
           <>
             <MigBox>
-              <p>Proses ini akan mengisi field alamat dengan <b>KARANG SENGON</b> untuk semua penduduk yang belum memiliki alamat.</p>
+              <p>Proses ini akan mengisi field alamat dengan <b>{alamat || '(nama desa belum diisi)'}</b> untuk semua penduduk yang belum memiliki alamat.</p>
             </MigBox>
-            <MigPrimary onClick={handleScan} disabled={!isAdmin()} icon={<Search className="i" />}>Scan Data Terlebih Dahulu</MigPrimary>
+            <MigPrimary onClick={handleScan} disabled={!isAdmin() || !alamat} icon={<Search className="i" />}>Scan data terlebih dahulu</MigPrimary>
           </>
         )}
 
@@ -127,7 +131,7 @@ export default function MigrateAlamatPage() {
                   <td className="nmx">{item.nama || '—'}</td>
                   <td className="mn">{item.nik}</td>
                   <td className="r">
-                    <MigRowBtn done={item.done} loading={item.loading} onClick={() => handleOne(item.id)} label="Isi Alamat" />
+                    <MigRowBtn done={item.done} loading={item.loading} onClick={() => handleOne(item.id)} label="Isi alamat" />
                   </td>
                 </tr>
               ))}

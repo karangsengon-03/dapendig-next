@@ -201,7 +201,7 @@ export default function FixTanggalExcelPage() {
               <p>③ Bandingkan <span className="mig-code">tanggal_lahir</span> — jika sudah sama → skip</p>
               <p>④ Tampilkan preview sebelum eksekusi</p>
             </MigBox>
-            <MigPrimary onClick={handlePreview} disabled={!isAdmin()} icon={<FileSpreadsheet className="i" />}>Scan & Preview Perbedaan</MigPrimary>
+            <MigPrimary onClick={handlePreview} disabled={!isAdmin()} icon={<FileSpreadsheet className="i" />}>Scan & preview perbedaan</MigPrimary>
           </>
         )}
 

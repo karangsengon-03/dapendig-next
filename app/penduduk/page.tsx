@@ -13,7 +13,8 @@ import { PendudukFilter, adaFilterAktif, FILTER_AWAL, type FilterState } from '@
 import { usePendudukList } from '@/hooks/usePenduduk'
 import { useDusunAktif } from '@/hooks/useDusunAktif'
 import { PENDIDIKAN } from '@/lib/penduduk-constants'
-import { cocokRentangUmur, kunciRentangSah } from '@/lib/umur'
+import { jumlahKeluarga } from '@/lib/keluarga'
+import { cocokRentangUmur, cocokKlasifikasi, kunciRentangSah, klasifikasiSah } from '@/lib/umur'
 import { useAuthStore } from '@/store/authStore'
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const
@@ -22,7 +23,7 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100] as const
 const DEFAULT_FILTER: FilterState = FILTER_AWAL
 
 // Param URL (dari klik di Beranda dan Monografi): ?rt= &dusun= &umur=0-4 &agama= &pekerjaan= &pendidikan= &statusPerkawinan= &status=
-const PARAM_FILTER = ['rt', 'dusun', 'umur', 'agama', 'pekerjaan', 'pendidikan', 'statusPerkawinan', 'status'] as const
+const PARAM_FILTER = ['rt', 'dusun', 'umur', 'klasifikasi', 'agama', 'pekerjaan', 'pendidikan', 'statusPerkawinan', 'status'] as const
 
 function filterDariUrl(sp: { get: (k: string) => string | null }): FilterState {
   return {
@@ -30,6 +31,7 @@ function filterDariUrl(sp: { get: (k: string) => string | null }): FilterState {
     rt: sp.get('rt') ?? '',
     dusun: sp.get('dusun') ?? '',
     umur: kunciRentangSah(sp.get('umur')),
+    klasifikasi: klasifikasiSah(sp.get('klasifikasi')),
     agama: sp.get('agama') ?? '',
     pekerjaan: sp.get('pekerjaan') ?? '',
     pendidikan: sp.get('pendidikan') ?? '',
@@ -167,6 +169,7 @@ function PendudukContent() {
     if (filter.dusun) rows = rows.filter((r) => dusunDariRt(r.rt) === filter.dusun)
     if (filter.jenisKelamin) rows = rows.filter((r) => r.jenis_kelamin === filter.jenisKelamin)
     if (filter.umur) rows = rows.filter((r) => cocokRentangUmur(r.tanggal_lahir, filter.umur))
+    if (filter.klasifikasi) rows = rows.filter((r) => cocokKlasifikasi(r.tanggal_lahir, filter.klasifikasi))
     if (filter.agama) rows = rows.filter((r) => r.agama === filter.agama)
     if (filter.statusPerkawinan) rows = rows.filter((r) => r.status_perkawinan === filter.statusPerkawinan)
     if (filter.pekerjaan) rows = rows.filter((r) => r.pekerjaan === filter.pekerjaan)
@@ -214,7 +217,7 @@ function PendudukContent() {
   // Ringkasan header (dari data yang sudah dimuat): penduduk aktif dan jumlah KK-nya
   const ringkasan = useMemo(() => {
     const aktif = allData.filter(r => r.status === 'aktif')
-    return { jiwa: aktif.length, kk: new Set(aktif.map(r => r.no_kk).filter(Boolean)).size }
+    return { jiwa: aktif.length, kk: jumlahKeluarga(aktif) }
   }, [allData])
 
   function handleFilter(f: FilterState) {
@@ -245,15 +248,15 @@ function PendudukContent() {
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <PageHeader
-        title="Data penduduk"
+        title="Penduduk"
         description={isLoading ? 'Memuat data penduduk…' : `${ringkasan.jiwa.toLocaleString('id-ID')} penduduk aktif di ${ringkasan.kk.toLocaleString('id-ID')} kepala keluarga`}
         action={isAdmin() ? (
           <>
             <Button asChild variant="outline">
-              <Link href="/pengaturan?bagian=impor" title="Impor Excel ada di Pengaturan"><Upload className="i" /><span className="hm">Impor</span></Link>
+              <Link href="/pengaturan?bagian=impor" title="Impor Excel ada di Pengaturan"><Upload className="i" />Impor Excel</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/pengaturan?bagian=ekspor" title="Ekspor Excel ada di Pengaturan"><Download className="i" /><span className="hm">Ekspor Excel</span></Link>
+              <Link href="/pengaturan?bagian=ekspor" title="Ekspor Excel ada di Pengaturan"><Download className="i" />Ekspor Excel</Link>
             </Button>
           </>
         ) : undefined}
@@ -344,7 +347,7 @@ function nomorHalaman(page: number, total: number): (number | '…')[] {
 
 export default function PendudukPage() {
   return (
-    <AppShell title="Data Penduduk" fullHeight>
+    <AppShell title="Penduduk" fullHeight>
       <Suspense fallback={<div style={{ color: 'var(--ink-3)', fontSize: 14 }}>Memuat...</div>}>
         <PendudukContent />
       </Suspense>
