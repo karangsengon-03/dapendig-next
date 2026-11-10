@@ -19,7 +19,7 @@ import { labelDesa } from '@/lib/wilayah'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatCard } from '@/components/dashboard/StatCard'
-import { BarRows, CountUp, useMasuk, type BarRow } from '@/components/dashboard/dashParts'
+import { BarRows, BarisTotal, CountUp, useMasuk, type BarRow } from '@/components/dashboard/dashParts'
 import {
   useMonografi, useSaveKelompokUmurConfig, DEFAULT_KELOMPOK_UMUR_CONFIG, formatKelompokLabel,
   type KelompokUmurConfig,
@@ -32,6 +32,10 @@ import { useAppStore } from '@/store/appStore'
 import { useAuthStore } from '@/store/authStore'
 
 type DataKel = { kelompok: string; laki: number; perempuan: number }
+type Lp = { laki: number; perempuan: number }
+
+const jumlahLp = (peta: Record<string, Lp>): Lp =>
+  Object.values(peta).reduce((a, v) => ({ laki: a.laki + v.laki, perempuan: a.perempuan + v.perempuan }), { laki: 0, perempuan: 0 })
 
 const fmt = (n: number) => n.toLocaleString('id-ID')
 
@@ -61,8 +65,9 @@ function Piramida({ data }: { data: DataKel[] }) {
 }
 
 // ── Klasifikasi umur (tetap, tidak dipengaruhi konfigurasi piramida; daftar di lib/umur.ts) ──
-function KlasifikasiUmur({ byKlasifikasi, total }: { byKlasifikasi: Record<string, number>; total: number }) {
+function KlasifikasiUmur({ byKlasifikasi, lp, total }: { byKlasifikasi: Record<string, number>; lp: Record<string, Lp>; total: number }) {
   const tercatat = Object.values(byKlasifikasi).reduce((a, b) => a + b, 0)
+  const sum = jumlahLp(lp)
   return (
     <div className="a-card p lift">
       <div className="ch2" style={{ marginBottom: 12 }}>
@@ -72,6 +77,7 @@ function KlasifikasiUmur({ byKlasifikasi, total }: { byKlasifikasi: Record<strin
       <div className="klas">
         {KLASIFIKASI_UMUR.map(k => {
           const n = byKlasifikasi[k.label] ?? 0
+          const l = lp[k.label] ?? { laki: 0, perempuan: 0 }
           return (
             <Link className="kt clk" key={k.label} href={`/penduduk?klasifikasi=${encodeURIComponent(k.label)}&status=aktif`}>
               <span className={`a-badge ${k.tone} sm nd`}>{k.label}</span>
@@ -79,14 +85,12 @@ function KlasifikasiUmur({ byKlasifikasi, total }: { byKlasifikasi: Record<strin
               <small>
                 {k.max === 999 ? `${k.min}+ th` : `${k.min}–${k.max} th`} · {total ? Math.round((n / total) * 100) : 0}%
               </small>
+              <small className="lpk"><b className="l">L {fmt(l.laki)}</b> · <b className="p">P {fmt(l.perempuan)}</b></small>
             </Link>
           )
         })}
       </div>
-      <div className="rtot mtot">
-        <span>Total tercatat dalam klasifikasi</span>
-        <span>{fmt(tercatat)} jiwa</span>
-      </div>
+      <BarisTotal className="mtot" label="Total tercatat dalam klasifikasi" laki={sum.laki} perempuan={sum.perempuan} jumlah={tercatat} satuan="jiwa" />
     </div>
   )
 }
@@ -97,10 +101,16 @@ function BebanTanggungan({ data, config, total }: { data: DataKel[]; config: Kel
   let muda = 0 // 0–14
   let produktif = 0 // 15–64
   let tua = 0 // 65+
+  const lpMuda = { laki: 0, perempuan: 0 }
+  const lpProd = { laki: 0, perempuan: 0 }
+  const lpTua = { laki: 0, perempuan: 0 }
   data.forEach((row, i) => {
     const cfg = config[i]
     if (!cfg) return
     const jumlah = row.laki + row.perempuan
+    const tujuan = cfg.max <= 14 ? lpMuda : cfg.min >= 65 ? lpTua : lpProd
+    tujuan.laki += row.laki
+    tujuan.perempuan += row.perempuan
     if (cfg.max <= 14) muda += jumlah
     else if (cfg.min >= 65) tua += jumlah
     else produktif += jumlah
@@ -108,9 +118,9 @@ function BebanTanggungan({ data, config, total }: { data: DataKel[]; config: Kel
   const rasio = produktif > 0 ? Math.round(((muda + tua) / produktif) * 100) : 0
   const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
   const bagian = [
-    { label: 'Tanggungan muda', ket: 'usia 0–14 tahun', n: muda, warna: 'var(--gold-500)' },
-    { label: 'Usia produktif', ket: 'usia 15–64 tahun', n: produktif, warna: 'var(--navy-600)' },
-    { label: 'Tanggungan tua', ket: 'usia 65+ tahun', n: tua, warna: 'var(--pr)' },
+    { label: 'Tanggungan muda', ket: 'usia 0–14 tahun', n: muda, lp: lpMuda, warna: 'var(--gold-500)' },
+    { label: 'Usia produktif', ket: 'usia 15–64 tahun', n: produktif, lp: lpProd, warna: 'var(--navy-600)' },
+    { label: 'Tanggungan tua', ket: 'usia 65+ tahun', n: tua, lp: lpTua, warna: 'var(--pr)' },
   ]
   const tingkat = rasio <= 50 ? { teks: 'Rendah ✓', tone: 'ok' } : rasio <= 80 ? { teks: 'Sedang', tone: 'warn' } : { teks: 'Tinggi', tone: 'bad' }
 
@@ -136,9 +146,11 @@ function BebanTanggungan({ data, config, total }: { data: DataKel[]; config: Kel
             <em className="lb"><span className="dot" style={{ background: b.warna }} />{b.label}</em>
             <b>{fmt(b.n)}</b>
             <small>{b.ket.replace('usia ', '').replace(' tahun', ' th')} · {pct(b.n)}%</small>
+            <small className="lpk"><b className="l">L {fmt(b.lp.laki)}</b> · <b className="p">P {fmt(b.lp.perempuan)}</b></small>
           </div>
         ))}
       </div>
+      <BarisTotal className="mtot" label="Total tercatat dalam beban tanggungan" laki={lpMuda.laki + lpProd.laki + lpTua.laki} perempuan={lpMuda.perempuan + lpProd.perempuan + lpTua.perempuan} jumlah={muda + produktif + tua} satuan="jiwa" />
       <div className="rasio">
         <b>{rasio}</b>
         <span>tanggungan per 100 penduduk usia produktif</span>
@@ -151,7 +163,7 @@ function BebanTanggungan({ data, config, total }: { data: DataKel[]; config: Kel
 // ── Kartu sebaran (Agama, Status perkawinan, Pendidikan, Pekerjaan) ───────────
 // Urutan: bila `baku` diberikan (status perkawinan, pendidikan = urutan bertingkat) ikuti urutan itu, nilai lama di luar daftar di akhir;
 // selain itu (agama, pekerjaan) dari yang terbanyak.
-function barisSebaran(rec: Record<string, number>, kunci: string, baku?: readonly string[]): BarRow[] {
+function barisSebaran(rec: Record<string, number>, lp: Record<string, Lp>, kunci: string, baku?: readonly string[]): BarRow[] {
   const posisi = (k: string) => { const i = baku ? baku.indexOf(k) : -1; return i < 0 ? Number.MAX_SAFE_INTEGER : i }
   return Object.entries(rec)
     .filter(([, n]) => n > 0)
@@ -160,18 +172,21 @@ function barisSebaran(rec: Record<string, number>, kunci: string, baku?: readonl
       key: k,
       label: k,
       nilai: n,
+      laki: lp[k]?.laki ?? 0,
+      perempuan: lp[k]?.perempuan ?? 0,
       href: `/penduduk?${kunci}=${encodeURIComponent(k)}&status=aktif`,
     }))
 }
 
 function KartuSebaran({
-  judul, sub, rec, kunci, total, warna, batas, baku,
+  judul, sub, rec, lp, kunci, total, warna, batas, baku,
 }: {
-  judul: string; sub: string; rec: Record<string, number>; kunci: string
+  judul: string; sub: string; rec: Record<string, number>; lp: Record<string, Lp>; kunci: string
   total: number; warna: string; batas?: number; baku?: readonly string[]
 }) {
   const [semua, setSemua] = useState(false)
-  const rows = barisSebaran(rec, kunci, baku)
+  const rows = barisSebaran(rec, lp, kunci, baku)
+  const sum = jumlahLp(lp)
   const tampil = batas && !semua ? rows.slice(0, batas) : rows
   const tercatat = Object.values(rec).reduce((a, b) => a + b, 0)
   return (
@@ -191,10 +206,7 @@ function KartuSebaran({
           {semua ? `Tampilkan ${batas} teratas` : `Tampilkan semua (${rows.length})`}
         </Button>
       )}
-      <div className="rtot">
-        <span>Total tercatat</span>
-        <span>{fmt(tercatat)} jiwa</span>
-      </div>
+      <BarisTotal label="Total tercatat" laki={sum.laki} perempuan={sum.perempuan} jumlah={tercatat} satuan="jiwa" />
     </div>
   )
 }
@@ -415,15 +427,15 @@ export default function MonografiPage() {
       ) : (
         <>
           <div className="g2 eq" style={{ marginTop: 14 }}>
-            <KartuSebaran judul="Agama" sub="Sebaran pemeluk agama" rec={data.byAgama} kunci="agama" total={total}
+            <KartuSebaran judul="Agama" sub="Sebaran pemeluk agama" rec={data.byAgama} lp={data.lpAgama} kunci="agama" total={total}
               warna="linear-gradient(90deg,var(--navy-700),var(--navy-500))" />
-            <KartuSebaran judul="Status perkawinan" sub="Sebaran status kawin" rec={data.byStatusPerkawinan} kunci="statusPerkawinan" total={total} baku={STATUS_PERKAWINAN}
+            <KartuSebaran judul="Status perkawinan" sub="Sebaran status kawin" rec={data.byStatusPerkawinan} lp={data.lpStatusPerkawinan} kunci="statusPerkawinan" total={total} baku={STATUS_PERKAWINAN}
               warna="linear-gradient(90deg,var(--gold-600),var(--gold-400))" />
           </div>
           <div className="g2 eq" style={{ marginTop: 14 }}>
-            <KartuSebaran judul="Tingkat pendidikan" sub="Pendidikan terakhir" rec={data.byPendidikan} kunci="pendidikan" total={total} baku={PENDIDIKAN}
+            <KartuSebaran judul="Tingkat pendidikan" sub="Pendidikan terakhir" rec={data.byPendidikan} lp={data.lpPendidikan} kunci="pendidikan" total={total} baku={PENDIDIKAN}
               warna="linear-gradient(90deg,var(--navy-600),#6FA8F0)" />
-            <KartuSebaran judul="Pekerjaan" sub="Pekerjaan terbanyak" rec={data.byPekerjaan} kunci="pekerjaan" total={total} batas={8}
+            <KartuSebaran judul="Pekerjaan" sub="Pekerjaan terbanyak" rec={data.byPekerjaan} lp={data.lpPekerjaan} kunci="pekerjaan" total={total} batas={8}
               warna="linear-gradient(90deg,var(--gold-600),var(--gold-400))" />
           </div>
 
@@ -444,15 +456,12 @@ export default function MonografiPage() {
               <p className="a-hint pir-hint" style={{ marginTop: 14 }}>
                 Kelompok umur bisa disesuaikan untuk permintaan data dengan format berbeda (mis. data sekolah atau usia produktif).
               </p>
-              <div className="rtot mtot">
-                <span>Total tercatat dalam piramida</span>
-                <span>{fmt(tercatatPiramida)} jiwa</span>
-              </div>
+              <BarisTotal className="mtot" label="Total tercatat dalam piramida" laki={data.piramidaUmur.reduce((a, d) => a + d.laki, 0)} perempuan={data.piramidaUmur.reduce((a, d) => a + d.perempuan, 0)} jumlah={tercatatPiramida} satuan="jiwa" />
             </div>
           </div>
 
           <div className="g2 eq" style={{ marginTop: 14 }}>
-            <KlasifikasiUmur byKlasifikasi={data.byKlasifikasiUmur} total={total} />
+            <KlasifikasiUmur byKlasifikasi={data.byKlasifikasiUmur} lp={data.lpKlasifikasiUmur} total={total} />
             <BebanTanggungan data={data.piramidaUmur} config={data.kelompokUmurConfig} total={total} />
           </div>
         </>

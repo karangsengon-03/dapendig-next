@@ -1301,3 +1301,20 @@ a.kt{color:inherit;text-decoration:none}
 
 /* ── v3.4.0: nomor versi aplikasi terlihat di Login, layar muat, Pengaturan, dan sidebar ── */
 .app-ver{margin:0;text-align:center;font-size:12px;color:var(--ink-3);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+
+/* ── v3.5.0: keterangan kecil pada baris sebaran, penanda RT/RW terkunci di Pengaturan ── */
+.a-row .n .ket{display:block;margin-top:2px;font-size:11px;font-weight:500;line-height:1.3;color:var(--gold-600)}
+.dsn-chip.kunci{background:var(--navy-100);color:var(--navy-700)}
+.dsn-chip.kunci svg{flex:none;opacity:.75}
+.dsn-chip .cnt-p{font-weight:500;opacity:.75;font-size:11px}
+.dsn-note{margin:0 0 14px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.5;border:1px solid var(--line-2);background:var(--bg);color:var(--ink-2)}
+.dsn-note.warn{border-color:var(--gold-400);background:#FBF3DC;color:#6B4E0A}
+.dk .dsn-note.warn{background:#2E2410;color:#F0D79A}
+.dsn-note b{font-weight:700}
+.dsn-note .act-c{margin-top:10px;justify-content:flex-start}
+.rtot .tl{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rtot .tl .lp{font-size:12px;font-weight:600;color:var(--ink-3)}
+.rtot .tl .lp .l,.kt .lpk .l,.rs .lpk .l{color:var(--lk)}
+.rtot .tl .lp .p,.kt .lpk .p,.rs .lpk .p{color:var(--pr)}
+.kt .lpk,.rs .lpk{display:block;margin:0;font-size:11.5px;font-weight:600;color:var(--ink-3)}
+.kt .lpk b,.rs .lpk b{font-weight:700}

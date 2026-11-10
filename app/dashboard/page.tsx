@@ -1,5 +1,6 @@
 'use client'
 
+import { KUNCI_RT_KOSONG } from '@/lib/sebaran-rt'
 import { useState } from 'react'
 import Link from 'next/link'
 import {
@@ -17,7 +18,7 @@ import { GenderChart } from '@/components/dashboard/GenderChart'
 import { WilayahBadge } from '@/components/dashboard/WilayahBadge'
 import { UmurChart } from '@/components/dashboard/UmurChart'
 import { RecentActivity } from '@/components/dashboard/RecentActivity'
-import { BarRows, CountUp, useMasuk } from '@/components/dashboard/dashParts'
+import { BarRows, BarisTotal, CountUp, useMasuk } from '@/components/dashboard/dashParts'
 import {
   usePendudukStats,
   usePendudukBaruBulanIni,
@@ -111,24 +112,30 @@ export default function DashboardPage() {
   const totalPenduduk = stats?.totalPenduduk ?? 0
   const persenLaki = laki + perempuan > 0 ? (laki / (laki + perempuan)) * 100 : 50
 
+  // Semua RT di data penduduk tampil apa adanya; yang belum didaftarkan di Pengaturan diberi keterangan (bukan disembunyikan di "Lain-lain").
   const rtRows = (stats?.rtData ?? []).map(row => ({
     key: row.rt,
-    label: row.rt === 'Lain-lain' ? row.rt : `RT ${row.rt}`,
+    label: row.rt === KUNCI_RT_KOSONG ? 'RT belum diisi' : `RT ${row.rt}`,
+    ket: row.rt !== KUNCI_RT_KOSONG && !row.terdaftar ? 'belum terdaftar di Pengaturan' : undefined,
     nilai: row.jumlah,
     laki: row.laki,
     perempuan: row.perempuan,
-    // Klik RT → daftar penduduk RT itu (param rt dibaca app/penduduk/page.tsx); "Lain-lain" bukan satu RT.
-    href: row.rt === 'Lain-lain' ? undefined : `/penduduk?rt=${row.rt}`,
+    // Klik RT → daftar penduduk RT itu (param rt dibaca app/penduduk/page.tsx); RT kosong bukan satu RT.
+    href: row.rt === KUNCI_RT_KOSONG ? undefined : `/penduduk?rt=${row.rt}`,
   }))
   const dusunRows = (stats?.dusunData ?? []).map(row => ({
     key: row.dusun,
     label: row.dusun,
+    ket: row.rtLuar && row.rtLuar.length > 0
+      ? `${row.rtLuar.map(r => (r === KUNCI_RT_KOSONG ? 'RT belum diisi' : `RT ${r}`)).join(', ')} belum terdaftar di dusun mana pun`
+      : undefined,
     nilai: row.jumlah,
     laki: row.laki,
     perempuan: row.perempuan,
-    // Klik dusun → daftar penduduk aktif di dusun itu (param dusun dibaca app/penduduk/page.tsx); "Lain-lain" bukan satu dusun.
-    href: row.dusun === 'Lain-lain' ? undefined : `/penduduk?dusun=${encodeURIComponent(row.dusun)}&status=aktif`,
+    // Klik dusun → daftar penduduk aktif di dusun itu (param dusun dibaca app/penduduk/page.tsx); baris dengan RT belum terdaftar bukan satu dusun.
+    href: row.rtLuar ? undefined : `/penduduk?dusun=${encodeURIComponent(row.dusun)}&status=aktif`,
   }))
+  const adaRtBelumTerdaftar = (stats?.rtData ?? []).some(r => !r.terdaftar)
 
   return (
     <AppShell title="Beranda">
@@ -223,11 +230,12 @@ export default function DashboardPage() {
           ) : (
             <>
               <BarRows rows={rtRows} total={totalPenduduk} warna="linear-gradient(90deg,var(--navy-700),var(--navy-500))" />
-              <div className="rtot">
-                <span>Total</span>
-                <span className="lp"><b className="l">L {laki.toLocaleString('id-ID')}</b> · <b className="p">P {perempuan.toLocaleString('id-ID')}</b></span>
-                <span>{totalPenduduk.toLocaleString('id-ID')}</span>
-              </div>
+              {adaRtBelumTerdaftar && (
+                <p className="a-hint" style={{ marginTop: 8 }}>
+                  RT yang ditandai “belum terdaftar” ada di data penduduk tetapi belum ada di Pengaturan → Dusun, RT, dan RW. Datanya tetap dihitung.
+                </p>
+              )}
+              <BarisTotal label="Total tercatat" laki={laki} perempuan={perempuan} jumlah={totalPenduduk} satuan="jiwa" />
             </>
           )}
 
@@ -242,11 +250,7 @@ export default function DashboardPage() {
           ) : (
             <>
               <BarRows rows={dusunRows} total={totalPenduduk} warna="linear-gradient(90deg,var(--gold-600),var(--gold-400))" />
-              <div className="rtot">
-                <span>Total</span>
-                <span className="lp"><b className="l">L {laki.toLocaleString('id-ID')}</b> · <b className="p">P {perempuan.toLocaleString('id-ID')}</b></span>
-                <span>{totalPenduduk.toLocaleString('id-ID')}</span>
-              </div>
+              <BarisTotal label="Total tercatat" laki={laki} perempuan={perempuan} jumlah={totalPenduduk} satuan="jiwa" />
             </>
           )}
         </div>

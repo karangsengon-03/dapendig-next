@@ -40,7 +40,7 @@ export function getInisial(nama: string | undefined | null): string {
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
-export const APP_VERSION = 'v3.4.0'
+export const APP_VERSION = 'v3.5.0'
 
 /**
  * Parse tanggal dari berbagai format ke Date object.

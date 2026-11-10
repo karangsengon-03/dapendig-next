@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { sebaranPerRt } from '@/lib/sebaran-rt'
+import { sebaranPerRt, type SebaranJk } from '@/lib/sebaran-rt'
 import { klasifikasiDariUmur } from '@/lib/umur'
 import { collection, getDocs, query, where, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -53,6 +53,12 @@ export interface MonografiData {
   byPekerjaan: Record<string, number>
   byStatusPerkawinan: Record<string, number>
   byRT: Record<string, { laki: number; perempuan: number }>
+  /** Rincian L/P untuk setiap sebaran di atas (kunci sama dengan byAgama dst.), supaya semua kartu punya L dan P. */
+  lpAgama: Record<string, SebaranJk>
+  lpPendidikan: Record<string, SebaranJk>
+  lpPekerjaan: Record<string, SebaranJk>
+  lpStatusPerkawinan: Record<string, SebaranJk>
+  lpKlasifikasiUmur: Record<string, SebaranJk>
   piramidaUmur: { kelompok: string; laki: number; perempuan: number }[]
   byKlasifikasiUmur: Record<string, number>
   kelompokUmurConfig: KelompokUmurConfig
@@ -102,6 +108,16 @@ async function fetchMonografi(): Promise<MonografiData> {
   const byPekerjaan: Record<string, number> = {}
   const byStatusPerkawinan: Record<string, number> = {}
   const byKlasifikasiUmur: Record<string, number> = {}
+  const lpAgama: Record<string, SebaranJk> = {}
+  const lpPendidikan: Record<string, SebaranJk> = {}
+  const lpPekerjaan: Record<string, SebaranJk> = {}
+  const lpStatusPerkawinan: Record<string, SebaranJk> = {}
+  const lpKlasifikasiUmur: Record<string, SebaranJk> = {}
+  const hitungLp = (peta: Record<string, SebaranJk>, kunci: string, jk: string | undefined) => {
+    const e = (peta[kunci] ??= { laki: 0, perempuan: 0 })
+    if (jk === 'Laki-laki') e.laki++
+    else e.perempuan++
+  }
 
   const piramida = kelompokUmurConfig.map((k) => ({
     kelompok: formatKelompokLabel(k),
@@ -117,16 +133,16 @@ async function fetchMonografi(): Promise<MonografiData> {
     else perempuan++
 
     const agama = p.agama?.trim()
-    if (agama) byAgama[agama] = (byAgama[agama] ?? 0) + 1
+    if (agama) { byAgama[agama] = (byAgama[agama] ?? 0) + 1; hitungLp(lpAgama, agama, p.jenis_kelamin) }
 
     const pendidikan = p.pendidikan?.trim()
-    if (pendidikan) byPendidikan[pendidikan] = (byPendidikan[pendidikan] ?? 0) + 1
+    if (pendidikan) { byPendidikan[pendidikan] = (byPendidikan[pendidikan] ?? 0) + 1; hitungLp(lpPendidikan, pendidikan, p.jenis_kelamin) }
 
     const pekerjaan = p.pekerjaan?.trim()
-    if (pekerjaan) byPekerjaan[pekerjaan] = (byPekerjaan[pekerjaan] ?? 0) + 1
+    if (pekerjaan) { byPekerjaan[pekerjaan] = (byPekerjaan[pekerjaan] ?? 0) + 1; hitungLp(lpPekerjaan, pekerjaan, p.jenis_kelamin) }
 
     const statusPerkawinan = p.status_perkawinan?.trim()
-    if (statusPerkawinan) byStatusPerkawinan[statusPerkawinan] = (byStatusPerkawinan[statusPerkawinan] ?? 0) + 1
+    if (statusPerkawinan) { byStatusPerkawinan[statusPerkawinan] = (byStatusPerkawinan[statusPerkawinan] ?? 0) + 1; hitungLp(lpStatusPerkawinan, statusPerkawinan, p.jenis_kelamin) }
 
     if (p.tanggal_lahir) {
       const umur = hitungUmur(p.tanggal_lahir)
@@ -140,7 +156,7 @@ async function fetchMonografi(): Promise<MonografiData> {
 
       // Klasifikasi umur (tetap)
       const kls = klasifikasiDariUmur(umur)
-      if (kls) byKlasifikasiUmur[kls.label] = (byKlasifikasiUmur[kls.label] ?? 0) + 1
+      if (kls) { byKlasifikasiUmur[kls.label] = (byKlasifikasiUmur[kls.label] ?? 0) + 1; hitungLp(lpKlasifikasiUmur, kls.label, p.jenis_kelamin) }
     }
   }
 
@@ -158,6 +174,11 @@ async function fetchMonografi(): Promise<MonografiData> {
     byPekerjaan,
     byStatusPerkawinan,
     byRT,
+    lpAgama,
+    lpPendidikan,
+    lpPekerjaan,
+    lpStatusPerkawinan,
+    lpKlasifikasiUmur,
     piramidaUmur: piramida,
     byKlasifikasiUmur,
     kelompokUmurConfig,

@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, RotateCcw, Save, Trash2, X } from 'lucide-react'
+import { Lock, Plus, RotateCcw, Save, Trash2, TriangleAlert, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Field, InBox } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/toast'
 import { useDusunConfig, useSaveDusun } from '@/hooks/usePengaturan'
-import { DUSUN_BAWAAN, RW_BAWAAN, validasiDusun, validasiRw, type DusunItem } from '@/lib/dusun'
+import { useAppStore } from '@/store/appStore'
+import { DUSUN_BAWAAN, RW_BAWAAN, daftarkanTerpakai, rtBelumTerdaftar, rwBelumTerdaftar, validasiDusun, validasiRw, type DusunItem } from '@/lib/dusun'
 import { GalatTolak } from '@/lib/galat-tolak'
 import { rt3 } from '@/lib/rt-rw'
 
@@ -25,6 +26,9 @@ export function DusunRtSection() {
   const [salinanRw, setSalinanRw] = useState<string[] | null>(null)
   const [rwBaru, setRwBaru] = useState('')
   const [sudahCoba, setSudahCoba] = useState(false)
+  // RT/RW yang ADA di data penduduk aktif (jumlah per RT/RW): dikunci bila terdaftar, dan yang belum terdaftar diberi keterangan
+  const rtPakai = useAppStore((s) => s.rtPakai)
+  const rwPakai = useAppStore((s) => s.rwPakai)
 
   const aktif = salinan ?? data?.dusun ?? DUSUN_BAWAAN
   const galat = validasiDusun(aktif)
@@ -33,9 +37,20 @@ export function DusunRtSection() {
   const galatRw = validasiRw(rwAktif)
 
   const ubah = (next: DusunItem[]) => setSalinan(next)
+  const belumRt = rtBelumTerdaftar(aktif, rtPakai)
+  const belumRw = rwBelumTerdaftar(rwAktif, rwPakai)
+  // Terkunci = dipakai penduduk aktif DAN hanya terdaftar di satu dusun (menghapusnya membuat RT itu tak terdaftar lagi).
+  // RT yang sudah ada di dusun lain boleh dilepas dari dusun ini (pindah dusun).
+  const pemilikRt = (rt: string) => aktif.filter((d) => d.rt.some((r) => rt3(r) === rt)).length
+  const rtKunci = (rt: string) => (rtPakai[rt3(rt)] ?? 0) > 0 && pemilikRt(rt3(rt)) <= 1
+  const rwKunci = (rw: string) => (rwPakai[rt3(rw)] ?? 0) > 0
+  const dusunKunci = (d: DusunItem) => d.rt.some(rtKunci)
   const ubahNama = (i: number, nama: string) => ubah(aktif.map((d, k) => (k === i ? { ...d, nama } : d)))
   const hapusRt = (i: number, rt: string) => ubah(aktif.map((d, k) => (k === i ? { ...d, rt: d.rt.filter((r) => r !== rt) } : d)))
-  const hapusDusun = (i: number) => ubah(aktif.filter((_, k) => k !== i))
+  const hapusDusun = (i: number) => {
+    if (dusunKunci(aktif[i])) { toast('Dusun ini berisi RT yang dipakai penduduk, jadi tidak bisa dihapus', 'error'); return }
+    ubah(aktif.filter((_, k) => k !== i))
+  }
   const tambahDusun = () => ubah([...aktif, { nama: '', rt: [] }])
 
   function tambahRt(i: number) {
@@ -81,10 +96,30 @@ export function DusunRtSection() {
         <h4>Dusun, RT, dan RW</h4>
         <p>
           Tentukan RT mana saja yang masuk setiap dusun. Gabungan RT semua dusun menjadi pilihan RT di form dan filter;
-          dusun penduduk mengikuti RT-nya. RT yang dihapus tetap tersimpan pada data lama dan dikelompokkan sebagai
-          “Lain-lain” di statistik sampai RT-nya diubah. Daftar RW di bagian bawah menjadi pilihan RW di semua form.
+          dusun penduduk mengikuti RT-nya. Daftar RW di bagian bawah menjadi pilihan RW di semua form.
         </p>
       </div>
+
+      <div className="dsn-note" data-testid="catatan-kunci">
+        <b>Data penduduk adalah acuan.</b> RT dan RW yang ada pada data penduduk aktif selalu tampil apa adanya di Beranda dan statistik,
+        walau belum didaftarkan di sini. Yang sudah terdaftar dan dipakai penduduk ditandai gembok <Lock size={12} aria-hidden style={{ verticalAlign: '-1px' }} />
+        beserta jumlah penduduknya dan tidak bisa dihapus selama masih dipakai. Anda tetap bebas menambah RT, RW, atau dusun lain.
+      </div>
+
+      {(belumRt.length > 0 || belumRw.length > 0) && (
+        <div className="dsn-note warn" role="status" data-testid="catatan-belum-terdaftar">
+          <TriangleAlert size={14} aria-hidden style={{ verticalAlign: '-2px', marginRight: 6 }} />
+          <b>Ada RT/RW di data penduduk yang belum terdaftar.</b>
+          {belumRt.length > 0 && <> RT: {belumRt.map((r) => `${r} (${rtPakai[r]} jiwa)`).join(', ')}.</>}
+          {belumRw.length > 0 && <> RW: {belumRw.map((r) => `${r} (${rwPakai[r]} jiwa)`).join(', ')}.</>}
+          {' '}Datanya tetap dihitung dan RT/RW itu sudah bisa dipilih di form dan filter, tetapi dusunnya tampil sebagai “Lain-lain” sampai RT-nya dimasukkan ke dusun.
+          <div className="act-c">
+            <Button type="button" variant="outline" size="sm" onClick={() => { const g = daftarkanTerpakai(aktif, rwAktif, { rt: rtPakai, rw: rwPakai }); setSalinan(g.dusun); setSalinanRw(g.rw) }}>
+              <Plus size={15} />Daftarkan semua ke daftar
+            </Button>
+          </div>
+        </div>
+      )}
 
       {tampil?.umum && <p className="a-err" role="alert">{tampil.umum}</p>}
 
@@ -96,16 +131,20 @@ export function DusunRtSection() {
                 <input id={`dsn-nama-${i}`} placeholder="Contoh: Pesanggrahan" value={d.nama} onChange={(e) => ubahNama(i, e.target.value)} autoComplete="off" />
               </InBox>
             </Field>
-            <Button type="button" variant="outline" size="icon" className="dsn-del" aria-label={`Hapus dusun ${d.nama || i + 1}`} onClick={() => hapusDusun(i)}>
+            <Button type="button" variant="outline" size="icon" className="dsn-del" aria-label={`Hapus dusun ${d.nama || i + 1}`} disabled={dusunKunci(d)} title={dusunKunci(d) ? 'Berisi RT yang dipakai penduduk, tidak bisa dihapus' : undefined} onClick={() => hapusDusun(i)}>
               <Trash2 size={16} />
             </Button>
           </div>
 
           <div>
             <div className="dsn-chips" aria-label={`RT dusun ${d.nama || i + 1}`}>
-              {d.rt.map((r) => (
+              {d.rt.map((r) => rtKunci(r) ? (
+                <span className="dsn-chip kunci" key={r} style={{ paddingRight: 12 }} title={`Dipakai ${rtPakai[rt3(r)]} penduduk aktif, tidak bisa dihapus`}>
+                  <Lock size={12} aria-hidden />RT {r}<span className="cnt-p">· {rtPakai[rt3(r)]}</span>
+                </span>
+              ) : (
                 <span className="dsn-chip" key={r}>
-                  RT {r}
+                  RT {r}{(rtPakai[rt3(r)] ?? 0) > 0 && <span className="cnt-p">· {rtPakai[rt3(r)]}</span>}
                   <button type="button" aria-label={`Hapus RT ${r} dari ${d.nama || 'dusun ini'}`} onClick={() => hapusRt(i, r)}><X size={13} /></button>
                 </span>
               ))}
@@ -137,7 +176,11 @@ export function DusunRtSection() {
         </div>
         <div>
           <div className="dsn-chips" aria-label="Daftar RW">
-            {rwAktif.map((r) => (
+            {rwAktif.map((r) => rwKunci(r) ? (
+              <span className="dsn-chip kunci" key={r} style={{ paddingRight: 12 }} title={`Dipakai ${rwPakai[rt3(r)]} penduduk aktif, tidak bisa dihapus`}>
+                <Lock size={12} aria-hidden />RW {r}<span className="cnt-p">· {rwPakai[rt3(r)]}</span>
+              </span>
+            ) : (
               <span className="dsn-chip" key={r}>
                 RW {r}
                 <button type="button" aria-label={`Hapus RW ${r}`} onClick={() => setSalinanRw(rwAktif.filter((x) => x !== r))}><X size={13} /></button>
@@ -164,7 +207,7 @@ export function DusunRtSection() {
 
       <div className="act-c" style={{ marginTop: 14 }}>
         <Button type="button" variant="outline" onClick={tambahDusun}><Plus size={16} />Tambah dusun</Button>
-        <Button type="button" variant="outline" onClick={() => { setSalinan(DUSUN_BAWAAN); setSalinanRw(RW_BAWAAN); setSudahCoba(false) }}><RotateCcw size={16} />Pakai bawaan</Button>
+        <Button type="button" variant="outline" onClick={() => { const g = daftarkanTerpakai(DUSUN_BAWAAN, RW_BAWAAN, { rt: rtPakai, rw: rwPakai }); setSalinan(g.dusun); setSalinanRw(g.rw); setSudahCoba(false) }}><RotateCcw size={16} />Pakai bawaan</Button>
       </div>
       <div className="act-c" style={{ marginTop: 10 }}>
         <Button type="button" onClick={handleSimpan} disabled={isPending}><Save size={16} />{isPending ? 'Menyimpan…' : 'Simpan'}</Button>

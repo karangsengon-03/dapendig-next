@@ -29,25 +29,26 @@ describe('sebaranPerRt — data lama dan baru menyatu', () => {
   })
 })
 
-describe('kelompokRt — Sebaran per RT di Beranda', () => {
+describe('kelompokRt — Sebaran per RT di Beranda (semua RT di data tampil apa adanya)', () => {
   const rtResmi = daftarRt(PETA)
   it('semua RT resmi tampil berurutan walau 0; data "4" dan "004" menyatu', () => {
     const hasil = kelompokRt([{ rt: '4', jenis_kelamin: L }, { rt: '004', jenis_kelamin: P }, { rt: '01', jenis_kelamin: L }], rtResmi)
     expect(hasil.map((b) => b.rt)).toEqual(['001', '002', '003', '004', '005', '006', '007', '008'])
-    expect(hasil.find((b) => b.rt === '004')).toEqual({ rt: '004', laki: 1, perempuan: 1, jumlah: 2 })
+    expect(hasil.find((b) => b.rt === '004')).toEqual({ rt: '004', laki: 1, perempuan: 1, jumlah: 2, terdaftar: true })
     expect(hasil.find((b) => b.rt === '001')?.jumlah).toBe(1)
     expect(hasil.find((b) => b.rt === '002')?.jumlah).toBe(0)
   })
-  it('RT di luar daftar dan RT kosong masuk "Lain-lain" (paling akhir); tanpa itu baris Lain-lain tidak ada', () => {
-    const tanpa = kelompokRt([{ rt: '001', jenis_kelamin: L }], rtResmi)
-    expect(tanpa.some((b) => b.rt === 'Lain-lain')).toBe(false)
-    const dengan = kelompokRt([{ rt: '001', jenis_kelamin: L }, { rt: '099', jenis_kelamin: L }, { rt: '', jenis_kelamin: P }, { rt: 'x', jenis_kelamin: P }], rtResmi)
-    expect(dengan.at(-1)).toEqual({ rt: 'Lain-lain', laki: 1, perempuan: 2, jumlah: 3 })
+  it('RT di data yang belum terdaftar tampil sebagai barisnya sendiri (terurut, terdaftar: false); RT kosong "—" paling akhir', () => {
+    const hasil = kelompokRt([{ rt: '001', jenis_kelamin: L }, { rt: '030', jenis_kelamin: L }, { rt: '000', jenis_kelamin: P }, { rt: '020', jenis_kelamin: P }, { rt: '', jenis_kelamin: P }], rtResmi)
+    expect(hasil.map((b) => b.rt)).toEqual(['000', '001', '002', '003', '004', '005', '006', '007', '008', '020', '030', '—'])
+    expect(hasil.find((b) => b.rt === '030')).toEqual({ rt: '030', laki: 1, perempuan: 0, jumlah: 1, terdaftar: false })
+    expect(hasil.find((b) => b.rt === '000')?.terdaftar).toBe(false)
+    expect(hasil.at(-1)).toEqual({ rt: '—', laki: 0, perempuan: 1, jumlah: 1, terdaftar: false })
+    expect(hasil.some((b) => b.rt === 'Lain-lain')).toBe(false)
   })
-  it('RT mengikuti Pengaturan: RT yang dihapus dari pengaturan pindah ke Lain-lain', () => {
-    const hasil = kelompokRt([{ rt: '007', jenis_kelamin: L }], ['001', '002'])
-    expect(hasil.map((b) => b.rt)).toEqual(['001', '002', 'Lain-lain'])
-    expect(hasil.at(-1)?.jumlah).toBe(1)
+  it('RT 000 yang didaftarkan di Pengaturan terdaftar; RT yang dihapus dari Pengaturan tetap tampil (belum terdaftar)', () => {
+    const hasil = kelompokRt([{ rt: '000', jenis_kelamin: L }, { rt: '007', jenis_kelamin: L }], ['000', '001', '002'])
+    expect(hasil.map((b) => [b.rt, b.terdaftar])).toEqual([['000', true], ['001', true], ['002', true], ['007', false]])
   })
   it('jumlah semua baris = jumlah penduduk', () => {
     const rows = ['1', '01', '002', '5', '', '099', 'x', '008'].map((rt, i) => ({ rt, jenis_kelamin: i % 2 ? L : P }))
@@ -67,7 +68,7 @@ describe('kelompokDusun — Sebaran per dusun di Beranda', () => {
   it('RT yang belum masuk dusun mana pun dan RT kosong → "Lain-lain" di akhir', () => {
     const hasil = kelompokDusun([{ rt: '099', jenis_kelamin: L }, { rt: '', jenis_kelamin: P }, { rt: '008', jenis_kelamin: P }], PETA)
     expect(hasil.map((b) => b.dusun)).toEqual(['Pesanggrahan', 'Paleran', 'Sumber', 'Lain-lain'])
-    expect(hasil.at(-1)).toEqual({ dusun: 'Lain-lain', laki: 1, perempuan: 1, jumlah: 2 })
+    expect(hasil.at(-1)).toEqual({ dusun: 'Lain-lain', laki: 1, perempuan: 1, jumlah: 2, rtLuar: ['099', '—'] })
     expect(hasil.find((b) => b.dusun === 'Sumber')?.jumlah).toBe(1)
   })
   it('pemetaan baru dari Pengaturan langsung dipakai (RT dipindah antardusun)', () => {
@@ -106,7 +107,7 @@ function lamaDashboard(rows: { rt?: string | number | null; jenis_kelamin?: stri
   return { rtData, dusunData }
 }
 
-describe('hasil sama persis dengan logika lama di hook (data acak)', () => {
+describe('sebaran dusun sama dengan logika lama di hook; RT tidak ada yang hilang (data acak)', () => {
   it('500 baris campuran bentuk RT', () => {
     let seed = 20261102
     const acak = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296 }
@@ -117,8 +118,10 @@ describe('hasil sama persis dengan logika lama di hook (data acak)', () => {
     })
     for (const peta of [PETA, [{ nama: 'A', rt: ['001'] }, { nama: 'B', rt: ['002', '003'] }], []] as DusunItem[][]) {
       const lama = lamaDashboard(rows, peta)
-      expect(kelompokRt(rows, daftarRt(peta))).toEqual(lama.rtData)
-      expect(kelompokDusun(rows, peta)).toEqual(lama.dusunData)
+      expect(kelompokDusun(rows, peta).map((b) => ({ dusun: b.dusun, laki: b.laki, perempuan: b.perempuan, jumlah: b.jumlah }))).toEqual(lama.dusunData)
+      // RT: jumlah semua baris sama dengan jumlah penduduk (tidak ada yang hilang) dan tiap RT di data punya barisnya sendiri
+      const hasilRt = kelompokRt(rows, daftarRt(peta))
+      expect(hasilRt.reduce((t, b) => t + b.jumlah, 0)).toBe(rows.length)
     }
   })
 })

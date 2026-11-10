@@ -4,11 +4,14 @@
  * dan RT/dusun mengikuti Pengaturan → Dusun dan RT. Diekstrak dari kedua hook tanpa mengubah perilaku.
  */
 import { rt3 } from '@/lib/rt-rw'
-import { dusunDariRt, type DusunItem } from '@/lib/dusun'
+import { dusunDariRt, urutRt, NAMA_DUSUN_LAIN, type DusunItem } from '@/lib/dusun'
 
 export interface SebaranJk { laki: number; perempuan: number }
-export interface BarisRt extends SebaranJk { rt: string; jumlah: number }
-export interface BarisDusun extends SebaranJk { dusun: string; jumlah: number }
+export interface BarisRt extends SebaranJk { rt: string; jumlah: number; /** false = RT ada di data penduduk tetapi belum didaftarkan di Pengaturan. */ terdaftar: boolean }
+export interface BarisDusun extends SebaranJk { dusun: string; jumlah: number; /** Hanya baris "Lain-lain": RT penduduk yang belum masuk dusun mana pun ("—" = RT belum diisi). */ rtLuar?: string[] }
+
+/** Kunci baris untuk penduduk yang RT-nya kosong. */
+export const KUNCI_RT_KOSONG = '—'
 
 interface BarisPenduduk { rt?: string | number | null; jenis_kelamin?: string | null }
 
@@ -29,36 +32,43 @@ export function sebaranPerRt(rows: readonly BarisPenduduk[], kunciKosong = ''): 
   return hasil
 }
 
-/** Baris Beranda "Sebaran per RT": semua RT resmi (walau 0), lalu "Lain-lain" bila ada RT di luar daftar (termasuk RT kosong). */
+/**
+ * Baris Beranda "Sebaran per RT": SEMUA RT yang ada di data penduduk tampil apa adanya, ditambah RT terdaftar di Pengaturan walau 0 jiwa.
+ * RT yang belum terdaftar ditandai `terdaftar: false`; RT kosong jadi satu baris "—" di akhir.
+ */
 export function kelompokRt(rows: readonly BarisPenduduk[], rtResmi: readonly string[]): BarisRt[] {
-  const byRT = sebaranPerRt(rows, '—')
-  const hasil: BarisRt[] = rtResmi.map((rt) => ({
+  const byRT = sebaranPerRt(rows, KUNCI_RT_KOSONG)
+  const resmi = new Set(rtResmi)
+  const semua = [...new Set([...rtResmi, ...Object.keys(byRT).filter((k) => k !== KUNCI_RT_KOSONG)])].sort(urutRt)
+  if (byRT[KUNCI_RT_KOSONG]) semua.push(KUNCI_RT_KOSONG)
+  return semua.map((rt) => ({
     rt,
     laki: byRT[rt]?.laki ?? 0,
     perempuan: byRT[rt]?.perempuan ?? 0,
     jumlah: (byRT[rt]?.laki ?? 0) + (byRT[rt]?.perempuan ?? 0),
+    terdaftar: rt === KUNCI_RT_KOSONG ? false : resmi.has(rt),
   }))
-  const luar = Object.entries(byRT).filter(([rt]) => !rtResmi.includes(rt))
-  const lainLaki = luar.reduce((s, [, v]) => s + v.laki, 0)
-  const lainPerempuan = luar.reduce((s, [, v]) => s + v.perempuan, 0)
-  if (lainLaki + lainPerempuan > 0) {
-    hasil.push({ rt: 'Lain-lain', laki: lainLaki, perempuan: lainPerempuan, jumlah: lainLaki + lainPerempuan })
-  }
-  return hasil
 }
 
-/** Baris Beranda "Sebaran per dusun": urutan dusun dari Pengaturan (walau 0), lalu "Lain-lain" bila ada RT yang belum masuk dusun mana pun. */
+/** Baris Beranda "Sebaran per dusun": urutan dusun dari Pengaturan (walau 0), lalu "Lain-lain" bila ada RT yang belum masuk dusun mana pun (daftar RT-nya ikut dicatat). */
 export function kelompokDusun(rows: readonly BarisPenduduk[], petaDusun: readonly DusunItem[]): BarisDusun[] {
   const byDusun: Record<string, SebaranJk> = {}
+  const rtLuar = new Set<string>()
   for (const r of rows) {
-    const dusun = dusunDariRt(rt3(r.rt), petaDusun) || 'Lain-lain'
-    if (!byDusun[dusun]) byDusun[dusun] = { laki: 0, perempuan: 0 }
-    tambah(byDusun[dusun], r.jenis_kelamin)
+    const rt = rt3(r.rt)
+    const dusun = dusunDariRt(rt, petaDusun)
+    const kunci = dusun || NAMA_DUSUN_LAIN
+    if (!dusun) rtLuar.add(rt || KUNCI_RT_KOSONG)
+    if (!byDusun[kunci]) byDusun[kunci] = { laki: 0, perempuan: 0 }
+    tambah(byDusun[kunci], r.jenis_kelamin)
   }
-  return [...petaDusun.map((d) => d.nama), ...(byDusun['Lain-lain'] ? ['Lain-lain'] : [])].map((dusun) => ({
+  const luarUrut = [...rtLuar].filter((r) => r !== KUNCI_RT_KOSONG).sort(urutRt)
+  if (rtLuar.has(KUNCI_RT_KOSONG)) luarUrut.push(KUNCI_RT_KOSONG)
+  return [...petaDusun.map((d) => d.nama), ...(byDusun[NAMA_DUSUN_LAIN] && !petaDusun.some((d) => d.nama === NAMA_DUSUN_LAIN) ? [NAMA_DUSUN_LAIN] : [])].map((dusun) => ({
     dusun,
     laki: byDusun[dusun]?.laki ?? 0,
     perempuan: byDusun[dusun]?.perempuan ?? 0,
     jumlah: (byDusun[dusun]?.laki ?? 0) + (byDusun[dusun]?.perempuan ?? 0),
+    ...(dusun === NAMA_DUSUN_LAIN && !petaDusun.some((d) => d.nama === NAMA_DUSUN_LAIN) ? { rtLuar: luarUrut } : {}),
   }))
 }

@@ -24,7 +24,7 @@ export const DUSUN_BAWAAN: DusunItem[] = [
   { nama: 'Blangguan', rt: ['010', '011'] },
 ]
 
-const urutRt = (a: string, b: string) => Number(a) - Number(b) || a.localeCompare(b)
+export const urutRt = (a: string, b: string) => Number(a) - Number(b) || a.localeCompare(b)
 
 /** Rapikan data mentah (mis. dari Firestore): nama dipangkas, RT jadi 3 digit, unik, dan terurut. Bentuk tidak valid atau kosong → null. */
 export function normalisasiDusun(mentah: unknown): DusunItem[] | null {
@@ -99,4 +99,56 @@ export function validasiRw(rw: readonly string[]): string | undefined {
   if (rw.length === 0) return 'Minimal harus ada satu RW.'
   for (const r of rw) if (!/^\d{1,3}$/.test(r.trim())) return `RW "${r}" tidak valid (angka 0–999)`
   return undefined
+}
+
+// ── RT/RW yang dipakai data penduduk ─────────────────────────────────────────
+// Data penduduk adalah sumber kebenaran: RT/RW yang ada di data selalu tampil apa adanya dan menjadi pilihan di form/filter,
+// walau belum didaftarkan di Pengaturan. Yang sudah terdaftar DAN dipakai penduduk dikunci (tidak bisa dihapus) di Pengaturan.
+
+export const NAMA_DUSUN_LAIN = 'Lain-lain'
+
+export interface RtRwTerpakai { rt: Record<string, number>; rw: Record<string, number> }
+
+/** Jumlah penduduk per RT dan per RW (3 digit; "0" = "000"). RT/RW kosong tidak dihitung. Beri baris penduduk aktif saja. */
+export function hitungRtRwTerpakai(rows: readonly { rt?: string | number | null; rw?: string | number | null }[]): RtRwTerpakai {
+  const hasil: RtRwTerpakai = { rt: {}, rw: {} }
+  for (const r of rows) {
+    const a = rt3(r.rt)
+    const b = rt3(r.rw)
+    if (a) hasil.rt[a] = (hasil.rt[a] ?? 0) + 1
+    if (b) hasil.rw[b] = (hasil.rw[b] ?? 0) + 1
+  }
+  return hasil
+}
+
+/** Gabungan daftar terdaftar dan yang dipakai data; unik dan terurut. Dipakai untuk pilihan RT/RW di form dan filter. */
+export function gabungPilihan(terdaftar: readonly string[], terpakai: Record<string, number>): string[] {
+  return [...new Set([...terdaftar.map((r) => rt3(r)), ...Object.keys(terpakai)].filter(Boolean))].sort(urutRt)
+}
+
+/** RT yang dipakai penduduk tetapi belum masuk dusun mana pun. */
+export function rtBelumTerdaftar(dusun: readonly DusunItem[], terpakai: Record<string, number>): string[] {
+  const resmi = new Set(daftarRt(dusun))
+  return Object.keys(terpakai).filter((r) => !resmi.has(r)).sort(urutRt)
+}
+
+/** RW yang dipakai penduduk tetapi belum ada di Daftar RW. */
+export function rwBelumTerdaftar(rw: readonly string[], terpakai: Record<string, number>): string[] {
+  const resmi = new Set(rw.map((r) => rt3(r)))
+  return Object.keys(terpakai).filter((r) => !resmi.has(r)).sort(urutRt)
+}
+
+/** Daftarkan semua RT/RW yang dipakai data tetapi belum terdaftar: RT masuk dusun "Lain-lain" (dibuat bila belum ada), RW masuk Daftar RW. */
+export function daftarkanTerpakai(
+  dusun: readonly DusunItem[], rw: readonly string[], terpakai: RtRwTerpakai,
+): { dusun: DusunItem[]; rw: string[] } {
+  const rtBaru = rtBelumTerdaftar(dusun, terpakai.rt)
+  const rwBaru = rwBelumTerdaftar(rw, terpakai.rw)
+  let dusunBaru = dusun.map((d) => ({ ...d, rt: [...d.rt] }))
+  if (rtBaru.length > 0) {
+    const i = dusunBaru.findIndex((d) => d.nama.trim().toLowerCase() === NAMA_DUSUN_LAIN.toLowerCase())
+    if (i >= 0) dusunBaru[i] = { ...dusunBaru[i], rt: [...dusunBaru[i].rt, ...rtBaru].sort(urutRt) }
+    else dusunBaru = [...dusunBaru, { nama: NAMA_DUSUN_LAIN, rt: rtBaru }]
+  }
+  return { dusun: dusunBaru, rw: [...rw, ...rwBaru].sort(urutRt) }
 }

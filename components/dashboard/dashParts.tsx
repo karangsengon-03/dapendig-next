@@ -66,6 +66,8 @@ export interface BarRow {
   /** Rincian L/P (informasi dari zip); dilewati bila tidak ada. */
   laki?: number
   perempuan?: number
+  /** Keterangan kecil di bawah nama (mis. "belum terdaftar di Pengaturan"). */
+  ket?: string
   /** Bila diisi, baris menjadi tautan (klik untuk melihat warga). */
   href?: string
 }
@@ -79,7 +81,7 @@ export function BarRows({ rows, total, warna }: { rows: BarRow[]; total: number;
       {rows.map(r => {
         const isi = (
           <>
-            <span className="n">{r.label}</span>
+            <span className="n">{r.label}{r.ket && <small className="ket">{r.ket}</small>}</span>
             <div className="tr">
               <div className="a-bar">
                 <i
@@ -107,5 +109,20 @@ export function BarRows({ rows, total, warna }: { rows: BarRow[]; total: number;
         )
       })}
     </>
+  )
+}
+
+/** Baris total seragam untuk semua kartu data (Beranda dan Monografi): label, rincian L/P di bawahnya, dan jumlah di kanan. */
+export function BarisTotal({ label, laki, perempuan, jumlah, satuan, className }: {
+  label: string; laki: number; perempuan: number; jumlah: number; satuan?: string; className?: string
+}) {
+  return (
+    <div className={className ? `rtot ${className}` : 'rtot'}>
+      <span className="tl">
+        {label}
+        <small className="lp"><b className="l">L {laki.toLocaleString('id-ID')}</b> · <b className="p">P {perempuan.toLocaleString('id-ID')}</b></small>
+      </span>
+      <span>{jumlah.toLocaleString('id-ID')}{satuan ? ` ${satuan}` : ''}</span>
+    </div>
   )
 }

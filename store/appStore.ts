@@ -13,6 +13,10 @@ interface AppStore {
   /** Daftar RW (config/dusun, field rw); bawaan = RW_BAWAAN. */
   rw: string[]
   setRw: (r: string[]) => void
+  /** Jumlah penduduk aktif per RT dan per RW yang ADA di data (dimuat useWilayahTerpakai); sumber pilihan RT/RW dan kunci di Pengaturan. */
+  rtPakai: Record<string, number>
+  rwPakai: Record<string, number>
+  setWilayahPakai: (rt: Record<string, number>, rw: Record<string, number>) => void
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
   toggleSidebar: () => void
@@ -34,6 +38,9 @@ export const useAppStore = create<AppStore>((set) => ({
   setDusun: (dusun) => set({ dusun }),
   rw: RW_BAWAAN,
   setRw: (rw) => set({ rw }),
+  rtPakai: {},
+  rwPakai: {},
+  setWilayahPakai: (rtPakai, rwPakai) => set({ rtPakai, rwPakai }),
   sidebarOpen: false,
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),

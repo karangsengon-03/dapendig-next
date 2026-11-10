@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useAppStore } from '@/store/appStore'
 import { useWilayah } from '@/hooks/useWilayah'
+import { useWilayahTerpakai } from '@/hooks/useWilayahTerpakai'
 import { useIdentitasDesa } from '@/hooks/useIdentitasDesa'
 import { labelDesa } from '@/lib/wilayah'
 import { cn } from '@/lib/utils'
@@ -89,6 +90,7 @@ export function AppShell({ children, title, fullHeight }: AppShellProps) {
   // useAuthListener TIDAK dipanggil di sini — sudah dipanggil di root AuthProvider (app/layout.tsx)
   // Memanggil dua kali menyebabkan dua subscriber onAuthStateChanged yang race condition
   useWilayah()
+  useWilayahTerpakai()
 
   // ToastProvider hanya di root (app/layout.tsx): satu penampung toast untuk semua halaman, termasuk /login.
   return (

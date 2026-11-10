@@ -113,15 +113,15 @@ async function fetchUmurStats(): Promise<UmurData[]> {
   )
   const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Penduduk))
 
-  return KATEGORI_UMUR.map(({ label, min, max, color }) => ({
-    label,
-    color,
-    jumlah: rows.filter((r) => {
-      // Umur dari lib/umur (sama dengan Daftar Penduduk); tanggal kosong/rusak = -1, tidak masuk kategori mana pun
+  return KATEGORI_UMUR.map(({ label, min, max, color }) => {
+    // Umur dari lib/umur (sama dengan Daftar Penduduk); tanggal kosong/rusak = -1, tidak masuk kategori mana pun
+    const anggota = rows.filter((r) => {
       const umur = umurDari(r.tanggal_lahir)
       return umur >= min && umur <= max
-    }).length,
-  }))
+    })
+    const laki = anggota.filter((r) => r.jenis_kelamin === 'Laki-laki').length
+    return { label, color, jumlah: anggota.length, laki, perempuan: anggota.length - laki }
+  })
 }
 
 export function useUmurStats() {

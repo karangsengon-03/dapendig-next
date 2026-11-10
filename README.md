@@ -4,7 +4,7 @@ Aplikasi PWA manajemen data penduduk untuk **Desa Karang Sengon, Kecamatan Klaba
 
 ---
 
-## Versi Saat Ini: v3.4.0
+## Versi Saat Ini: v3.5.0
 
 Rilis **fitur dan perbaikan** di atas redesain v3.0.0: Dusun, RT, dan RW dapat diatur dari Pengaturan, Edit catatan Pindah Masuk/Kelahiran ikut memperbarui menu Penduduk, ikon dan warna diseragamkan, toast di atas layar, dan Next.js 16.4.3. Struktur data Firestore dan `firestore.rules` **tidak berubah** dari v2.9.1, sehingga data lama tetap terbaca dan rules tidak perlu di-deploy ulang. Ringkasan lengkap ada di [Riwayat Versi](#riwayat-versi).
 
@@ -207,6 +207,21 @@ Deploy `firestore.rules` bila berubah: lihat `PANDUAN_DEPLOY_RULES.md`.
 ---
 
 ## Riwayat Versi
+
+### v3.5.0 — November 2026
+
+Rilis di atas v3.4.0: perbaikan Riwayat, RT/RW bersumber dari data penduduk, dan total serta rincian L/P seragam di semua kartu data. Tidak ada koleksi, field, atau query baru; `firestore.rules` tidak berubah.
+
+**Perbaikan bug**
+- **Riwayat perubahan data di Detail penduduk tidak memuat edit** (mis. RT/RW diubah dari 000/000 ke 003/001, padahal ada di Log aktivitas). Penyebab: log edit ditulis tanpa `nik_target`, sedangkan Riwayat mencari log berdasarkan field itu. Kini log edit memuat `nik_target` dan ringkasan perubahan ("Edit penduduk: RUS — RT 000 → 003; RW 000 → 001"; `lib/ringkas-perubahan.ts`), dan log hapus ke Recycle Bin juga memuat NIK. **Edit yang dibuat sebelum v3.5.0 tidak punya NIK di lognya, jadi tetap tidak muncul di Riwayat** (hanya di Log aktivitas); entri baru muncul sebagaimana mestinya.
+- **RT/RW yang belum terdaftar di Pengaturan tidak lagi "hilang" ke Lain-lain tanpa keterangan.** Sebaran per RT di Beranda kini menampilkan SEMUA RT yang ada di data penduduk apa adanya (mis. RT 000, RT 020, RT 030), terurut, dengan keterangan "belum terdaftar di Pengaturan" untuk yang belum didaftarkan; RT yang kosong menjadi satu baris "RT belum diisi". Baris dusun "Lain-lain" kini menyebut RT mana saja yang belum masuk dusun mana pun. Tidak perlu menambah RT di Pengaturan agar datanya tampil.
+
+**Fitur baru**
+- **Pilihan RT/RW di form dan filter** (Penduduk, Mutasi, Kelahiran, Kematian, filter RT) kini gabungan RT/RW terdaftar dan yang ada di data penduduk aktif (`useWilayahTerpakai`, `rtPakai` dan `rwPakai` di store, `gabungPilihan` di `lib/dusun.ts`), jadi RT 000 atau RT 030 bisa dipilih dan disaring tanpa didaftarkan dulu.
+- **Pengaturan → Dusun, RT, dan RW:** RT/RW yang sudah terdaftar DAN dipakai penduduk aktif ditandai gembok beserta jumlah penduduknya dan tidak bisa dihapus (RT yang sudah ada juga di dusun lain boleh dilepas dari dusun ini, artinya pindah dusun); dusun yang berisi RT terkunci tidak bisa dihapus. Catatan di atas daftar menjelaskan aturan ini, dan bila ada RT/RW di data yang belum terdaftar muncul peringatan beserta jumlah jiwanya dan tombol "Daftarkan semua ke daftar" (RT masuk dusun "Lain-lain", RW masuk Daftar RW; baru tersimpan setelah Simpan). "Pakai bawaan" tidak lagi menghapus RT/RW yang dipakai penduduk. Menambah RT, RW, dan dusun lain tetap bebas.
+- **Total dan rincian L/P seragam** di Beranda dan Monografi: setiap kartu data punya baris "Total tercatat" dengan L/P dan jumlah (komponen `BarisTotal`). Beranda: Kelompok umur (sebelumnya tanpa total dan tanpa L/P) kini punya L/P per baris dan total; Sebaran per RT dan per dusun memakai baris total yang sama. Monografi: Agama, Status perkawinan, Tingkat pendidikan, dan Pekerjaan kini menampilkan L/P per baris dan total; Klasifikasi umur dan tiga kotak Rasio beban tanggungan menampilkan L/P per kotak; Rasio beban tanggungan dan Piramida punya baris total dengan L/P (`lpAgama` dst. di `useMonografi`).
+
+**Pengujian:** `tsc` bersih, lint 0 peringatan, tes baru: ringkasan perubahan, log edit memuat `nik_target`, helper RT/RW terpakai, sebaran per RT/dusun, serta kunci dan catatan "belum terdaftar" di Pengaturan.
 
 ### v3.4.0 — November 2026
 

@@ -2,12 +2,14 @@
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { KATEGORI_UMUR, kunciRentang, labelRentang } from '@/lib/umur'
-import { BarRows } from './dashParts'
+import { BarRows, BarisTotal } from './dashParts'
 
 export interface UmurData {
   label: string
   jumlah: number
   color: string
+  laki?: number
+  perempuan?: number
 }
 
 interface UmurChartProps {
@@ -42,12 +44,17 @@ export function UmurChart({ data, loading }: UmurChartProps) {
               key: d.label,
               label: k ? labelRentang(k.min, k.max) : d.label,
               nilai: d.jumlah,
+              laki: d.laki ?? 0,
+              perempuan: d.perempuan ?? 0,
               href: k ? `/penduduk?umur=${kunciRentang(k.min, k.max)}&status=aktif` : undefined,
             }
           })}
           total={total}
           warna="linear-gradient(90deg,var(--navy-600),#6FA8F0)"
         />
+      )}
+      {!loading && total > 0 && (
+        <BarisTotal label="Total tercatat" laki={data.reduce((s, d) => s + (d.laki ?? 0), 0)} perempuan={data.reduce((s, d) => s + (d.perempuan ?? 0), 0)} jumlah={total} satuan="jiwa" />
       )}
     </div>
   )

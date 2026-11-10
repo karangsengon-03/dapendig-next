@@ -1,5 +1,6 @@
 'use client'
 
+import { ringkasPerubahan } from '@/lib/ringkas-perubahan'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   collection,
@@ -69,11 +70,15 @@ async function updatePenduduk(
   data: PendudukFormData,
   email: string
 ): Promise<void> {
+  // Data lama dibaca dulu agar Riwayat memuat apa yang berubah (mis. RT 000 → 003).
+  const lama = await getDoc(doc(db, COL, id))
   await updateDoc(doc(db, COL, id), {
     ...data,
     updated_at: serverTimestamp(),
   })
-  await writeLog('edit', `Edit penduduk: ${data.nama_lengkap}`, email)
+  const ringkas = ringkasPerubahan(lama.exists() ? (lama.data() as Record<string, unknown>) : undefined, data as unknown as Record<string, unknown>)
+  // nik_target wajib diisi: Riwayat di Detail penduduk mencari log berdasarkan field ini.
+  await writeLog('edit', `Edit penduduk: ${data.nama_lengkap}${ringkas ? ` — ${ringkas}` : ''}`, email, lama.exists() ? (lama.data().nik as string) || id : data.nik || id)
 }
 
 // ── Delete → Recycle Bin ─────────────────────────────────────────────────────
@@ -92,7 +97,7 @@ async function deletePendudukToRecycleBin(
     dihapus_at: serverTimestamp(),
   })
   await deleteDoc(doc(db, COL, id))
-  await writeLog('hapus', `Hapus (ke recycle bin): ${nama}`, email)
+  await writeLog('hapus', `Hapus (ke recycle bin): ${nama}`, email, dataAsli.nik || id)
 }
 
 // ── Catat Pindah keluar ───────────────────────────────────────────────────────

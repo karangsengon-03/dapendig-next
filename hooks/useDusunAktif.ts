@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useAppStore } from '@/store/appStore'
-import { daftarRt, dusunDariRt, type DusunItem } from '@/lib/dusun'
+import { daftarRt, dusunDariRt, gabungPilihan, type DusunItem } from '@/lib/dusun'
 
 /**
  * Pemetaan RT → Dusun yang sedang berlaku (dimuat dari config/dusun oleh useWilayah di AppShell; bawaan = DUSUN_BAWAAN).
@@ -10,15 +10,20 @@ import { daftarRt, dusunDariRt, type DusunItem } from '@/lib/dusun'
  */
 export function useDusunAktif() {
   const dusun = useAppStore((s) => s.dusun)
-  const rwList = useAppStore((s) => s.rw)
+  const rw = useAppStore((s) => s.rw)
+  const rtPakai = useAppStore((s) => s.rtPakai)
+  const rwPakai = useAppStore((s) => s.rwPakai)
   return useMemo(
     () => ({
       dusun,
-      rtList: daftarRt(dusun),
-      rwList,
+      // Pilihan = yang terdaftar di Pengaturan + yang ADA di data penduduk (RT/RW yang belum didaftarkan tetap bisa dipilih/disaring)
+      rtList: gabungPilihan(daftarRt(dusun), rtPakai),
+      rwList: gabungPilihan(rw, rwPakai),
+      rtPakai,
+      rwPakai,
       dusunDariRt: (rt: string | number | null | undefined) => dusunDariRt(rt, dusun),
     }),
-    [dusun, rwList],
+    [dusun, rw, rtPakai, rwPakai],
   )
 }
 

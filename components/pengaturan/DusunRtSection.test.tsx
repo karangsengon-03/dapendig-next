@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, within } from '@testing-library/react'
 import { GalatTolak } from '@/lib/galat-tolak'
 import { DUSUN_BAWAAN, RW_BAWAAN, type DusunItem } from '@/lib/dusun'
+import { useAppStore } from '@/store/appStore'
 
 const toastMock = vi.fn()
 vi.mock('@/components/ui/toast', () => ({ useToast: () => ({ toast: toastMock }) }))
@@ -20,6 +21,7 @@ const klikSimpan = () => fireEvent.click(screen.getByRole('button', { name: /Sim
 
 beforeEach(() => {
   toastMock.mockClear(); simpanMock.mockReset()
+  useAppStore.setState({ rtPakai: {}, rwPakai: {} })
   dataTersimpan = { dusun: DUSUN_BAWAAN, rw: RW_BAWAAN, tersimpan: false }
 })
 
@@ -160,5 +162,45 @@ describe('DusunRtSection', () => {
     simpanMock.mockImplementationOnce((_d, o) => o.onError(new GalatTolak('Pengaturan dusun belum valid.')))
     klikSimpan()
     expect(toastMock).toHaveBeenCalledWith('Pengaturan dusun belum valid.', 'error')
+  })
+
+  it('RT/RW yang dipakai penduduk dikunci (gembok, jumlah, tanpa tombol hapus); yang tidak dipakai tetap bisa dihapus', () => {
+    useAppStore.setState({ rtPakai: { '001': 12 }, rwPakai: { '001': 30 } })
+    render(<DusunRtSection />)
+    expect(screen.queryByRole('button', { name: 'Hapus RT 001 dari Pesanggrahan' })).toBeNull()
+    expect(screen.getByText('RT 001').closest('.dsn-chip')?.className).toContain('kunci')
+    expect(screen.getByText('· 12')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Hapus RT 002 dari Pesanggrahan' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Hapus RW 001' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Hapus RW 002' })).toBeTruthy()
+  })
+
+  it('dusun yang berisi RT terkunci tidak bisa dihapus', () => {
+    useAppStore.setState({ rtPakai: { '004': 5 }, rwPakai: {} })
+    render(<DusunRtSection />)
+    expect((screen.getByRole('button', { name: 'Hapus dusun Paleran' }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('button', { name: 'Hapus dusun Sumber' }) as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('RT/RW di data yang belum terdaftar diberi keterangan dan bisa didaftarkan sekaligus (RT 000 dan RT 030 ke "Lain-lain")', () => {
+    useAppStore.setState({ rtPakai: { '000': 3, '001': 1, '030': 2 }, rwPakai: { '009': 4 } })
+    render(<DusunRtSection />)
+    const cat = screen.getByTestId('catatan-belum-terdaftar')
+    expect(cat.textContent).toContain('000 (3 jiwa), 030 (2 jiwa)')
+    expect(cat.textContent).toContain('009 (4 jiwa)')
+    fireEvent.click(screen.getByRole('button', { name: /Daftarkan semua/ }))
+    expect(screen.queryByTestId('catatan-belum-terdaftar')).toBeNull()
+    expect(kartu()).toHaveLength(5)
+    klikSimpan()
+    const dikirim = simpanMock.mock.calls[0][0] as { dusun: DusunItem[]; rw: string[] }
+    expect(dikirim.dusun[4]).toEqual({ nama: 'Lain-lain', rt: ['000', '030'] })
+    expect(dikirim.rw).toContain('009')
+  })
+
+  it('tanpa RT/RW di luar daftar tidak ada catatan peringatan', () => {
+    useAppStore.setState({ rtPakai: { '001': 1 }, rwPakai: { '001': 1 } })
+    render(<DusunRtSection />)
+    expect(screen.queryByTestId('catatan-belum-terdaftar')).toBeNull()
+    expect(screen.getByTestId('catatan-kunci')).toBeTruthy()
   })
 })

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { DUSUN_BAWAAN, RW_BAWAAN, daftarRt, dusunDariRt, normalisasiDusun, normalisasiRw, validasiDusun, validasiRw } from './dusun'
+import { DUSUN_BAWAAN, RW_BAWAAN, daftarRt, daftarkanTerpakai, dusunDariRt, gabungPilihan, hitungRtRwTerpakai, normalisasiDusun, normalisasiRw, rtBelumTerdaftar, rwBelumTerdaftar, validasiDusun, validasiRw, type DusunItem } from './dusun'
 
 describe('DUSUN_BAWAAN', () => {
   it('gabungan RT bawaan = RT resmi Desa Karang Sengon (001–011) dan setiap RT hanya di satu dusun', () => {
@@ -95,5 +95,32 @@ describe('RW', () => {
     expect(validasiRw(['000', '001'])).toBeUndefined()
     expect(validasiRw(['1234'])).toMatch(/tidak valid/)
     expect(validasiRw(['001', '010'])).toBeUndefined()
+  })
+})
+
+describe('RT/RW yang dipakai data penduduk', () => {
+  const dusun: DusunItem[] = [{ nama: 'A', rt: ['001', '002'] }]
+  it('hitungRtRwTerpakai: 3 digit, "0" = "000", kosong tidak dihitung', () => {
+    const h = hitungRtRwTerpakai([{ rt: '1', rw: '1' }, { rt: '001', rw: '001' }, { rt: 0, rw: '000' }, { rt: '', rw: null }, { rt: '030', rw: '009' }])
+    expect(h.rt).toEqual({ '001': 2, '000': 1, '030': 1 })
+    expect(h.rw).toEqual({ '001': 2, '000': 1, '009': 1 })
+  })
+  it('gabungPilihan: terdaftar + yang dipakai data, unik dan terurut', () => {
+    expect(gabungPilihan(['001', '002'], { '000': 1, '002': 3, '030': 2 })).toEqual(['000', '001', '002', '030'])
+  })
+  it('rtBelumTerdaftar dan rwBelumTerdaftar', () => {
+    expect(rtBelumTerdaftar(dusun, { '001': 5, '030': 2, '000': 1 })).toEqual(['000', '030'])
+    expect(rwBelumTerdaftar(['001'], { '001': 1, '009': 4 })).toEqual(['009'])
+  })
+  it('daftarkanTerpakai: RT baru masuk dusun "Lain-lain" (dibuat bila belum ada), RW masuk Daftar RW; data asli tidak berubah', () => {
+    const g = daftarkanTerpakai(dusun, ['001'], { rt: { '001': 1, '030': 2 }, rw: { '001': 1, '009': 1 } })
+    expect(g.dusun).toEqual([{ nama: 'A', rt: ['001', '002'] }, { nama: 'Lain-lain', rt: ['030'] }])
+    expect(g.rw).toEqual(['001', '009'])
+    expect(dusun).toEqual([{ nama: 'A', rt: ['001', '002'] }])
+    const g2 = daftarkanTerpakai(g.dusun, g.rw, { rt: { '020': 1, '030': 2 }, rw: {} })
+    expect(g2.dusun.find((d) => d.nama === 'Lain-lain')?.rt).toEqual(['020', '030'])
+  })
+  it('tidak ada yang belum terdaftar → tidak ada dusun baru', () => {
+    expect(daftarkanTerpakai(dusun, ['001'], { rt: { '001': 1 }, rw: { '001': 1 } }).dusun).toEqual(dusun)
   })
 })
