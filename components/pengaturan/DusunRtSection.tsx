@@ -162,10 +162,12 @@ export function DusunRtSection() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
+      <div className="act-c" style={{ marginTop: 14 }}>
         <Button type="button" variant="outline" onClick={tambahDusun}><Plus size={16} />Tambah dusun</Button>
-        <Button type="button" variant="ghost" onClick={() => { setSalinan(DUSUN_BAWAAN); setSalinanRw(RW_BAWAAN); setSudahCoba(false) }}><RotateCcw size={16} />Pakai bawaan</Button>
-        <Button type="button" onClick={handleSimpan} disabled={isPending} style={{ marginLeft: 'auto' }}><Save size={16} />{isPending ? 'Menyimpan…' : 'Simpan'}</Button>
+        <Button type="button" variant="outline" onClick={() => { setSalinan(DUSUN_BAWAAN); setSalinanRw(RW_BAWAAN); setSudahCoba(false) }}><RotateCcw size={16} />Pakai bawaan</Button>
+      </div>
+      <div className="act-c" style={{ marginTop: 10 }}>
+        <Button type="button" onClick={handleSimpan} disabled={isPending}><Save size={16} />{isPending ? 'Menyimpan…' : 'Simpan'}</Button>
       </div>
     </div>
   )

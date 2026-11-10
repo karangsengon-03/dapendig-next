@@ -200,7 +200,7 @@ export function MigError({
           <p className={mono ? 'mig-err' : undefined} style={{ margin: 0 }}>{msg}</p>
         </div>
       </div>
-      <Button variant="ghost" onClick={onRetry} style={{ alignSelf: 'flex-start' }}>Coba lagi</Button>
+      <Button variant="ghost" onClick={onRetry} style={{ alignSelf: 'center' }}>Coba lagi</Button>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
+import { VersiAplikasi } from '@/components/layout/VersiAplikasi'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useTheme } from 'next-themes'
@@ -130,6 +131,7 @@ function PengaturanIsi({ currentUid }: { currentUid: string }) {
           {sec === 'impor' && <ImportSection />}
           {sec === 'pemeliharaan' && <PemeliharaanSection />}
         </div>
+        <VersiAplikasi className="mt-4" />
       </div>
     </>
   )
@@ -546,7 +548,7 @@ function WilayahKadesForm({ tampil }: { tampil: 'wilayah' | 'kades' | null }) {
             </div>
           )}
 
-          <div className="set-ft">
+          <div className="set-ft act-c">
             <Button type="submit" disabled={isPending}>
               <Save className="i" />
               {isPending ? 'Menyimpan...' : 'Simpan'}

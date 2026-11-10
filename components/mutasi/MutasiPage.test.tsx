@@ -185,7 +185,7 @@ describe('Halaman Mutasi — Reset dan ganti tab', () => {
     fireEvent.click(screen.getByRole('button', { name: /Reset/ }))
     expect((kolomCari() as HTMLInputElement).value).toBe('')
     expect(barisNik()).toEqual([NIK.b, NIK.c, NIK.a])
-    expect(screen.getByRole('button', { name: 'Filter RT' }).textContent).toContain('Semua RT')
+    expect(screen.getByRole('button', { name: 'Filter RT' }).textContent).toBe('RT')
   })
 
   it('pindah tab mengembalikan pencarian, RT, dan urutan ke bawaan', () => {
@@ -194,7 +194,7 @@ describe('Halaman Mutasi — Reset dan ganti tab', () => {
     pilihMenu('Filter RT', 'RT 010')
     bukaTabMasuk()
     expect((kolomCari() as HTMLInputElement).value).toBe('')
-    expect(screen.getByRole('button', { name: 'Filter RT' }).textContent).toContain('Semua RT')
+    expect(screen.getByRole('button', { name: 'Filter RT' }).textContent).toBe('RT')
     expect(barisNik()).toHaveLength(3)
   })
 })

@@ -603,6 +603,11 @@
 .chips-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
 .cnt{margin-left:auto;font-size:13px;color:var(--ink-3)}
 .cnt b{color:var(--ink)}
+.frow3{display:flex;gap:10px;align-items:center}
+.frow3 .a-chip .t{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.frow3 .a-chip .cv{font-size:13px;flex:none}
+.fcnt{display:flex;align-items:center;gap:10px;margin-left:auto}
+.fcnt .cnt{margin-left:0}
 .a-chip{cursor:pointer;transition:background .15s,border-color .15s}
 .a-chip:hover{border-color:var(--navy-500)}
 .a-chip .x{display:inline-flex;margin-left:2px;opacity:.7}
@@ -675,6 +680,7 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5;cursor:pointer}
 .a-copy{cursor:pointer;transition:all .15s}
 .a-copy:hover{background:var(--navy-100);color:var(--navy-700)}
 .a-hero2 .bar .a-btn{text-decoration:none}
+.a-hero2 .bar .a-btn.dsf{margin-left:auto}
 .a-layer .a-mbg{position:fixed;z-index:80;animation:fade .18s}
 .a-layer .a-modal{animation:modalIn .24s cubic-bezier(.2,.8,.25,1);max-height:92%}
 .a-layer .a-modal .mb{overflow:auto}
@@ -830,6 +836,7 @@ a.kt{color:inherit;text-decoration:none}
   .a-hero2 .bar .a-btn{flex:none}
   .a-hero2 .bar .a-btn.pri{flex:1 1 100%;order:-1}
   .a-hero2 .bar .a-btn.sec{flex:1 1 calc(50% - 4px)}
+  .a-hero2 .bar .a-btn.sof{flex:1 1 0;min-width:0}
   .a-hero2 .bar .a-btn.dsf{margin-left:0;flex:none;width:44px;padding:0}
   .a-hero2 .bar .a-btn.dsf .hm{display:none}
   .a-kvm{grid-template-columns:1fr 1fr}
@@ -851,6 +858,9 @@ a.kt{color:inherit;text-decoration:none}
   .a-toasts{left:12px;right:12px}
   .a-toast{min-width:0;max-width:none}
   .fbar .srch{max-width:none;flex-basis:100%}
+  .fbar .frow3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;flex-basis:100%}
+  .fbar .frow3 .a-chip{justify-content:center;gap:5px;padding:0 8px;min-width:0}
+  .fbar .fcnt{flex-basis:100%;margin-left:0;justify-content:space-between}
   .chips-row{flex-wrap:nowrap;overflow:auto;padding-bottom:4px;margin-right:-14px;padding-right:14px}
   .chips-row .a-chip{flex:none}
   .chips-row .cnt{display:none}
@@ -917,7 +927,7 @@ a.kt{color:inherit;text-decoration:none}
   .a-side.rail .me .melink { justify-content: center; flex: none; }
   .a-side .me .who { min-width: 0; }
   .a-side .me .who b, .a-side .me .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .a-side .ver { margin: 6px 0 0; text-align: center; font-size: 11px; color: #7C93B5; }
+  .a-side .ver { margin: 6px 0 0; text-align: center; font-size: 12px; color: #8FA5C6; }
   .a-side.rail .ver { display: none; }
   .a-side .it:focus-visible, .a-side .colbtn:focus-visible, .a-side .thm button:focus-visible { outline-color: rgba(201,169,97,.75); }
 
@@ -1043,14 +1053,7 @@ a.kt{color:inherit;text-decoration:none}
   .rs > div { flex-wrap: wrap; }
   .rs small { flex-basis: 100%; margin: -2px 0 0 17px; }
   /* Log: rentang tanggal sebaris dengan chip filter */
-  .dtr { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-3); }
-  .dtr svg { font-size: 15px; }
-  .dt-in { height: 34px; padding: 0 10px; border-radius: 99px; border: 1px solid var(--line-2); background: var(--card); color: var(--ink-2); font: inherit; font-size: 13px; outline: 0; min-width: 0; }
-  .dt-in:focus-visible { border-color: var(--navy-500); box-shadow: 0 0 0 3px rgba(47,123,208,.16); }
-  .dk .dt-in { color-scheme: dark; }
   @media (max-width: 700px) {
-    .dtr { flex: 1 1 100%; }
-    .dtr .dt-in { flex: 1; }
     .mpg .a-btn { flex: none; }
   }
   /* Profil: kolom sempit di tengah (AppShell sudah membungkus .pg) */
@@ -1095,7 +1098,7 @@ a.kt{color:inherit;text-decoration:none}
     .a-step .ln { margin: 0 6px; min-width: 10px; }
     .a-mig:has(.a-btn) { flex-wrap: wrap; }
     .a-mig:has(.a-btn) > div:nth-child(2) { flex: 1 1 calc(100% - 60px) !important; }
-    .a-mig:has(.a-btn) .a-btn { margin-left: 56px; }
+    .a-mig:has(.a-btn) .a-btn { margin: 4px auto 0; min-width: 200px; justify-content: center; }
   }
   /* Halaman utilitas migrasi: kolom sempit di tengah */
   .pg-mig { max-width: 760px; margin: 0 auto; }
@@ -1255,3 +1258,46 @@ a.kt{color:inherit;text-decoration:none}
 .dk .ico-lk{color:#9CC4F7}
 .dk .ico-pr{background:#3A1730;color:#F0A2CC}
 .a-tli .pt.mute{border-color:var(--ink-3);background:var(--bg);color:var(--ink-2)}
+
+/* ── v3.3.2: kerapian Monografi (kartu rata tengah, kop piramida bertumpuk di HP, baris total sejajar isi) ── */
+.kt{align-items:center;text-align:center}
+.kt small{text-align:center}
+.rs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rs > div{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;text-align:center;border:1px solid var(--line);border-radius:13px;padding:12px 8px;background:var(--bg);font-size:13px}
+.rs .lb{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-style:normal;font-size:13px;color:var(--ink-2);line-height:1.25;min-height:2.5em;text-align:center}
+.rs .dot{flex:none;width:10px;height:10px;border-radius:3px}
+.rs b{margin:0;font-family:var(--f-display);font-size:26px;line-height:1;letter-spacing:-.02em;color:var(--ink)}
+.rs small{flex-basis:auto;margin:0;font-size:12px;color:var(--ink-3)}
+.rasio{flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
+.rasio span{text-align:center}
+.rtot.mtot{padding:12px 0 0}
+.pir-hint{text-align:center}
+@media(max-width:700px){
+  .a-card .ch.ch-pir{flex-direction:column;align-items:stretch;gap:12px}
+  .ch-pir .btn-atur{width:100%;justify-content:center}
+  .rs{gap:8px}
+  .rs > div{padding:12px 4px}
+  .rs .lb{font-size:12px;flex-direction:column;gap:4px}
+}
+
+/* ── v3.3.2: filter Log aktivitas — empat kotak seragam (dua kolom, tinggi, padding, huruf sama) ── */
+.lg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;flex:1 1 100%;max-width:520px}
+.lg-box,.a-chip.lg-box{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;min-width:0;height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--line-2);background:var(--card);font-size:14px;font-weight:500;color:var(--ink-2)}
+.a-chip.lg-box.on{background:var(--navy-700);border-color:var(--navy-700);color:#fff}
+.lg-box svg{flex:none;font-size:15px;color:var(--ink-3)}
+.a-chip.lg-box.on svg{color:#fff}
+.lg-box .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.lg-box .cv{margin-left:auto;font-size:13px}
+.lg-dt{display:block;min-width:0}
+.lg-cap{display:block;margin:0 0 4px 2px;font-size:12px;color:var(--ink-3)}
+.lg-box .dt-in{flex:1;min-width:0;height:100%;padding:0;border:0;border-radius:0;background:transparent;color:var(--ink-2);font:inherit;outline:0}
+.lg-box:focus-within{border-color:var(--navy-500);box-shadow:0 0 0 3px rgba(47,123,208,.16)}
+.dk .lg-box .dt-in{color-scheme:dark}
+
+/* ── v3.3.2: tombol aksi Pengaturan rata tengah (Simpan, Tambah dusun, Ekspor Laporan, dst.) ── */
+.act-c{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.set-ft.act-c{flex-direction:column;gap:8px;text-align:center}
+.set-ft.act-c small{text-align:center}
+
+/* ── v3.4.0: nomor versi aplikasi terlihat di Login, layar muat, Pengaturan, dan sidebar ── */
+.app-ver{margin:0;text-align:center;font-size:12px;color:var(--ink-3);letter-spacing:.02em;font-variant-numeric:tabular-nums}

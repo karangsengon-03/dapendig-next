@@ -10,13 +10,12 @@ export function rt3(v: string | number | null | undefined): string {
   return /^\d+$/.test(s) ? String(Number(s)).padStart(3, '0') : s
 }
 
-/** RT/RW yang sah untuk ditampilkan: kosong dan "000" (placeholder dari impor lama = belum diisi) menjadi ''. */
+/** RT/RW untuk ditampilkan. "000" adalah nilai sah (KTP asli ada yang RT/RW 000); hanya yang kosong menjadi ''. */
 export function rt3Sah(v: string | number | null | undefined): string {
-  const x = rt3(v)
-  return x === '000' ? '' : x
+  return rt3(v)
 }
 
-/** "RT 003/RW 001" untuk daftar penduduk; yang belum diisi ditulis "—" ("RT —/RW —"), bukan "RT 000/RW 000". */
+/** "RT 003/RW 001" untuk daftar penduduk; yang benar-benar kosong ditulis "—"; "000" tampil apa adanya ("RT 000/RW 000"). */
 export function labelRtRw(rt: string | number | null | undefined, rw: string | number | null | undefined): string {
   return `RT ${rt3Sah(rt) || '—'}/RW ${rt3Sah(rw) || '—'}`
 }

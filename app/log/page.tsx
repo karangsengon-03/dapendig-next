@@ -159,42 +159,49 @@ function LogFilter({
         )}
       </div>
 
-      <div className="chips-row">
+      <div className="lg-grid">
         <button
           type="button"
-          className={cn('a-chip', filter.aksi && 'on')}
+          className={cn('a-chip lg-box', filter.aksi && 'on')}
           aria-haspopup="menu"
           onClick={e => setPop({ jenis: 'aksi', pos: hitungPos(e.currentTarget, 220) })}
         >
-          <Activity className="i" />{labelAksi}<ChevronDown className="i" style={{ fontSize: 13 }} />
+          <Activity className="i" /><span className="t">{labelAksi}</span><ChevronDown className="i cv" />
         </button>
         <button
           type="button"
-          className={cn('a-chip', filter.koleksi && 'on')}
+          className={cn('a-chip lg-box', filter.koleksi && 'on')}
           aria-haspopup="menu"
           onClick={e => setPop({ jenis: 'koleksi', pos: hitungPos(e.currentTarget, 220) })}
         >
-          <Layers className="i" />{labelKoleksi}<ChevronDown className="i" style={{ fontSize: 13 }} />
+          <Layers className="i" /><span className="t">{labelKoleksi}</span><ChevronDown className="i cv" />
         </button>
-      </div>
-
-      <div className="dtr">
-        <Calendar className="i" />
-        <input
-          type="date"
-          className="dt-in"
-          aria-label="Tanggal dari"
-          value={filter.dateFrom}
-          onChange={e => set({ dateFrom: e.target.value })}
-        />
-        <span>s/d</span>
-        <input
-          type="date"
-          className="dt-in"
-          aria-label="Tanggal sampai"
-          value={filter.dateTo}
-          onChange={e => set({ dateTo: e.target.value })}
-        />
+        <label className="lg-dt">
+          <span className="lg-cap">Dari tanggal</span>
+          <span className="lg-box">
+            <Calendar className="i" />
+            <input
+              type="date"
+              className="dt-in"
+              aria-label="Tanggal dari"
+              value={filter.dateFrom}
+              onChange={e => set({ dateFrom: e.target.value })}
+            />
+          </span>
+        </label>
+        <label className="lg-dt">
+          <span className="lg-cap">Sampai tanggal</span>
+          <span className="lg-box">
+            <Calendar className="i" />
+            <input
+              type="date"
+              className="dt-in"
+              aria-label="Tanggal sampai"
+              value={filter.dateTo}
+              onChange={e => set({ dateTo: e.target.value })}
+            />
+          </span>
+        </label>
       </div>
 
       <Button

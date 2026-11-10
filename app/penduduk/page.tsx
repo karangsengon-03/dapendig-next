@@ -2,9 +2,8 @@
 
 import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
 import { rt3 } from '@/lib/rt-rw'
-import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { ChevronDown, ChevronLeft, ChevronRight, Download, Upload } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -15,7 +14,6 @@ import { useDusunAktif } from '@/hooks/useDusunAktif'
 import { PENDIDIKAN } from '@/lib/penduduk-constants'
 import { jumlahKeluarga } from '@/lib/keluarga'
 import { cocokRentangUmur, cocokKlasifikasi, kunciRentangSah, klasifikasiSah } from '@/lib/umur'
-import { useAuthStore } from '@/store/authStore'
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const
 
@@ -212,7 +210,6 @@ function PendudukContent() {
   }, [allData, filter, dusunDariRt])
 
   const totalPages = Math.ceil(filtered.length / pageSize) || 1
-  const { isAdmin } = useAuthStore()
 
   // Ringkasan header (dari data yang sudah dimuat): penduduk aktif dan jumlah KK-nya
   const ringkasan = useMemo(() => {
@@ -250,16 +247,6 @@ function PendudukContent() {
       <PageHeader
         title="Penduduk"
         description={isLoading ? 'Memuat data penduduk…' : `${ringkasan.jiwa.toLocaleString('id-ID')} penduduk aktif di ${ringkasan.kk.toLocaleString('id-ID')} kepala keluarga`}
-        action={isAdmin() ? (
-          <>
-            <Button asChild variant="outline">
-              <Link href="/pengaturan?bagian=impor" title="Impor Excel ada di Pengaturan"><Upload className="i" />Impor Excel</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/pengaturan?bagian=ekspor" title="Ekspor Excel ada di Pengaturan"><Download className="i" />Ekspor Excel</Link>
-            </Button>
-          </>
-        ) : undefined}
       />
 
       <PendudukFilter

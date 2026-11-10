@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { VersiAplikasi } from '@/components/layout/VersiAplikasi'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { signInWithEmailAndPassword } from 'firebase/auth'
@@ -271,6 +272,7 @@ export function LoginForm() {
           <p style={{ margin: 0, textAlign: 'center', fontSize: 13, color: 'var(--ink-3)' }}>
             © {labelPemerintahDesa({ desa: identitas.desa })} {new Date().getFullYear()}
           </p>
+          <VersiAplikasi />
         </div>
       </div>
     </div>

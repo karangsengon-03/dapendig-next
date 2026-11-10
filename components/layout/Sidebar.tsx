@@ -178,7 +178,7 @@ export function Sidebar() {
             </div>
           )}
 
-          <p className="ver">{APP_VERSION}</p>
+          <p className="ver">DaPenDig {APP_VERSION}</p>
         </div>
       </aside>
     </>

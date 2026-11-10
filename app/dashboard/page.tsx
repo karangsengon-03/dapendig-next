@@ -5,7 +5,6 @@ import Link from 'next/link'
 import {
   ChevronLeft,
   ChevronRight,
-  Download,
 } from 'lucide-react'
 import { PERISTIWA } from '@/lib/visual'
 import { JkIkon } from '@/components/ui/jk-ikon'
@@ -78,7 +77,7 @@ export default function DashboardPage() {
   const [bulan, setBulan] = useState(now.getMonth())
   const [tahun, setTahun] = useState(now.getFullYear())
   const masuk = useMasuk()
-  const { isOperator, isAdmin } = useAuthStore()
+  const { isOperator } = useAuthStore()
 
   const { data: stats, isLoading: loadingStats } = usePendudukStats()
   const { data: pendudukBaru = 0 } = usePendudukBaruBulanIni()
@@ -162,13 +161,6 @@ export default function DashboardPage() {
                 <ChevronRight className="i" />
               </button>
             </div>
-            {isAdmin() && (
-              <Button asChild variant="outline">
-                <Link href="/pengaturan?bagian=ekspor" title="Ekspor, Impor, dan Laporan Bulanan ada di Pengaturan">
-                  <Download className="i" />Ekspor / Impor / Laporan
-                </Link>
-              </Button>
-            )}
           </>
         }
       />

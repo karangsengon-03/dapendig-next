@@ -72,7 +72,7 @@ export function validasiDusun(dusun: readonly DusunItem[]): GalatDusun {
 
     if (d.rt.length === 0) baris[i].rt = 'Pilih minimal satu RT'
     for (const r of d.rt) {
-      if (!/^\d{1,3}$/.test(r.trim()) || Number(r) < 1) { baris[i].rt = `RT "${r}" tidak valid (angka 1–999)`; continue }
+      if (!/^\d{1,3}$/.test(r.trim())) { baris[i].rt = `RT "${r}" tidak valid (angka 0–999)`; continue }
       const v = rt3(r)
       const pemilik = pemilikRt.get(v)
       if (pemilik === undefined) pemilikRt.set(v, i)
@@ -97,6 +97,6 @@ export function normalisasiRw(mentah: unknown): string[] | null {
 /** Pesan galat untuk daftar RW; undefined bila valid. */
 export function validasiRw(rw: readonly string[]): string | undefined {
   if (rw.length === 0) return 'Minimal harus ada satu RW.'
-  for (const r of rw) if (!/^\d{1,3}$/.test(r.trim()) || Number(r) < 1) return `RW "${r}" tidak valid (angka 1–999)`
+  for (const r of rw) if (!/^\d{1,3}$/.test(r.trim())) return `RW "${r}" tidak valid (angka 0–999)`
   return undefined
 }

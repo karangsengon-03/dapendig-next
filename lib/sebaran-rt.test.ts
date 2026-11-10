@@ -19,10 +19,10 @@ describe('sebaranPerRt — data lama dan baru menyatu', () => {
     expect(Object.keys(hasil)).toEqual(['001'])
     expect(hasil['001']).toEqual({ laki: 2, perempuan: 2 })
   })
-  it('RT kosong → kunci yang diminta (bawaan "" untuk Monografi, "000" untuk Beranda)', () => {
+  it('RT kosong → kunci yang diminta (bawaan "" untuk Monografi, "—" untuk Beranda)', () => {
     const rows = [{ rt: '', jenis_kelamin: L }, { rt: null, jenis_kelamin: P }, { jenis_kelamin: P }]
     expect(sebaranPerRt(rows)).toEqual({ '': { laki: 1, perempuan: 2 } })
-    expect(sebaranPerRt(rows, '000')).toEqual({ '000': { laki: 1, perempuan: 2 } })
+    expect(sebaranPerRt(rows, '—')).toEqual({ '—': { laki: 1, perempuan: 2 } })
   })
   it('selain "Laki-laki" dihitung perempuan; "Lain-lain" apa adanya', () => {
     expect(sebaranPerRt([{ rt: 'Lain-lain', jenis_kelamin: 'x' }, { rt: 'Lain-lain', jenis_kelamin: undefined }])).toEqual({ 'Lain-lain': { laki: 0, perempuan: 2 } })
@@ -82,7 +82,7 @@ describe('kelompokDusun — Sebaran per dusun di Beranda', () => {
 function lamaDashboard(rows: { rt?: string | number | null; jenis_kelamin?: string }[], petaDusun: DusunItem[]) {
   const byRT: Record<string, { laki: number; perempuan: number }> = {}
   for (const r of rows) {
-    const key = rt3(r.rt) || '000'
+    const key = rt3(r.rt) || '—'
     if (!byRT[key]) byRT[key] = { laki: 0, perempuan: 0 }
     if (r.jenis_kelamin === 'Laki-laki') byRT[key].laki++
     else byRT[key].perempuan++

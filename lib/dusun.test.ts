@@ -68,9 +68,10 @@ describe('validasiDusun', () => {
     expect(g.baris[1].rt).toBe('RT 002 sudah ada di dusun A')
     expect(g.ada).toBe(true)
   })
-  it('RT bukan angka atau 0 ditolak', () => {
+  it('RT bukan angka ditolak; RT 000 dan 020 sah', () => {
     expect(validasiDusun([{ nama: 'A', rt: ['abc'] }]).baris[0].rt).toMatch(/tidak valid/)
-    expect(validasiDusun([{ nama: 'A', rt: ['000'] }]).baris[0].rt).toMatch(/tidak valid/)
+    expect(validasiDusun([{ nama: 'A', rt: ['000', '020'] }]).ada).toBe(false)
+    expect(validasiDusun([{ nama: 'A', rt: ['1000'] }]).baris[0].rt).toMatch(/tidak valid/)
   })
   it('RT tidak harus berurutan', () => {
     expect(validasiDusun([{ nama: 'A', rt: ['001', '007'] }, { nama: 'B', rt: ['002'] }]).ada).toBe(false)
@@ -88,10 +89,10 @@ describe('RW', () => {
     expect(normalisasiRw(undefined)).toBeNull()
     expect(normalisasiRw('001')).toBeNull()
   })
-  it('validasiRw: kosong, bukan angka, 0, lebih dari 3 digit ditolak', () => {
+  it('validasiRw: kosong, bukan angka, lebih dari 3 digit ditolak; 000 sah', () => {
     expect(validasiRw([])).toMatch(/Minimal/)
     expect(validasiRw(['abc'])).toMatch(/tidak valid/)
-    expect(validasiRw(['000'])).toMatch(/tidak valid/)
+    expect(validasiRw(['000', '001'])).toBeUndefined()
     expect(validasiRw(['1234'])).toMatch(/tidak valid/)
     expect(validasiRw(['001', '010'])).toBeUndefined()
   })

@@ -214,7 +214,7 @@ export function ImportSection() {
             className="hidden"
             aria-label="Pilih berkas Excel"
           />
-          <Button variant="ghost" size="sm" onClick={downloadTemplate} style={{ alignSelf: 'flex-start' }}>
+          <Button variant="ghost" size="sm" onClick={downloadTemplate} style={{ alignSelf: 'center' }}>
             <Download className="i" />
             Download Template Excel
           </Button>

@@ -282,7 +282,7 @@ function LaporanBulananSection() {
         <h4>Laporan bulanan</h4>
         <p>Ekspor laporan multi-sheet: rekap, mutasi, kelahiran, dan kematian untuk bulan tertentu.</p>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <div className="act-c">
         <InBox className="lap-sel">
           <select aria-label="Bulan laporan" value={bulan} onChange={(e) => setBulan(e.target.value)}>
             {BULAN_OPTS.map(([val, label]) => (

@@ -149,7 +149,7 @@ describe('Halaman Kematian — pencarian, urutan, RT', () => {
     pilihMenu('Filter RT', 'RT 002')
     bukaTabMeninggal()
     expect((kolomCari() as HTMLInputElement).value).toBe('')
-    expect(screen.getByRole('button', { name: 'Filter RT' }).textContent).toContain('Semua RT')
+    expect(screen.getByRole('button', { name: 'Filter RT' }).textContent).toBe('RT')
     expect(barisNik()).toHaveLength(3)
   })
 })

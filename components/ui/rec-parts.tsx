@@ -48,6 +48,12 @@ export function labelBulan(ym: string): string {
   return `${NAMA_BULAN[Number(m) - 1] ?? m} ${y}`
 }
 
+/** "Okt 2026" untuk tombol filter yang sempit. */
+export function labelBulanPendek(ym: string): string {
+  const [y, m] = ym.split('-')
+  return `${(NAMA_BULAN[Number(m) - 1] ?? m).slice(0, 3)} ${y}`
+}
+
 /** Bulan-bulan yang ada di data (terbaru dulu) untuk popover filter. */
 export function daftarBulan(tanggal: (string | undefined)[]): string[] {
   return Array.from(new Set(tanggal.map(kunciBulan).filter(Boolean))).sort().reverse()
@@ -163,49 +169,55 @@ export function RecToolbar({
           autoComplete="off"
         />
       </div>
-      <button
-        type="button"
-        className={cn('a-chip', bulan && 'on')}
-        aria-haspopup="menu"
-        onClick={(e) => buka('bulan', e.currentTarget, 230)}
-      >
-        <Calendar className="i" />
-        {bulan ? labelBulan(bulan) : 'Semua bulan'}
-        <ChevronDown className="i" style={{ fontSize: 13 }} />
-      </button>
-      {onRt && (
+      <div className="frow3">
         <button
           type="button"
-          className={cn('a-chip', rt && 'on')}
+          className={cn('a-chip', bulan && 'on')}
           aria-haspopup="menu"
-          aria-label="Filter RT"
-          onClick={(e) => buka('rt', e.currentTarget, 200)}
+          aria-label="Filter bulan"
+          onClick={(e) => buka('bulan', e.currentTarget, 230)}
         >
-          <MapPin className="i" />
-          {rt ? `RT ${rt}` : 'Semua RT'}
-          <ChevronDown className="i" style={{ fontSize: 13 }} />
+          <Calendar className="i" />
+          <span className="t">{bulan ? labelBulanPendek(bulan) : 'Bulan'}</span>
+          <ChevronDown className="i cv" />
         </button>
-      )}
-      {onUrut && (
-        <button
-          type="button"
-          className={cn('a-chip', urutAktif !== URUT_BAWAAN && 'on')}
-          aria-haspopup="menu"
-          aria-label="Urutkan"
-          onClick={(e) => buka('urut', e.currentTarget, 200)}
-        >
-          <SlidersHorizontal className="i" />
-          Urut: {labelUrut}
-          <ChevronDown className="i" style={{ fontSize: 13 }} />
-        </button>
-      )}
-      {onReset && adaUbahan && (
-        <button type="button" className="a-chip" onClick={onReset}>
-          <RotateCcw className="i" />
-          Reset
-        </button>
-      )}
-      <span className="cnt" style={{ marginLeft: 'auto' }}><b>{jumlah}</b> data</span>
+        {onRt && (
+          <button
+            type="button"
+            className={cn('a-chip', rt && 'on')}
+            aria-haspopup="menu"
+            aria-label="Filter RT"
+            onClick={(e) => buka('rt', e.currentTarget, 200)}
+          >
+            <MapPin className="i" />
+            <span className="t">{rt ? `RT ${rt}` : 'RT'}</span>
+            <ChevronDown className="i cv" />
+          </button>
+        )}
+        {onUrut && (
+          <button
+            type="button"
+            className={cn('a-chip', urutAktif !== URUT_BAWAAN && 'on')}
+            aria-haspopup="menu"
+            aria-label="Urutkan"
+            title={`Urut: ${labelUrut}`}
+            onClick={(e) => buka('urut', e.currentTarget, 200)}
+          >
+            <SlidersHorizontal className="i" />
+            <span className="t">{labelUrut}</span>
+            <ChevronDown className="i cv" />
+          </button>
+        )}
+      </div>
+      <div className="fcnt">
+        <span className="cnt"><b>{jumlah}</b> data</span>
+        {onReset && adaUbahan && (
+          <button type="button" className="a-chip" onClick={onReset}>
+            <RotateCcw className="i" />
+            Reset
+          </button>
+        )}
+      </div>
       {pop?.kunci === 'bulan' && menu('Filter bulan', 230, opsiBulan, bulan, onBulan)}
       {pop?.kunci === 'rt' && onRt && menu('Filter RT', 200, opsiRt, rt ?? '', onRt)}
       {pop?.kunci === 'urut' && onUrut && menu(

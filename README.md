@@ -4,7 +4,7 @@ Aplikasi PWA manajemen data penduduk untuk **Desa Karang Sengon, Kecamatan Klaba
 
 ---
 
-## Versi Saat Ini: v3.3.1
+## Versi Saat Ini: v3.4.0
 
 Rilis **fitur dan perbaikan** di atas redesain v3.0.0: Dusun, RT, dan RW dapat diatur dari Pengaturan, Edit catatan Pindah Masuk/Kelahiran ikut memperbarui menu Penduduk, ikon dan warna diseragamkan, toast di atas layar, dan Next.js 16.4.3. Struktur data Firestore dan `firestore.rules` **tidak berubah** dari v2.9.1, sehingga data lama tetap terbaca dan rules tidak perlu di-deploy ulang. Ringkasan lengkap ada di [Riwayat Versi](#riwayat-versi).
 
@@ -207,6 +207,31 @@ Deploy `firestore.rules` bila berubah: lihat `PANDUAN_DEPLOY_RULES.md`.
 ---
 
 ## Riwayat Versi
+
+### v3.4.0 — November 2026
+
+Rilis kecil di atas v3.3.2; tidak ada perubahan data, `firestore.rules`, koleksi, atau query.
+
+**Fitur baru**
+- **Nomor versi aplikasi selalu terlihat**, tidak perlu lagi mengecek Vercel. Sebelumnya versi hanya ada di panel kiri Login (disembunyikan di HP) dan di dasar sidebar (laci yang tertutup di HP), sehingga di HP tidak tampak. Kini tampil "DaPenDig v3.4.0" di bawah form Login, di layar muat (`app/loading.tsx` dan layar muat `AppShell`), di bagian bawah halaman Pengaturan, dan di dasar sidebar (huruf 12 px, warna lebih terang). Komponen bersama: `components/layout/VersiAplikasi.tsx`; nomor tetap dari satu sumber `APP_VERSION` (`lib/utils.ts`) yang dinaikkan skrip `npm run versi`.
+
+### v3.3.2 — November 2026
+
+Rilis **perbaikan dan kerapian tampilan** di atas v3.3.1. Struktur data tetap; `firestore.rules` tidak berubah; tidak ada koleksi, field, atau query baru.
+
+**Perbaikan fungsi**
+- **RT/RW 000 kini sah.** Pengaturan → Dusun, RT, dan RW menerima RT dan RW 0–999 (dulu 1–999, sehingga RT 000 dan RT di luar 001–011 tidak bisa ditambah). `rt3Sah` tidak lagi menganggap "000" sebagai belum diisi: daftar penduduk menulis "RT 000/RW 000" sama seperti Detail (dulu "RT —/RW —" di daftar), dan Cetak KK ikut mencetak 000. "—" hanya untuk RT/RW yang benar-benar kosong. Pilihan RT di form dan filter tetap diambil dari daftar di Pengaturan, jadi RT 000 dan RT 020 muncul di semua menu setelah ditambahkan di sana. Sebaran per RT di Beranda kini menaruh RT kosong di "Lain-lain" dengan kunci "—" (dulu "000", yang kini bentrok dengan RT 000 yang sah).
+
+**Kerapian dan konsistensi**
+- **Detail penduduk:** tombol Hapus tidak lagi meluber di HP (`margin-left:auto` inline menimpa aturan HP, teks tanpa `.hm`). Di HP Hapus berupa ikon persegi 44 px di sebelah "Cetak KK Sementara"; di desktop tetap di kanan.
+- **Tombol Ekspor/Impor/Laporan dihapus** dari Beranda dan Penduduk; semuanya hanya ada di Pengaturan (Ekspor, Impor, Laporan bulanan).
+- **Mutasi dan Kelahiran & kematian:** filter bulan, filter RT, dan urutan satu baris tiga tombol sama lebar di HP, teks diringkas ("Bulan", "RT", "Terbaru"; pilihan aktif tampil "Okt 2026", "RT 001", dst.). Jumlah data dan Reset pindah ke baris sendiri di bawahnya.
+- **Monografi:** kop Piramida bertumpuk di HP (judul, keterangan, tombol Atur kelompok umur selebar kartu); isi kotak Klasifikasi umur rata tengah; Rasio beban tanggungan memakai tiga kotak rata tengah yang sama bentuknya dengan Klasifikasi umur (label, angka, "rentang · persen"), kotak rasio rata tengah; baris "Total tercatat" sejajar dengan isi kartu; catatan kaki Piramida rata tengah.
+- **Log aktivitas:** Semua aksi, Semua koleksi, dan dua pemilih tanggal (kini berlabel "Dari tanggal" dan "Sampai tanggal") memakai kotak yang sama (dua kolom, tinggi 40 px, padding, huruf, dan sudut sama); "s/d" dihapus.
+- **Pengaturan:** Simpan, Tambah dusun, Pakai bawaan (kini sama-sama bergaris tepi), Ekspor Laporan, Jalankan, Download Template Excel, dan Coba lagi rata tengah; Simpan di Dusun, RT, dan RW pindah ke baris sendiri.
+- Kode mati: aturan CSS `.dtr` dan import yang tidak terpakai lagi dihapus.
+
+**Pengujian:** `tsc` bersih, lint 0 peringatan, tes disesuaikan (RT/RW 000 sah, label RT di tombol filter, kunci RT kosong di Beranda). Prototype tidak diperbarui di rilis ini (keputusan Mas Angga); uji tampilan dilakukan langsung di aplikasi.
 
 ### v3.3.1 — November 2026
 

@@ -1,6 +1,6 @@
 {
   "name": "dapendig-next",
-  "version": "3.3.1",
+  "version": "3.4.0",
   "private": true,
   "overrides": {
     "uuid": "^14.0.1",

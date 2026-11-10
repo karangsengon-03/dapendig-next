@@ -17,7 +17,7 @@ const tambah = (s: SebaranJk, jk: string | null | undefined) => { if (jk === 'La
 
 /**
  * Jumlah L/P per RT 3 digit. RT kosong dikelompokkan di `kunciKosong`
- * ("000" di Beranda; "" di Monografi, sesuai perilaku masing-masing sebelum diekstrak).
+ * ("—" di Beranda, agar tidak bentrok dengan RT 000 yang sah; "" di Monografi, sesuai perilaku masing-masing sebelum diekstrak).
  */
 export function sebaranPerRt(rows: readonly BarisPenduduk[], kunciKosong = ''): Record<string, SebaranJk> {
   const hasil: Record<string, SebaranJk> = {}
@@ -31,7 +31,7 @@ export function sebaranPerRt(rows: readonly BarisPenduduk[], kunciKosong = ''): 
 
 /** Baris Beranda "Sebaran per RT": semua RT resmi (walau 0), lalu "Lain-lain" bila ada RT di luar daftar (termasuk RT kosong). */
 export function kelompokRt(rows: readonly BarisPenduduk[], rtResmi: readonly string[]): BarisRt[] {
-  const byRT = sebaranPerRt(rows, '000')
+  const byRT = sebaranPerRt(rows, '—')
   const hasil: BarisRt[] = rtResmi.map((rt) => ({
     rt,
     laki: byRT[rt]?.laki ?? 0,

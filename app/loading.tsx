@@ -1,6 +1,7 @@
 'use client'
 
 import { AppLogo } from '@/components/layout/AppLogo'
+import { VersiAplikasi } from '@/components/layout/VersiAplikasi'
 import { useIdentitasDesa } from '@/hooks/useIdentitasDesa'
 import { labelDesa } from '@/lib/wilayah'
 
@@ -14,6 +15,7 @@ export default function Loading() {
         {labelDesa(identitas) && <p className="text-xs text-ink-3">{labelDesa(identitas)}</p>}
       </div>
       <div className="w-5 h-5 border-2 border-line-2 border-t-navy-600 rounded-full animate-spin mt-1" />
+      <VersiAplikasi />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { VersiAplikasi } from '@/components/layout/VersiAplikasi'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useAppStore } from '@/store/appStore'
@@ -40,6 +41,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
           {labelDesa(identitas) && <p className="text-xs text-ink-3">{labelDesa(identitas)}</p>}
         </div>
         <div className="w-5 h-5 border-2 border-line-2 border-t-navy-600 rounded-full animate-spin mt-1" />
+        <VersiAplikasi />
       </div>
     )
   }

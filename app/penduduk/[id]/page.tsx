@@ -302,11 +302,10 @@ export default function DetailPendudukPage() {
                     <Button
                       type="button"
                       variant="destructive"
-                      style={{ marginLeft: 'auto' }}
                       aria-label="Hapus data"
                       onClick={() => setShowDelete(true)}
                     >
-                      <Trash2 className="i" />Hapus
+                      <Trash2 className="i" /><span className="hm">Hapus</span>
                     </Button>
                   )}
                 </div>

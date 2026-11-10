@@ -83,7 +83,7 @@ function KlasifikasiUmur({ byKlasifikasi, total }: { byKlasifikasi: Record<strin
           )
         })}
       </div>
-      <div className="rtot">
+      <div className="rtot mtot">
         <span>Total tercatat dalam klasifikasi</span>
         <span>{fmt(tercatat)} jiwa</span>
       </div>
@@ -133,16 +133,16 @@ function BebanTanggungan({ data, config, total }: { data: DataKel[]; config: Kel
       <div className="rs">
         {bagian.map(b => (
           <div key={b.label}>
-            <span style={{ background: b.warna }} />
-            {b.label}<b>{fmt(b.n)}</b>
-            <small style={{ color: 'var(--ink-3)' }}>{b.ket} · {pct(b.n)}%</small>
+            <em className="lb"><span className="dot" style={{ background: b.warna }} />{b.label}</em>
+            <b>{fmt(b.n)}</b>
+            <small>{b.ket.replace('usia ', '').replace(' tahun', ' th')} · {pct(b.n)}%</small>
           </div>
         ))}
       </div>
       <div className="rasio">
         <b>{rasio}</b>
         <span>tanggungan per 100 penduduk usia produktif</span>
-        <span className={`a-badge ${tingkat.tone} sm nd`} style={{ marginLeft: 'auto' }}>{tingkat.teks}</span>
+        <span className={`a-badge ${tingkat.tone} sm nd`}>{tingkat.teks}</span>
       </div>
     </div>
   )
@@ -428,23 +428,23 @@ export default function MonografiPage() {
           </div>
 
           <div className="a-card" style={{ marginTop: 14 }}>
-            <div className="ch">
+            <div className="ch ch-pir">
               <div>
                 <h3>Piramida penduduk</h3>
                 <p>{data.kelompokUmurConfig.length} kelompok umur · {fmt(total)} penduduk aktif</p>
               </div>
               {canAtur && (
-                <Button type="button" variant="secondary" size="sm" onClick={() => setBukaKel(true)}>
+                <Button type="button" variant="secondary" size="sm" className="btn-atur" onClick={() => setBukaKel(true)}>
                   <SlidersVertical className="i" />Atur kelompok umur
                 </Button>
               )}
             </div>
-            <div style={{ padding: '18px 22px 22px' }}>
+            <div style={{ padding: 20 }}>
               <Piramida data={data.piramidaUmur} />
-              <p className="a-hint" style={{ marginTop: 14 }}>
+              <p className="a-hint pir-hint" style={{ marginTop: 14 }}>
                 Kelompok umur bisa disesuaikan untuk permintaan data dengan format berbeda (mis. data sekolah atau usia produktif).
               </p>
-              <div className="rtot">
+              <div className="rtot mtot">
                 <span>Total tercatat dalam piramida</span>
                 <span>{fmt(tercatatPiramida)} jiwa</span>
               </div>
