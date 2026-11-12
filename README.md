@@ -4,7 +4,7 @@ Aplikasi PWA manajemen data penduduk untuk **Desa Karang Sengon, Kecamatan Klaba
 
 ---
 
-## Versi Saat Ini: v3.5.0
+## Versi Saat Ini: v3.6.0
 
 Rilis **fitur dan perbaikan** di atas redesain v3.0.0: Dusun, RT, dan RW dapat diatur dari Pengaturan, Edit catatan Pindah Masuk/Kelahiran ikut memperbarui menu Penduduk, ikon dan warna diseragamkan, toast di atas layar, dan Next.js 16.4.3. Struktur data Firestore dan `firestore.rules` **tidak berubah** dari v2.9.1, sehingga data lama tetap terbaca dan rules tidak perlu di-deploy ulang. Ringkasan lengkap ada di [Riwayat Versi](#riwayat-versi).
 
@@ -207,6 +207,19 @@ Deploy `firestore.rules` bila berubah: lihat `PANDUAN_DEPLOY_RULES.md`.
 ---
 
 ## Riwayat Versi
+
+### v3.6.0 — November 2026
+
+Rilis di atas v3.5.0: jalur resmi untuk pemekaran/penataan wilayah dan perapian L/P di Monografi. Tidak ada koleksi, field, atau query baru; `firestore.rules` tidak berubah (pembaruan massal memakai izin operator yang sudah ada).
+
+**Fitur baru**
+- **Pemekaran / pindah wilayah** (Pengaturan → Dusun, RT, dan RW, khusus admin). RT/RW yang dipakai penduduk dikunci di Pengaturan; saat ada pemekaran, penduduk dipindah dulu lewat dialog ini, setelah itu RT lama yang sudah kosong otomatis tidak terkunci dan bisa dihapus. Pilih RT asal (dan RW asal, atau semua RW), isi RT tujuan dan/atau RW tujuan (angka 0–999; kosong = tidak berubah), lalu pilih cakupan: **semua keluarga** di RT itu, atau **sebagian** dengan mencentang keluarga (satuan pemindahan adalah keluarga/No. KK, semua anggota aktifnya ikut). Ada ringkasan jumlah jiwa dan keluarga, konfirmasi dua langkah, dan peringatan bila RT tujuan belum terdaftar di dusun mana pun. Hanya penduduk aktif yang dipindah; riwayat penduduk tidak aktif tidak disentuh. Setiap penduduk tercatat di Log aktivitas dan Riwayat Detail dengan nilai lama dan baru ("Pemekaran wilayah: NAMA — RT 005 → 012; RW 002 → 004"), ditambah satu ringkasan `edit_wilayah`. Penulisan massal memakai `lib/tulis-bertahap` (200 penduduk per batch; bila satu batch ditolak diulang per penduduk) dan hasilnya melaporkan yang gagal. Dusun mengikuti RT, jadi pindah RT otomatis pindah dusun sesuai Pengaturan. Logika murni ada di `lib/pemekaran.ts`.
+- **Memindahkan atau memecah dusun** (RT pindah dusun, dusun baru dari sebagian RT) tidak perlu mengubah data penduduk: tambahkan RT di dusun tujuan, lalu hapus dari dusun asal (diizinkan setelah RT itu terdaftar di dua dusun). Dusun yang RT-nya sudah dikeluarkan semua bisa dihapus. Catatan di Pengaturan menjelaskan langkah ini.
+
+**Perbaikan tampilan**
+- **L/P di Klasifikasi umur dan Rasio beban tanggungan (Monografi) terlalu besar:** tag `b` di dalam kotak mewarisi huruf angka besar (`.kt b` dan `.rs b`). Kini L/P berukuran 11,5 px dengan bobot sama seperti rincian L/P di sebaran lain.
+
+**Pengujian:** `tsc` bersih, lint 0 peringatan; tes baru untuk `lib/pemekaran` (keluarga per RT, validasi tujuan, rencana pemindahan seluruh dan sebagian, KK kosong, RT/RW 000) dan dialog `PemekaranModal` (ringkasan, konfirmasi dua langkah, sebagian keluarga, tombol nonaktif tanpa tujuan).
 
 ### v3.5.0 — November 2026
 

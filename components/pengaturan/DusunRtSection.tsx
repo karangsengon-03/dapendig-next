@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Lock, Plus, RotateCcw, Save, Trash2, TriangleAlert, X } from 'lucide-react'
+import { Lock, Plus, RotateCcw, Save, Split, Trash2, TriangleAlert, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Field, InBox } from '@/components/ui/field'
+import { PemekaranModal } from '@/components/pengaturan/PemekaranModal'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/toast'
 import { useDusunConfig, useSaveDusun } from '@/hooks/usePengaturan'
 import { useAppStore } from '@/store/appStore'
+import { useAuthStore } from '@/store/authStore'
 import { DUSUN_BAWAAN, RW_BAWAAN, daftarkanTerpakai, rtBelumTerdaftar, rwBelumTerdaftar, validasiDusun, validasiRw, type DusunItem } from '@/lib/dusun'
 import { GalatTolak } from '@/lib/galat-tolak'
 import { rt3 } from '@/lib/rt-rw'
@@ -27,6 +29,8 @@ export function DusunRtSection() {
   const [rwBaru, setRwBaru] = useState('')
   const [sudahCoba, setSudahCoba] = useState(false)
   // RT/RW yang ADA di data penduduk aktif (jumlah per RT/RW): dikunci bila terdaftar, dan yang belum terdaftar diberi keterangan
+  const isAdmin = useAuthStore((s) => s.isAdmin)()
+  const [bukaPemekaran, setBukaPemekaran] = useState(false)
   const rtPakai = useAppStore((s) => s.rtPakai)
   const rwPakai = useAppStore((s) => s.rwPakai)
 
@@ -104,6 +108,15 @@ export function DusunRtSection() {
         <b>Data penduduk adalah acuan.</b> RT dan RW yang ada pada data penduduk aktif selalu tampil apa adanya di Beranda dan statistik,
         walau belum didaftarkan di sini. Yang sudah terdaftar dan dipakai penduduk ditandai gembok <Lock size={12} aria-hidden style={{ verticalAlign: '-1px' }} />
         beserta jumlah penduduknya dan tidak bisa dihapus selama masih dipakai. Anda tetap bebas menambah RT, RW, atau dusun lain.
+        <br /><b>Pemekaran:</b> untuk memindahkan RT ke dusun lain, tambahkan RT itu di dusun tujuan lalu hapus dari dusun asal. Untuk memecah atau memindahkan penduduk ke RT/RW lain,
+        pakai tombol di bawah.
+        {isAdmin && (
+          <div className="act-c">
+            <Button type="button" variant="outline" size="sm" onClick={() => setBukaPemekaran(true)}>
+              <Split size={15} />Pemekaran / pindah wilayah
+            </Button>
+          </div>
+        )}
       </div>
 
       {(belumRt.length > 0 || belumRw.length > 0) && (
@@ -212,6 +225,7 @@ export function DusunRtSection() {
       <div className="act-c" style={{ marginTop: 10 }}>
         <Button type="button" onClick={handleSimpan} disabled={isPending}><Save size={16} />{isPending ? 'Menyimpan…' : 'Simpan'}</Button>
       </div>
+      {bukaPemekaran && <PemekaranModal onClose={() => setBukaPemekaran(false)} />}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { DUSUN_BAWAAN, RW_BAWAAN, type DusunItem } from '@/lib/dusun'
 import { useAppStore } from '@/store/appStore'
 
 const toastMock = vi.fn()
+vi.mock('@/components/pengaturan/PemekaranModal', () => ({ PemekaranModal: () => null }))
 vi.mock('@/components/ui/toast', () => ({ useToast: () => ({ toast: toastMock }) }))
 
 let dataTersimpan: { dusun: DusunItem[]; rw: string[]; tersimpan: boolean } | undefined = { dusun: DUSUN_BAWAAN, rw: RW_BAWAAN, tersimpan: false }
