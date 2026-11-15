@@ -1,13 +1,13 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ArrowRight, Split, TriangleAlert } from 'lucide-react'
+import { ArrowRight, Split, TriangleAlert, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/dialog'
 import { Field, InBox } from '@/components/ui/field'
 import { useToast } from '@/components/ui/toast'
 import { usePendudukList } from '@/hooks/usePenduduk'
-import { useJalankanPemekaran } from '@/hooks/usePemekaran'
+import { useJalankanPemekaran, useKembalikanPemekaran, usePemekaranRiwayat, type HasilKembali, type RiwayatPemekaran } from '@/hooks/usePemekaran'
 import { useAppStore } from '@/store/appStore'
 import { daftarRt, urutRt } from '@/lib/dusun'
 import { keluargaDiRt, rencanaPemindahan, validasiPemindahan, type PendudukWilayah } from '@/lib/pemekaran'
@@ -18,6 +18,57 @@ import { rt3 } from '@/lib/rt-rw'
  * (RT/RW yang dipakai penduduk dikunci di Pengaturan, jadi ini jalur resminya saat ada pemekaran atau penataan ulang).
  * Dusun mengikuti RT, jadi pindah RT otomatis pindah dusun sesuai pengaturan dusun.
  */
+const waktu = (detik: number) =>
+  detik ? new Date(detik * 1000).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+
+function HasilBalik({ h }: { h: HasilKembali }) {
+  return (
+    <div className="dsn-note" style={{ marginTop: 10, marginBottom: 0 }} data-testid="hasil-kembali">
+      <b>{h.dikembalikan} jiwa dikembalikan ke RT/RW semula.</b>
+      {h.dilewati.length > 0 && <> {h.dilewati.length} dilewati karena RT/RW-nya sudah berubah lagi atau datanya tidak ada: {h.dilewati.slice(0, 4).join('; ')}{h.dilewati.length > 4 ? '…' : ''}.</>}
+      {h.gagal.length > 0 && <> {h.gagal.length} gagal: {h.gagal.slice(0, 3).join('; ')}.</>}
+    </div>
+  )
+}
+
+/** Pemindahan sebelumnya yang masih bisa dikembalikan (seperti Tempat sampah: cadangan dihapus setelah dikembalikan). */
+function RiwayatPemindahan() {
+  const { toast } = useToast()
+  const { data: daftar = [] } = usePemekaranRiwayat()
+  const kembalikan = useKembalikanPemekaran()
+  const [konfirm, setKonfirm] = useState<string | null>(null)
+  const [hasil, setHasil] = useState<HasilKembali | null>(null)
+
+  if (daftar.length === 0 && !hasil) return null
+  const proses = (b: RiwayatPemekaran) =>
+    kembalikan.mutate(b, {
+      onSuccess: (h) => { setHasil(h); setKonfirm(null); toast(`${h.dikembalikan} jiwa dikembalikan`, h.gagal.length ? 'error' : 'success') },
+      onError: () => toast('Gagal mengembalikan pemindahan', 'error'),
+    })
+
+  return (
+    <div className="pmk-riwayat" data-testid="riwayat-pemekaran">
+      <h4>Pemindahan sebelumnya</h4>
+      {daftar.map((b) => (
+        <div className="pmk-rw" key={b.id}>
+          <span><b>{b.jumlah} jiwa · {b.ringkas}</b><small>{waktu(b.dibuatDetik)} · {b.oleh}</small></span>
+          {konfirm === b.id ? (
+            <span className="pmk-konf">
+              <Button type="button" size="sm" variant="destructive" disabled={kembalikan.isPending} onClick={() => proses(b)}>
+                {kembalikan.isPending ? 'Mengembalikan…' : 'Ya, kembalikan'}
+              </Button>
+              <Button type="button" size="sm" variant="outline" disabled={kembalikan.isPending} onClick={() => setKonfirm(null)}>Batal</Button>
+            </span>
+          ) : (
+            <Button type="button" size="sm" variant="outline" onClick={() => setKonfirm(b.id)}><Undo2 size={14} />Kembalikan</Button>
+          )}
+        </div>
+      ))}
+      {hasil && <HasilBalik h={hasil} />}
+    </div>
+  )
+}
+
 export function PemekaranModal({ onClose }: { onClose: () => void }) {
   const { toast } = useToast()
   const { data: semua = [] } = usePendudukList()
@@ -25,6 +76,9 @@ export function PemekaranModal({ onClose }: { onClose: () => void }) {
   const rtPakai = useAppStore((s) => s.rtPakai)
   const dusun = useAppStore((s) => s.dusun)
   const jalankan = useJalankanPemekaran()
+  const kembalikan = useKembalikanPemekaran()
+  const [konfBatal, setKonfBatal] = useState(false)
+  const [hasilBalik, setHasilBalik] = useState<HasilKembali | null>(null)
 
   const rtOpsi = useMemo(() => Object.keys(rtPakai).sort(urutRt), [rtPakai])
   const [rtAsal, setRtAsal] = useState(rtOpsi[0] ?? '')
@@ -35,7 +89,7 @@ export function PemekaranModal({ onClose }: { onClose: () => void }) {
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
   const [cari, setCari] = useState('')
   const [konfirmasi, setKonfirmasi] = useState(false)
-  const [selesai, setSelesai] = useState<{ ok: number; gagal: string[] } | null>(null)
+  const [selesai, setSelesai] = useState<{ ok: number; gagal: string[]; batch: Pick<RiwayatPemekaran, 'id' | 'items' | 'ringkas'> | null } | null>(null)
 
   const keluargaSemuaRw = useMemo(() => keluargaDiRt(rows, rtAsal), [rows, rtAsal])
   const rwOpsi = useMemo(() => [...new Set(keluargaSemuaRw.map((k) => k.rw).filter(Boolean))].sort(urutRt), [keluargaSemuaRw])
@@ -65,8 +119,12 @@ export function PemekaranModal({ onClose }: { onClose: () => void }) {
 
   function proses() {
     jalankan.mutate(rencana, {
-      onSuccess: (h) => {
-        setSelesai({ ok: h.berhasil.length, gagal: h.gagal.map((g) => `${g.item.nama}: ${g.pesan}`) })
+      onSuccess: ({ hasil: h, idBatch }) => {
+        setSelesai({
+          ok: h.berhasil.length,
+          gagal: h.gagal.map((g) => `${g.item.nama}: ${g.pesan}`),
+          batch: idBatch ? { id: idBatch, items: h.berhasil, ringkas: `${rtAsal ? `RT ${rt3(rtAsal)}` : ''} → ${labelTujuan}` } : null,
+        })
         toast(`${h.berhasil.length} jiwa dipindah ke ${labelTujuan}`, h.gagal.length ? 'error' : 'success')
       },
       onError: () => toast('Gagal memindahkan penduduk', 'error'),
@@ -76,13 +134,37 @@ export function PemekaranModal({ onClose }: { onClose: () => void }) {
   if (selesai) {
     return (
       <Modal onClose={onClose} title="Pemindahan selesai" icon={<Split className="i" />} tone="ok" width={520}
-        foot={<Button type="button" onClick={onClose}>Tutup</Button>}>
+        foot={
+          <>
+            {selesai.batch && !hasilBalik && (
+              konfBatal ? (
+                <>
+                  <Button type="button" variant="outline" disabled={kembalikan.isPending} onClick={() => setKonfBatal(false)}>Tidak jadi</Button>
+                  <Button type="button" variant="destructive" disabled={kembalikan.isPending}
+                    onClick={() => kembalikan.mutate(selesai.batch!, {
+                      onSuccess: (h) => { setHasilBalik(h); toast(`${h.dikembalikan} jiwa dikembalikan`, h.gagal.length ? 'error' : 'success') },
+                      onError: () => toast('Gagal mengembalikan pemindahan', 'error'),
+                    })}>
+                    {kembalikan.isPending ? 'Mengembalikan…' : `Ya, batalkan (${selesai.ok} jiwa)`}
+                  </Button>
+                </>
+              ) : (
+                <Button type="button" variant="outline" onClick={() => setKonfBatal(true)}><Undo2 size={15} />Batalkan pemindahan ini</Button>
+              )
+            )}
+            <Button type="button" onClick={onClose}>Tutup</Button>
+          </>
+        }>
         <p style={{ margin: 0 }}><b>{selesai.ok} jiwa</b> dipindah ke <b>{labelTujuan}</b>. Tiap perubahan tercatat di Log aktivitas dan Riwayat penduduk.</p>
         {selesai.gagal.length > 0 && (
           <p className="a-err" role="alert" style={{ marginTop: 10 }}>
             {selesai.gagal.length} gagal dipindah: {selesai.gagal.slice(0, 5).join('; ')}{selesai.gagal.length > 5 ? '…' : ''}
           </p>
         )}
+        {hasilBalik && <HasilBalik h={hasilBalik} />}
+        <p className="a-hint" style={{ marginTop: 10 }}>
+          Salah pindah? Pemindahan ini bisa dibatalkan sekarang atau nanti lewat &quot;Pemindahan sebelumnya&quot; di dialog ini.
+        </p>
         <p className="a-hint" style={{ marginTop: 10 }}>
           Langkah berikutnya: daftarkan RT/RW baru dan atur dusunnya di bagian Dusun, RT, dan RW; RT lama yang sudah kosong bisa dihapus dari daftar.
         </p>
@@ -178,6 +260,7 @@ export function PemekaranModal({ onClose }: { onClose: () => void }) {
           <b>Ini mengubah RT/RW {rencana.length} penduduk sekaligus.</b> Setiap perubahan dicatat di Log aktivitas dan Riwayat penduduk (nilai lama tertulis). Disarankan Ekspor data penduduk lebih dulu sebagai cadangan.
         </div>
       )}
+      <RiwayatPemindahan />
     </Modal>
   )
 }

@@ -21,13 +21,19 @@ vi.mock('@/hooks/usePenduduk', () => ({
     ],
   }),
 }))
-vi.mock('@/hooks/usePemekaran', () => ({ useJalankanPemekaran: () => ({ mutate: mutateMock, isPending: false }) }))
+const kembaliMock = vi.fn()
+const riwayatMock = vi.fn()
+vi.mock('@/hooks/usePemekaran', () => ({
+  useJalankanPemekaran: () => ({ mutate: mutateMock, isPending: false }),
+  useKembalikanPemekaran: () => ({ mutate: kembaliMock, isPending: false }),
+  usePemekaranRiwayat: () => ({ data: riwayatMock() }),
+}))
 vi.mock('@/components/ui/toast', () => ({ useToast: () => ({ toast: vi.fn() }) }))
 
 import { PemekaranModal } from '@/components/pengaturan/PemekaranModal'
 
 beforeEach(() => {
-  mutateMock.mockReset()
+  mutateMock.mockReset(); kembaliMock.mockReset(); riwayatMock.mockReturnValue([])
   useAppStore.setState({ rtPakai: { '005': 3 }, rwPakai: { '002': 2, '003': 1 }, dusun: [{ nama: 'A', rt: ['005'] }] })
 })
 
@@ -63,5 +69,22 @@ describe('PemekaranModal', () => {
     render(<PemekaranModal onClose={() => {}} />)
     expect((screen.getByRole('button', { name: /Lanjut/ }) as HTMLButtonElement).disabled).toBe(true)
     expect(screen.getByTestId('ringkasan-pemekaran').textContent).toContain('Isi RT tujuan')
+  })
+
+  it('Pemindahan sebelumnya: Kembalikan butuh konfirmasi, lalu mengirim snapshot pemindahan', () => {
+    const batch = { id: 'pemekaran-1', jumlah: 2, ringkas: 'RT 005 → 012', oleh: 'admin@test.local', dibuatDetik: 1760000000, items: [] }
+    riwayatMock.mockReturnValue([batch])
+    render(<PemekaranModal onClose={() => {}} />)
+    const bagian = screen.getByTestId('riwayat-pemekaran')
+    expect(bagian.textContent).toContain('2 jiwa · RT 005 → 012')
+    fireEvent.click(within(bagian).getByRole('button', { name: /Kembalikan/ }))
+    expect(kembaliMock).not.toHaveBeenCalled()
+    fireEvent.click(within(bagian).getByRole('button', { name: 'Ya, kembalikan' }))
+    expect(kembaliMock.mock.calls[0][0]).toBe(batch)
+  })
+
+  it('tanpa pemindahan sebelumnya, bagian riwayat tidak tampil', () => {
+    render(<PemekaranModal onClose={() => {}} />)
+    expect(screen.queryByTestId('riwayat-pemekaran')).toBeNull()
   })
 })

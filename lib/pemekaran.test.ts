@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { keluargaDiRt, rencanaPemindahan, ringkasItemPindah, validasiPemindahan, type PendudukWilayah } from '@/lib/pemekaran'
+import { keluargaDiRt, rencanaKembalikan, rencanaPemindahan, ringkasItemPindah, validasiPemindahan, type ItemPindah, type PendudukWilayah } from '@/lib/pemekaran'
 
 const P = (id: string, kk: string, nama: string, rt: string | number, rw: string | number, hub = 'Anggota', status = 'aktif'): PendudukWilayah =>
   ({ id, nik: id, no_kk: kk, nama_lengkap: nama, hubungan_keluarga: hub, rt, rw, status })
@@ -57,5 +57,29 @@ describe('rencanaPemindahan', () => {
     const r = rencanaPemindahan(DATA, { rtAsal: '005', rwAsal: '003', keluarga: null, rtTujuan: '', rwTujuan: '9' })
     expect(r).toHaveLength(1)
     expect(ringkasItemPindah(r[0])).toBe('RW 003 → 009')
+  })
+})
+
+describe('rencanaKembalikan', () => {
+  const dipindah: ItemPindah[] = [
+    { id: '1', nik: '1', nama: 'BUDI', rtLama: '005', rwLama: '002', rtBaru: '012', rwBaru: '004' },
+    { id: '2', nik: '2', nama: 'SITI', rtLama: '005', rwLama: '002', rtBaru: '012', rwBaru: '004' },
+    { id: '3', nik: '3', nama: 'ANI', rtLama: '005', rwLama: '003', rtBaru: '012', rwBaru: '004' },
+  ]
+  it('yang RT/RW-nya masih hasil pemindahan dikembalikan (arah dibalik); yang sudah diubah lagi atau hilang dilewati', () => {
+    const saatIni = new Map([
+      ['1', { rt: '012', rw: '004' }],
+      ['2', { rt: '12', rw: '4' }],
+      ['3', { rt: '020', rw: '004' }],
+    ])
+    const { kembali, dilewati } = rencanaKembalikan(dipindah, saatIni)
+    expect(kembali.map((i) => i.id)).toEqual(['1', '2'])
+    expect(kembali[0]).toMatchObject({ rtLama: '012', rwLama: '004', rtBaru: '005', rwBaru: '002' })
+    expect(ringkasItemPindah(kembali[0])).toBe('RT 012 → 005; RW 004 → 002')
+    expect(dilewati).toHaveLength(1)
+    expect(dilewati[0].alasan).toContain('sudah diubah lagi')
+    const hilang = rencanaKembalikan(dipindah, new Map())
+    expect(hilang.kembali).toEqual([])
+    expect(hilang.dilewati[0].alasan).toContain('sudah tidak ada')
   })
 })

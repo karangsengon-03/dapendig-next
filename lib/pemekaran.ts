@@ -102,3 +102,31 @@ export function ringkasItemPindah(i: Pick<ItemPindah, 'rtLama' | 'rwLama' | 'rtB
   if (i.rwLama !== i.rwBaru) bagian.push(`RW ${i.rwLama || '—'} → ${i.rwBaru}`)
   return bagian.join('; ')
 }
+
+export interface WilayahSaatIni { rt: string; rw: string }
+
+/**
+ * Rencana mengembalikan (membatalkan) pemindahan: tiap penduduk dikembalikan ke RT/RW semula HANYA bila RT/RW-nya sekarang
+ * masih sama dengan hasil pemindahan. Yang sudah diubah lagi sesudahnya (atau datanya sudah tidak ada) dilewati dan dilaporkan,
+ * supaya perubahan manual yang lebih baru tidak tertimpa.
+ */
+export function rencanaKembalikan(
+  items: readonly ItemPindah[],
+  saatIni: ReadonlyMap<string, WilayahSaatIni>,
+): { kembali: ItemPindah[]; dilewati: { item: ItemPindah; alasan: string }[] } {
+  const kembali: ItemPindah[] = []
+  const dilewati: { item: ItemPindah; alasan: string }[] = []
+  for (const i of items) {
+    const sekarang = saatIni.get(i.id)
+    if (!sekarang) { dilewati.push({ item: i, alasan: 'data penduduk sudah tidak ada' }); continue }
+    const rt = rt3(sekarang.rt)
+    const rw = rt3(sekarang.rw)
+    if (rt !== i.rtBaru || rw !== i.rwBaru) {
+      dilewati.push({ item: i, alasan: `RT/RW sudah diubah lagi (sekarang RT ${rt || '—'}/RW ${rw || '—'})` })
+      continue
+    }
+    // Arah dibalik: "lama" = keadaan sekarang, "baru" = keadaan semula
+    kembali.push({ id: i.id, nik: i.nik, nama: i.nama, rtLama: i.rtBaru, rwLama: i.rwBaru, rtBaru: i.rtLama, rwBaru: i.rwLama })
+  }
+  return { kembali, dilewati }
+}

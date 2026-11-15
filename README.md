@@ -4,7 +4,7 @@ Aplikasi PWA manajemen data penduduk untuk **Desa Karang Sengon, Kecamatan Klaba
 
 ---
 
-## Versi Saat Ini: v3.6.0
+## Versi Saat Ini: v3.7.0
 
 Rilis **fitur dan perbaikan** di atas redesain v3.0.0: Dusun, RT, dan RW dapat diatur dari Pengaturan, Edit catatan Pindah Masuk/Kelahiran ikut memperbarui menu Penduduk, ikon dan warna diseragamkan, toast di atas layar, dan Next.js 16.4.3. Struktur data Firestore dan `firestore.rules` **tidak berubah** dari v2.9.1, sehingga data lama tetap terbaca dan rules tidak perlu di-deploy ulang. Ringkasan lengkap ada di [Riwayat Versi](#riwayat-versi).
 
@@ -207,6 +207,18 @@ Deploy `firestore.rules` bila berubah: lihat `PANDUAN_DEPLOY_RULES.md`.
 ---
 
 ## Riwayat Versi
+
+### v3.7.0 — November 2026
+
+Rilis di atas v3.6.0: pemindahan massal RT/RW kini bisa dibatalkan dan dikembalikan, plus upgrade Next.js. `firestore.rules` **tidak berubah** (tidak perlu di-deploy ulang); tidak ada koleksi atau field baru yang dibaca aplikasi lain.
+
+**Fitur baru**
+- **Batalkan / kembalikan pemindahan massal** (Pengaturan → Dusun, RT, dan RW → Pemekaran / pindah wilayah), dengan skema seperti Tempat sampah. Sebelum menulis, keadaan semula (RT/RW lama dan baru tiap penduduk) disimpan lebih dulu sebagai satu dokumen cadangan `config/pemekaran-<waktu>` (koleksi `config` sudah hanya bisa ditulis admin, jadi tanpa perubahan rules); bila cadangan gagal disimpan, tidak ada penduduk yang dipindah. Dua jalan kembali: (1) tombol **"Batalkan pemindahan ini"** pada layar hasil sesudah memindah (dengan konfirmasi), dan (2) bagian **"Pemindahan sebelumnya"** di dialog yang memuat tiap pemindahan (jumlah jiwa, RT asal ke tujuan, waktu, pelaku) dengan tombol **Kembalikan** (dengan konfirmasi). Mengembalikan membaca keadaan penduduk SEKARANG dari server dan hanya memulihkan penduduk yang RT/RW-nya masih sama dengan hasil pemindahan; yang sudah diubah lagi sesudahnya (atau datanya sudah dihapus) dilewati dan dilaporkan, sehingga perubahan manual yang lebih baru tidak tertimpa. Seperti Tempat sampah, dokumen cadangan dihapus setelah selesai dikembalikan; bila ada yang gagal, cadangan tinggal berisi yang belum kembali. Setiap penduduk yang dikembalikan tercatat di Log aktivitas dan Riwayat Detail ("Pemindahan wilayah dikembalikan: NAMA — RT 012 → 005"), ditambah satu ringkasan `edit_wilayah`. Logika murni: `rencanaKembalikan` di `lib/pemekaran.ts`; hook: `useKembalikanPemekaran` dan `usePemekaranRiwayat` di `hooks/usePemekaran.ts`. Konfirmasi dua langkah sebelum memindah tetap ada (tombol Kembali).
+
+**Dependensi dan proses**
+- **Next.js 16.4.6** (sebelumnya 16.4.3, rilis stable terbaru) beserta `eslint-config-next` 16.4.6; hanya paket turunan Next yang ikut berubah di `package-lock.json`. React tetap 19.2.6 (kompatibel). `tsc`, lint, seluruh tes, dan `next build` lolos setelah upgrade.
+
+**Pengujian:** tes baru untuk `rencanaKembalikan` (dibalik, dilewati bila sudah diubah lagi atau hilang), `useJalankanPemekaran` (cadangan ditulis lebih dulu; bila cadangan gagal tidak ada yang ditulis; log ber-`nik_target`), `useKembalikanPemekaran` (yang masih sama dikembalikan, yang berubah dilewati, cadangan dihapus), dan dialog (daftar pemindahan sebelumnya, konfirmasi Kembalikan).
 
 ### v3.6.0 — November 2026
 
